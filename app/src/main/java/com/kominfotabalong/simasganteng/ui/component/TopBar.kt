@@ -1,5 +1,6 @@
 package com.kominfotabalong.simasganteng.ui.component
 
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBackIos
 import androidx.compose.material3.*
@@ -16,13 +17,14 @@ fun TopBar(
     destination: Destination,
     onBackClick: () -> Unit
 ) {
+    val titleColor=if (isSystemInDarkTheme()) Color.Black else Color.White
     TopAppBar(
         title = {
             Text(
                 text = destination.topBarTitle(),
                 style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.ExtraBold),
                 textAlign = TextAlign.Center,
-                color = Color.White,
+                color = titleColor,
             )
         },
         navigationIcon = {
@@ -32,7 +34,7 @@ fun TopBar(
                 Icon(
                     imageVector = Icons.Filled.ArrowBackIos,
                     contentDescription = "Kembali",
-                    tint = Color.White
+                    tint = titleColor
                 )
             }
         },

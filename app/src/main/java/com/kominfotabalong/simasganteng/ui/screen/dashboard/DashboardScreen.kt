@@ -9,6 +9,10 @@ import androidx.compose.material.icons.filled.ArrowForwardIos
 import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
@@ -19,8 +23,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.kominfotabalong.simasganteng.R
+import com.kominfotabalong.simasganteng.ui.component.GoogleSignOut
+import com.kominfotabalong.simasganteng.ui.component.WarningDialog
 import com.kominfotabalong.simasganteng.ui.screen.destinations.AddLaporanScreenDestination
+import com.kominfotabalong.simasganteng.ui.screen.destinations.LoginScreenDestination
+import com.kominfotabalong.simasganteng.ui.screen.login.LoginViewModel
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import java.util.*
@@ -30,10 +39,15 @@ import java.util.*
 @Destination
 fun DashboardScreen(
     modifier: Modifier = Modifier,
+    loginViewModel: LoginViewModel = hiltViewModel(),
     navigator: DestinationsNavigator
 ) {
     val rightNow: Calendar = Calendar.getInstance()
     val textBg = if (isSystemInDarkTheme()) Color.DarkGray else Color.LightGray
+    val titleColor = if (isSystemInDarkTheme()) Color.Black else Color.White
+    var showLogoutDialog by remember {
+        mutableStateOf(false)
+    }
 
     fun writeWelcomeUser(): String {
         return when (rightNow.get(Calendar.HOUR_OF_DAY)) {
@@ -54,6 +68,16 @@ fun DashboardScreen(
             }
         }
     }
+
+
+    WarningDialog(
+        showDialog = showLogoutDialog,
+        onDismiss = { dismiss -> showLogoutDialog = dismiss },
+        dialogDesc = "Apakah anda yakin ingin keluar dari aplikasi?",
+        onOkClick = {
+            loginViewModel.logOut()
+        })
+
 
     ConstraintLayout(modifier = modifier.fillMaxSize()) {
         val (background, content, adminTitle, adminContent, credit) = createRefs()
@@ -89,7 +113,7 @@ fun DashboardScreen(
                             style = MaterialTheme.typography.labelSmall.copy(
                                 fontWeight = FontWeight.Bold
                             ),
-                            color = Color.White,
+                            color = titleColor,
                             modifier = modifier
                                 .fillMaxWidth()
                                 .padding(start = 6.dp)
@@ -97,18 +121,20 @@ fun DashboardScreen(
                         Text(
                             text = "Selamat datang di aplikasi SI MAS GANTENG",
                             style = MaterialTheme.typography.labelSmall,
-                            color = Color.White,
+                            color = titleColor,
                             modifier = modifier
                                 .fillMaxWidth()
                                 .padding(start = 6.dp)
                         )
                     }
                 }
-                IconButton(onClick = { }, modifier = modifier.weight(0.1f)) {
+                IconButton(onClick = {
+                    showLogoutDialog = true
+                }, modifier = modifier.weight(0.1f)) {
                     Icon(
                         imageVector = Icons.Filled.Logout,
                         contentDescription = "keluar",
-                        tint = Color.White
+                        tint = titleColor
                     )
                 }
             }
@@ -139,12 +165,12 @@ fun DashboardScreen(
 
         Text(
             text = "Admin",
-            style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.ExtraBold),
+            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.ExtraBold),
             modifier = modifier
                 .constrainAs(adminTitle) {
                     top.linkTo(content.bottom)
                 }
-                .padding(start = 16.dp, top = 24.dp, bottom = 8.dp)
+                .padding(start = 16.dp, top = 24.dp, bottom = 16.dp)
         )
 
         // Admin Area
@@ -211,6 +237,12 @@ fun DashboardScreen(
                 .basicMarquee(iterations = Int.MAX_VALUE)
         )
     }
+
+    GoogleSignOut(navigateToLoginScreen = { signedOut ->
+        if (signedOut) {
+            navigator.navigate(LoginScreenDestination)
+        }
+    })
 
 }
 

@@ -12,3 +12,4 @@ val Pink40 = Color(0xFF7D5260)
 
 val OverlayLight30 = Color(0x4DFFFFFF)
 val OverlayDark30 = Color(0x4D000000)
+val Yellow400 = Color(0xFFF9A825)
