@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "835838430416",
+    "project_id": "simasganteng-d80af",
+    "storage_bucket": "simasganteng-d80af.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:835838430416:android:6cafe89acae579b40522d5",
+        "android_client_info": {
+          "package_name": "com.kominfotabalong.simasganteng"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "835838430416-hgho2pi39c4qr1ug0rkrdignh5lpguu9.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.kominfotabalong.simasganteng",
+            "certificate_hash": "88dadda593f612c5a795736c7f33609c17328524"
+          }
+        },
+        {
+          "client_id": "835838430416-19e762oknm4mj5378o3f8q7o9je72ksu.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAVlA5XoIupDPM1eUt_apAwCZNa4QeX_p4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "835838430416-19e762oknm4mj5378o3f8q7o9je72ksu.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
