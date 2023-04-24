@@ -5,6 +5,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.google.firebase.auth.FirebaseUser
 import com.kominfotabalong.simasganteng.data.model.GoogleAuthResponse
 import com.kominfotabalong.simasganteng.ui.screen.login.LoginViewModel
 import com.kominfotabalong.simasganteng.util.showToast
@@ -12,7 +13,7 @@ import com.kominfotabalong.simasganteng.util.showToast
 @Composable
 fun SignInWithGoogle(
     viewModel: LoginViewModel = hiltViewModel(),
-    navigateToHomeScreen: (signedIn: Boolean) -> Unit
+    navigateToHomeScreen: (currentUser: FirebaseUser) -> Unit
 ) {
     val context = LocalContext.current
     when (val signInWithGoogleResponse = viewModel.signInWithGoogleResponse) {
@@ -21,11 +22,13 @@ fun SignInWithGoogle(
                 Loading()
             }
         }
+
         is GoogleAuthResponse.Success -> signInWithGoogleResponse.data?.let { signedIn ->
             LaunchedEffect(signedIn) {
                 navigateToHomeScreen(signedIn)
             }
         }
+
         is GoogleAuthResponse.Failure -> LaunchedEffect(Unit) {
             signInWithGoogleResponse.e.localizedMessage?.let { context.showToast(it) }
             print(signInWithGoogleResponse.e)

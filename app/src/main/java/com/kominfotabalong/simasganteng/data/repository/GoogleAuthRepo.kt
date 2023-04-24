@@ -5,6 +5,10 @@ import com.google.android.gms.auth.api.identity.SignInClient
 import com.google.firebase.auth.AuthCredential
 import com.google.firebase.auth.FirebaseAuth
 import com.kominfotabalong.simasganteng.data.model.GoogleAuthResponse
+import com.kominfotabalong.simasganteng.data.remote.GoogleAuthInterface
+import com.kominfotabalong.simasganteng.data.remote.OneTapSignInResponse
+import com.kominfotabalong.simasganteng.data.remote.SignInWithGoogleResponse
+import com.kominfotabalong.simasganteng.data.remote.SignOutResponse
 import com.kominfotabalong.simasganteng.util.Constants.SIGN_IN_REQUEST
 import com.kominfotabalong.simasganteng.util.Constants.SIGN_UP_REQUEST
 import kotlinx.coroutines.tasks.await
@@ -43,10 +47,7 @@ class GoogleAuthRepo @Inject constructor(
         return try {
             val authResult = auth.signInWithCredential(googleCredential).await()
             val isNewUser = authResult.additionalUserInfo?.isNewUser ?: false
-            if (isNewUser) {
-//                addUserToFirestore()
-            }
-            GoogleAuthResponse.Success(true)
+            GoogleAuthResponse.Success(auth.currentUser)
         } catch (e: Exception) {
             GoogleAuthResponse.Failure(e)
         }

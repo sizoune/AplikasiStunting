@@ -18,18 +18,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
-import androidx.hilt.navigation.compose.hiltViewModel
 import com.kominfotabalong.simasganteng.R
-import com.kominfotabalong.simasganteng.ui.component.GoogleSignOut
+import com.kominfotabalong.simasganteng.data.model.LoginResponse
+import com.kominfotabalong.simasganteng.ui.component.LogoutHandler
+import com.kominfotabalong.simasganteng.ui.component.ObserveLoggedUser
 import com.kominfotabalong.simasganteng.ui.component.WarningDialog
 import com.kominfotabalong.simasganteng.ui.screen.destinations.AddLaporanScreenDestination
-import com.kominfotabalong.simasganteng.ui.screen.destinations.LoginScreenDestination
-import com.kominfotabalong.simasganteng.ui.screen.login.LoginViewModel
+import com.kominfotabalong.simasganteng.ui.screen.destinations.MapScreenDestination
+import com.kominfotabalong.simasganteng.util.showToast
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import java.util.*
@@ -39,7 +41,6 @@ import java.util.*
 @Destination
 fun DashboardScreen(
     modifier: Modifier = Modifier,
-    loginViewModel: LoginViewModel = hiltViewModel(),
     navigator: DestinationsNavigator
 ) {
     val rightNow: Calendar = Calendar.getInstance()
@@ -48,35 +49,52 @@ fun DashboardScreen(
     var showLogoutDialog by remember {
         mutableStateOf(false)
     }
+    var userData by remember {
+        mutableStateOf(LoginResponse())
+    }
+    var doLogout by remember {
+        mutableStateOf(false)
+    }
+    val context = LocalContext.current
+
 
     fun writeWelcomeUser(): String {
         return when (rightNow.get(Calendar.HOUR_OF_DAY)) {
             in 6..11 -> {
-                "Selamat Pagi "
+                "Selamat Pagi ${userData.user.name}"
             }
 
             in 12..15 -> {
-                "Selamat Siang "
+                "Selamat Siang ${userData.user.name}"
             }
 
             in 16..18 -> {
-                "Selamat Sore "
+                "Selamat Sore  ${userData.user.name}"
             }
 
             else -> {
-                "Selamat Malam"
+                "Selamat Malam  ${userData.user.name}"
             }
         }
     }
 
+    ObserveLoggedUser(
+        getData = userData.token == "",
+        onUserObserved = {
+            userData = it
+        }, onError = {
+            context.showToast(it)
+        })
 
     WarningDialog(
         showDialog = showLogoutDialog,
         onDismiss = { dismiss -> showLogoutDialog = dismiss },
         dialogDesc = "Apakah anda yakin ingin keluar dari aplikasi?",
         onOkClick = {
-            loginViewModel.logOut()
+            doLogout = true
         })
+
+    if (doLogout) LogoutHandler()
 
 
     ConstraintLayout(modifier = modifier.fillMaxSize()) {
@@ -163,60 +181,66 @@ fun DashboardScreen(
             )
         }
 
-        Text(
-            text = "Admin",
-            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.ExtraBold),
-            modifier = modifier
-                .constrainAs(adminTitle) {
-                    top.linkTo(content.bottom)
-                }
-                .padding(start = 16.dp, top = 24.dp, bottom = 16.dp)
-        )
+        if (userData.user.role.lowercase() != "public") {
+            Text(
+                text = "Admin",
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.ExtraBold),
+                modifier = modifier
+                    .constrainAs(adminTitle) {
+                        top.linkTo(content.bottom)
+                    }
+                    .padding(start = 16.dp, top = 24.dp, bottom = 16.dp)
+            )
 
-        // Admin Area
-        Card(
-            modifier = modifier
-                .constrainAs(adminContent) {
-                    top.linkTo(adminTitle.bottom)
-                    width = Dimension.fillToConstraints
+            // Admin Area
+            Card(
+                modifier = modifier
+                    .constrainAs(adminContent) {
+                        top.linkTo(adminTitle.bottom)
+                        width = Dimension.fillToConstraints
+                    }
+                    .padding(start = 16.dp, end = 16.dp),
+                elevation = CardDefaults.cardElevation(10.dp),
+                shape = RoundedCornerShape(20.dp)
+            ) {
+                Column {
+                    DashboardMenu(
+                        iconImage = R.drawable.in_report,
+                        menuTitle = "Laporan Masuk",
+                        menuDesc = "Lihat laporan anak terindikasi stunting dari masyarakat",
+                        menuOnClick = {}
+                    )
+                    Spacer(
+                        modifier = modifier
+                            .height(1.dp)
+                            .background(color = Color.LightGray)
+                            .fillMaxWidth()
+                    )
+                    DashboardMenu(
+                        iconImage = R.drawable.verif_report,
+                        menuTitle = "Laporan Terverifikasi",
+                        menuDesc = "Lihat balita yang telah diverifikasi petugas kesehatan",
+                        menuOnClick = {}
+                    )
+                    Spacer(
+                        modifier = modifier
+                            .height(1.dp)
+                            .background(color = Color.LightGray)
+                            .fillMaxWidth()
+                    )
+                    DashboardMenu(
+                        iconImage = R.drawable.recap,
+                        menuTitle = "Rekapitulasi Pelaporan",
+                        menuDesc = "Lihat rekapitulasi pelaporan masuk dan balita terverifikasi",
+                        menuOnClick = {
+                            navigator.navigate(MapScreenDestination)
+                        }
+                    )
                 }
-                .padding(start = 16.dp, end = 16.dp),
-            elevation = CardDefaults.cardElevation(10.dp),
-            shape = RoundedCornerShape(20.dp)
-        ) {
-            Column {
-                DashboardMenu(
-                    iconImage = R.drawable.in_report,
-                    menuTitle = "Laporan Masuk",
-                    menuDesc = "Lihat laporan anak terindikasi stunting dari masyarakat",
-                    menuOnClick = {}
-                )
-                Spacer(
-                    modifier = modifier
-                        .height(1.dp)
-                        .background(color = Color.LightGray)
-                        .fillMaxWidth()
-                )
-                DashboardMenu(
-                    iconImage = R.drawable.verif_report,
-                    menuTitle = "Laporan Terverifikasi",
-                    menuDesc = "Lihat balita yang telah diverifikasi petugas kesehatan",
-                    menuOnClick = {}
-                )
-                Spacer(
-                    modifier = modifier
-                        .height(1.dp)
-                        .background(color = Color.LightGray)
-                        .fillMaxWidth()
-                )
-                DashboardMenu(
-                    iconImage = R.drawable.recap,
-                    menuTitle = "Rekapitulasi Pelaporan",
-                    menuDesc = "Lihat rekapitulasi pelaporan masuk dan balita terverifikasi",
-                    menuOnClick = {}
-                )
             }
         }
+
+
 
         Text(
             text = "SIstem inforMASi Tanggap stunTING KELUarga bahagiA, dikembangkan oleh Dinas Komunikasi dan Informatika Kabupaten Tabalong",
@@ -237,12 +261,6 @@ fun DashboardScreen(
                 .basicMarquee(iterations = Int.MAX_VALUE)
         )
     }
-
-    GoogleSignOut(navigateToLoginScreen = { signedOut ->
-        if (signedOut) {
-            navigator.navigate(LoginScreenDestination)
-        }
-    })
 
 }
 

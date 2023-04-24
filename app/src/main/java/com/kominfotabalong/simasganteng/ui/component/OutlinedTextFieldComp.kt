@@ -9,7 +9,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material3.*
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -26,31 +30,37 @@ fun OutlinedTextFieldComp(
     leadingIcon: @Composable (() -> Unit)? = null,
     prefix: @Composable (() -> Unit)? = null,
     suffix: @Composable (() -> Unit)? = null,
+    singleLine:Boolean = true,
     supportingText: @Composable (() -> Unit)? = null,
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     enabled: Boolean = true,
     readOnly: Boolean = false,
     placeholderText: String,
     query: String,
+    minLines: Int = 1,
     isError: Boolean = false,
     errorMsg: String = "",
     onQueryChange: (String) -> Unit,
 ) {
     Column(
-        modifier = modifier.fillMaxWidth().padding(
-            bottom = if (isError) {
-                0.dp
-            } else {
-                10.dp
-            }
-        ).heightIn(min = 48.dp)
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(
+                bottom = if (isError) {
+                    0.dp
+                } else {
+                    10.dp
+                }
+            )
+            .heightIn(min = 48.dp)
     ) {
         OutlinedTextField(
             value = query,
-            singleLine = true,
+            singleLine = singleLine,
             enabled = enabled,
             readOnly = readOnly,
             isError = isError,
+            minLines = minLines,
             prefix = prefix,
             supportingText = supportingText,
             suffix = suffix,
@@ -69,7 +79,8 @@ fun OutlinedTextFieldComp(
             label = {
                 Text(placeholderText)
             },
-            modifier = modifier.fillMaxWidth()
+            modifier = modifier
+                .fillMaxWidth()
                 .heightIn(min = 48.dp)
         )
         if (isError)

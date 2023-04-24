@@ -1,11 +1,14 @@
-package com.kominfotabalong.simasganteng.data.repository
+package com.kominfotabalong.simasganteng.data.remote
 
 import com.google.android.gms.auth.api.identity.BeginSignInResult
 import com.google.firebase.auth.AuthCredential
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
 import com.kominfotabalong.simasganteng.data.model.GoogleAuthResponse
 
+
 typealias OneTapSignInResponse = GoogleAuthResponse<BeginSignInResult>
-typealias SignInWithGoogleResponse = GoogleAuthResponse<Boolean>
+typealias SignInWithGoogleResponse = GoogleAuthResponse<FirebaseUser>
 typealias SignOutResponse = GoogleAuthResponse<Boolean>
 
 interface GoogleAuthInterface {
