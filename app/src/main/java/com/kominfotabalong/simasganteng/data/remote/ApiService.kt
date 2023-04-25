@@ -2,6 +2,7 @@ package com.kominfotabalong.simasganteng.data.remote
 
 import com.haroldadmin.cnradapter.NetworkResponse
 import com.kominfotabalong.simasganteng.data.model.ApiBaseResponse
+import com.kominfotabalong.simasganteng.data.model.ArtikelResponse
 import com.kominfotabalong.simasganteng.data.model.Kecamatan
 import com.kominfotabalong.simasganteng.data.model.LaporanResponse
 import com.kominfotabalong.simasganteng.data.model.LoginResponse
@@ -45,6 +46,10 @@ interface ApiService {
     suspend fun getDaftarPuskes(
         @Header("Authorization") token: String
     ): NetworkResponse<ResponseListObject<PuskesmasResponse>, ApiBaseResponse>
+
+    @GET("artikel")
+    suspend fun getDaftarArtikel(
+    ): NetworkResponse<ResponseListObject<ArtikelResponse>, ApiBaseResponse>
 
     @Headers("Accept: application/json")
     @POST("laporan")

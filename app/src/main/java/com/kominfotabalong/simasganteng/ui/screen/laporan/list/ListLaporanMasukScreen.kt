@@ -1,6 +1,7 @@
 package com.kominfotabalong.simasganteng.ui.screen.laporan.list
 
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Divider
@@ -35,7 +36,7 @@ import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 @Composable
 @Destination
 fun ListLaporanMasukScreen(
-    modifier: Modifier = Modifier,
+    modifier: Modifier = Modifier.navigationBarsPadding(),
     viewModel: LaporanViewModel = hiltViewModel(),
     navigator: DestinationsNavigator,
     snackbarHostState: SnackbarHostState,

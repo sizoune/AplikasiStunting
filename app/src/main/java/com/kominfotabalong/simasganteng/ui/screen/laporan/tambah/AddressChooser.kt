@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -58,7 +59,7 @@ import com.ramcosta.composedestinations.result.ResultBackNavigator
 @Composable
 @Destination
 fun AddressChooser(
-    modifier: Modifier = Modifier,
+    modifier: Modifier = Modifier.systemBarsPadding(),
     viewModel: LaporanViewModel = hiltViewModel(),
     userLatLng: LatLng,
     selectedKecamatan: Kecamatan? = null,

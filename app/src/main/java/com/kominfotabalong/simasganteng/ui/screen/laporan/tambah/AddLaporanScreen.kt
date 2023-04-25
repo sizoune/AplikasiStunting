@@ -6,6 +6,7 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBackIos
@@ -51,7 +52,7 @@ import com.ramcosta.composedestinations.result.ResultRecipient
 @Composable
 @Destination
 fun AddLaporanScreen(
-    modifier: Modifier = Modifier,
+    modifier: Modifier = Modifier.navigationBarsPadding(),
     viewModel: LaporanViewModel = hiltViewModel(),
     navigator: DestinationsNavigator,
     snackbarHostState: SnackbarHostState,

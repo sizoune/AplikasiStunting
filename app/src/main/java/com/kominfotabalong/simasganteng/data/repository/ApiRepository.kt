@@ -161,6 +161,31 @@ class ApiRepository @Inject constructor(
         }
     }.flowOn(Dispatchers.IO)
 
+    suspend fun getDaftarArtikel(
+    ) = flow {
+        when (val data = apiService.getDaftarArtikel()) {
+            is NetworkResponse.Success -> {
+                emit(
+                    NetworkResponse.Success(
+                        data, null, 200
+                    )
+                )
+            }
+
+            is NetworkResponse.ServerError -> {
+                emit(NetworkResponse.ServerError(data.body, data.code))
+            }
+
+            is NetworkResponse.NetworkError -> {
+                emit(NetworkResponse.NetworkError(data.error))
+            }
+
+            is NetworkResponse.UnknownError -> {
+                emit(NetworkResponse.UnknownError(data.error))
+            }
+        }
+    }.flowOn(Dispatchers.IO)
+
     suspend fun tambahLaporan(
         token: String, dataLaporan: AddLaporanRequest
     ) = flow {
