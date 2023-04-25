@@ -23,18 +23,21 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import com.google.accompanist.navigation.material.ExperimentalMaterialNavigationApi
+import com.kominfotabalong.simasganteng.ui.NavGraphs
+import com.kominfotabalong.simasganteng.ui.appCurrentDestinationAsState
 import com.kominfotabalong.simasganteng.ui.component.TopBar
-import com.kominfotabalong.simasganteng.ui.screen.NavGraphs
-import com.kominfotabalong.simasganteng.ui.screen.appCurrentDestinationAsState
-import com.kominfotabalong.simasganteng.ui.screen.destinations.AddLaporanScreenDestination
-import com.kominfotabalong.simasganteng.ui.screen.destinations.DashboardScreenDestination
-import com.kominfotabalong.simasganteng.ui.screen.destinations.Destination
-import com.kominfotabalong.simasganteng.ui.screen.destinations.LoginScreenDestination
-import com.kominfotabalong.simasganteng.ui.screen.destinations.MapScreenDestination
-import com.kominfotabalong.simasganteng.ui.screen.destinations.SplashScreenDestination
+import com.kominfotabalong.simasganteng.ui.destinations.AddLaporanScreenDestination
+import com.kominfotabalong.simasganteng.ui.destinations.DashboardScreenDestination
+import com.kominfotabalong.simasganteng.ui.destinations.Destination
+import com.kominfotabalong.simasganteng.ui.destinations.LoginScreenDestination
+import com.kominfotabalong.simasganteng.ui.destinations.LogoutHandlerDestination
+import com.kominfotabalong.simasganteng.ui.destinations.MapScreenDestination
+import com.kominfotabalong.simasganteng.ui.destinations.SplashScreenDestination
 import com.kominfotabalong.simasganteng.ui.screen.laporan.AddLaporanScreen
+import com.kominfotabalong.simasganteng.ui.screen.login.LoginScreen
+import com.kominfotabalong.simasganteng.ui.screen.login.LoginViewModel
 import com.kominfotabalong.simasganteng.ui.screen.splash.SplashScreen
-import com.kominfotabalong.simasganteng.ui.screen.startAppDestination
+import com.kominfotabalong.simasganteng.ui.startAppDestination
 import com.kominfotabalong.simasganteng.util.showToast
 import com.ramcosta.composedestinations.DestinationsNavHost
 import com.ramcosta.composedestinations.animations.defaults.RootNavGraphDefaultAnimations
@@ -47,7 +50,7 @@ import com.ramcosta.composedestinations.scope.resultRecipient
 @Composable
 fun SiMasGantengApp(
     modifier: Modifier = Modifier,
-    mainViewModel: MainViewModel = hiltViewModel(),
+    mainViewModel: LoginViewModel = hiltViewModel(),
     navController: NavHostController = rememberAnimatedNavController(),
 ) {
     val currentDestination: Destination = navController.appCurrentDestinationAsState().value
@@ -64,13 +67,21 @@ fun SiMasGantengApp(
     var loggedUser by remember {
         mutableStateOf("")
     }
+    var isFinishDoLogin by remember {
+        mutableStateOf(false)
+    }
 
     mainViewModel.getLoggedUserData().collectAsState(initial = "").value.let { userData ->
+        println("userData = $userData")
         loggedUser = userData
     }
 
+    mainViewModel.isFinishLogin.collectAsState().value.let {
+        isFinishDoLogin = it
+    }
+
     val startRoute =
-        if (isSplashLoaded) (if (loggedUser.isEmpty()) LoginScreenDestination else DashboardScreenDestination)
+        if (isSplashLoaded) (if (loggedUser.isNotEmpty() && isFinishDoLogin) DashboardScreenDestination else LoginScreenDestination)
         else NavGraphs.root.startRoute
 
     val snackbarHostState = remember { SnackbarHostState() }
@@ -95,13 +106,19 @@ fun SiMasGantengApp(
             modifier = Modifier.padding(innerPadding),
             dependenciesContainerBuilder = {
                 dependency(snackbarHostState)
+                dependency(LogoutHandlerDestination) { mainViewModel }
             }
         ) {
             animatedComposable(SplashScreenDestination) {
                 SplashScreen {
                     isSplashLoaded = true
-                    destinationsNavigator.navigate(if (loggedUser.isEmpty()) LoginScreenDestination else DashboardScreenDestination)
+                    mainViewModel.setLoginStatus(loggedUser.isNotEmpty())
                 }
+            }
+            animatedComposable(LoginScreenDestination) {
+                LoginScreen(snackbarHostState = snackbarHostState, onLoginSuccess = {
+                    mainViewModel.setLoginStatus(true)
+                })
             }
             animatedComposable(AddLaporanScreenDestination) {
                 AddLaporanScreen(

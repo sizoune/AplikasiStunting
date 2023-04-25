@@ -1,5 +1,6 @@
 package com.kominfotabalong.simasganteng.ui.screen.dashboard
 
+import android.content.pm.PackageManager
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
@@ -24,13 +25,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
+import androidx.core.content.ContextCompat
 import com.kominfotabalong.simasganteng.R
 import com.kominfotabalong.simasganteng.data.model.LoginResponse
-import com.kominfotabalong.simasganteng.ui.component.LogoutHandler
 import com.kominfotabalong.simasganteng.ui.component.ObserveLoggedUser
 import com.kominfotabalong.simasganteng.ui.component.WarningDialog
-import com.kominfotabalong.simasganteng.ui.screen.destinations.AddLaporanScreenDestination
-import com.kominfotabalong.simasganteng.ui.screen.destinations.MapScreenDestination
+import com.kominfotabalong.simasganteng.ui.destinations.AddLaporanScreenDestination
+import com.kominfotabalong.simasganteng.ui.destinations.LogoutHandlerDestination
+import com.kominfotabalong.simasganteng.ui.destinations.MapScreenDestination
 import com.kominfotabalong.simasganteng.util.showToast
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
@@ -94,7 +96,7 @@ fun DashboardScreen(
             doLogout = true
         })
 
-    if (doLogout) LogoutHandler()
+    if (doLogout) navigator.navigate(LogoutHandlerDestination(""))
 
 
     ConstraintLayout(modifier = modifier.fillMaxSize()) {

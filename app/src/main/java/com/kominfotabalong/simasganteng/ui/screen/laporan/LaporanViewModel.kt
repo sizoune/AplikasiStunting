@@ -6,6 +6,7 @@ import android.location.Address
 import android.location.Geocoder
 import android.location.Location
 import android.os.Build
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.android.gms.location.LocationCallback
@@ -72,6 +73,13 @@ class LaporanViewModel @Inject constructor(
         MutableStateFlow(false)
     val isLoading: StateFlow<Boolean>
         get() = _isLoading
+
+    var dataCollect = mutableStateOf(0)
+
+    fun collectData(dataIndex: Int) {
+        println("currentStep = $dataIndex")
+        dataCollect.value = dataIndex
+    }
 
     fun getTabalongDistricts(token: String) {
         _isLoading.value = true

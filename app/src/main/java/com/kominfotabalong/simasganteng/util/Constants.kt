@@ -9,4 +9,6 @@ object Constants {
     const val ADDRESS_CHOOSE = "ADDRESS_CHOOSE"
     const val LOGIN_ADMIN = "LOGIN_ADMIN"
     const val LOGIN_GOOGLE = "LOGIN_GOOGLE"
+    const val TANGGAL_LAHIR = "TANGGAL_LAHIR"
+    const val TANGGAL_ISI = "TANGGAL_ISI"
 }

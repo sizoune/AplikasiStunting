@@ -22,7 +22,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -48,17 +47,17 @@ import com.google.android.gms.auth.api.identity.BeginSignInResult
 import com.google.android.gms.common.api.ApiException
 import com.google.firebase.auth.GoogleAuthProvider.getCredential
 import com.kominfotabalong.simasganteng.R
+import com.kominfotabalong.simasganteng.data.model.GoogleAuthResponse
 import com.kominfotabalong.simasganteng.ui.common.UiState
 import com.kominfotabalong.simasganteng.ui.component.Loading
 import com.kominfotabalong.simasganteng.ui.component.OneTapSignIn
 import com.kominfotabalong.simasganteng.ui.component.OutlinedTextFieldComp
+import com.kominfotabalong.simasganteng.ui.component.ShowSnackbarWithAction
 import com.kominfotabalong.simasganteng.ui.component.SignInWithGoogle
-import com.kominfotabalong.simasganteng.ui.screen.destinations.DashboardScreenDestination
 import com.kominfotabalong.simasganteng.util.Constants.LOGIN_ADMIN
 import com.kominfotabalong.simasganteng.util.Constants.LOGIN_GOOGLE
 import com.kominfotabalong.simasganteng.util.showToast
 import com.ramcosta.composedestinations.annotation.Destination
-import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
@@ -68,7 +67,7 @@ fun LoginScreen(
     modifier: Modifier = Modifier,
     viewModel: LoginViewModel = hiltViewModel(),
     snackbarHostState: SnackbarHostState,
-    navigator: DestinationsNavigator
+    onLoginSuccess: () -> Unit,
 ) {
     val context = LocalContext.current
     val coroutine = rememberCoroutineScope()
@@ -255,6 +254,15 @@ fun LoginScreen(
     var currentName by remember {
         mutableStateOf("")
     }
+    var fcmToken by remember {
+        mutableStateOf("")
+    }
+    var userToken by remember {
+        mutableStateOf("")
+    }
+    val (showSnackBar, setShowSnackBar) = remember {
+        mutableStateOf(false)
+    }
 
     SignInWithGoogle(
         navigateToHomeScreen = { currentUser ->
@@ -273,9 +281,38 @@ fun LoginScreen(
         }
     )
 
-    val (showSnackBar, setShowSnackBar) = remember {
-        mutableStateOf(false)
-    }
+    GetFCMToken(viewModel = viewModel, onTokenObserved = {
+        fcmToken = it
+        println("fcmToken = $it")
+        LaunchedEffect(userToken != "" && fcmToken != "") {
+            println("panggil")
+            viewModel.postFCMToken(
+                userToken = userToken,
+                fcmToken = fcmToken
+            )
+        }
+    })
+
+    if (userToken != "" && fcmToken != "")
+        ObservePostFCM(
+            viewModel = viewModel,
+            onResultSuccess = {
+                onLoginSuccess()
+            },
+            onResultError = {
+                ShowSnackbarWithAction(snackbarHostState = snackbarHostState,
+                    errorMsg = it,
+                    showSnackBar = showSnackBar,
+                    onRetryClick = {
+                        viewModel.postFCMToken(
+                            userToken = userToken,
+                            fcmToken = fcmToken
+                        )
+                    },
+                    onDismiss = { setShowSnackBar(it) })
+            },
+            onUnauthorized = {})
+
 
     if (loginState != "")
         viewModel.uiState.collectAsState().value.let { uiState ->
@@ -287,40 +324,86 @@ fun LoginScreen(
                 }
 
                 is UiState.Success -> {
+                    viewModel.getFCMToken()
+                    userToken = uiState.data.data.token
                     viewModel.saveUserData(uiState.data.data)
-                    navigator.navigate(DashboardScreenDestination)
                 }
 
                 is UiState.Error -> {
                     println("error = ${uiState.errorMessage}")
-                    setShowSnackBar(true)
-                    LaunchedEffect(showSnackBar) {
-                        when (snackbarHostState.showSnackbar(uiState.errorMessage, "Retry", true)) {
-                            SnackbarResult.ActionPerformed -> {
-                                setShowSnackBar(false)
-                                if (loginState == LOGIN_ADMIN)
-                                    viewModel.doLogin(usernameText, passwordText)
-                                else
-                                    viewModel.doLoginWithGoogle(
-                                        email = currentEmail,
-                                        name = currentName,
-                                        firebaseToken = currentFirebaseToken
-                                    )
-                            }
-
-                            SnackbarResult.Dismissed -> {
-                                loginState = ""
-                                setShowSnackBar(false)
-                            }
-                        }
-                    }
+                    ShowSnackbarWithAction(snackbarHostState = snackbarHostState,
+                        errorMsg = uiState.errorMessage,
+                        showSnackBar = showSnackBar,
+                        onRetryClick = {
+                            setShowSnackBar(false)
+                            if (loginState == LOGIN_ADMIN)
+                                viewModel.doLogin(usernameText, passwordText)
+                            else
+                                viewModel.doLoginWithGoogle(
+                                    email = currentEmail,
+                                    name = currentName,
+                                    firebaseToken = currentFirebaseToken
+                                )
+                        },
+                        onDismiss = {
+                            loginState = ""
+                            setShowSnackBar(it)
+                        })
                 }
 
                 is UiState.Unauthorized -> {}
             }
         }
 
+}
 
+@Composable
+fun GetFCMToken(viewModel: LoginViewModel, onTokenObserved: @Composable (String) -> Unit) {
+    val context = LocalContext.current
+    when (val fcmResp = viewModel.fcmResponse) {
+        is GoogleAuthResponse.Loading -> {
+        }
+
+        is GoogleAuthResponse.Success -> fcmResp.data?.let { fcmToken ->
+            onTokenObserved(fcmToken)
+        }
+
+        is GoogleAuthResponse.Failure -> LaunchedEffect(Unit) {
+            fcmResp.e.localizedMessage?.let { context.showToast(it) }
+        }
+    }
+}
+
+@Composable
+fun ObservePostFCM(
+    viewModel: LoginViewModel,
+    onResultSuccess: @Composable (String) -> Unit,
+    onResultError: @Composable (message: String) -> Unit,
+    onUnauthorized: @Composable () -> Unit
+) {
+    viewModel.fcmState.collectAsState().value.let { uiState ->
+        when (uiState) {
+
+            is UiState.Loading -> {
+                Dialog(onDismissRequest = {}) {
+                    Loading()
+                }
+            }
+
+            is UiState.Success -> {
+                onResultSuccess(uiState.data.message ?: "FCM Submitted successfully!")
+            }
+
+            is UiState.Error -> {
+                println("error = ${uiState.errorMessage}")
+                onResultError(uiState.errorMessage)
+            }
+
+            is UiState.Unauthorized -> {
+                onUnauthorized()
+            }
+        }
+    }
 }
 
 

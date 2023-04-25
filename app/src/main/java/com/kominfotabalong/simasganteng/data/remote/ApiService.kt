@@ -27,6 +27,12 @@ interface ApiService {
         @Body params: RequestBody
     ): NetworkResponse<ResponseObject<LoginResponse>, ApiBaseResponse>
 
+    @POST("store-token")
+    suspend fun postFCMToken(
+        @Header("Authorization") token: String,
+        @Body params: RequestBody
+    ): NetworkResponse<ApiBaseResponse, ApiBaseResponse>
+
     @GET("indonesia/districts-tabalong")
     suspend fun getTabalongDistricts(
         @Header("Authorization") token: String
@@ -37,6 +43,7 @@ interface ApiService {
         @Header("Authorization") token: String
     ): NetworkResponse<ResponseListObject<PuskesmasResponse>, ApiBaseResponse>
 
+    @Headers("Accept: application/json")
     @POST("laporan")
     suspend fun tambahLaporan(
         @Header("Authorization") token: String,

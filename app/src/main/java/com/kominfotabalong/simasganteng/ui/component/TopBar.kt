@@ -8,8 +8,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import com.kominfotabalong.simasganteng.ui.screen.destinations.AddLaporanScreenDestination
-import com.kominfotabalong.simasganteng.ui.screen.destinations.Destination
+import com.kominfotabalong.simasganteng.ui.destinations.AddLaporanScreenDestination
+import com.kominfotabalong.simasganteng.ui.destinations.Destination
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

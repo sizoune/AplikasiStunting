@@ -30,7 +30,7 @@ fun OutlinedTextFieldComp(
     leadingIcon: @Composable (() -> Unit)? = null,
     prefix: @Composable (() -> Unit)? = null,
     suffix: @Composable (() -> Unit)? = null,
-    singleLine:Boolean = true,
+    singleLine: Boolean = true,
     supportingText: @Composable (() -> Unit)? = null,
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     enabled: Boolean = true,
@@ -71,6 +71,8 @@ fun OutlinedTextFieldComp(
             trailingIcon = {
                 if (isError)
                     Icon(Icons.Filled.Info, "Error", tint = MaterialTheme.colorScheme.error)
+                else
+                    trailingIcon?.let { it() }
             },
             leadingIcon = leadingIcon,
             colors = TextFieldDefaults.colors(

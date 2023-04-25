@@ -24,6 +24,7 @@ class MainViewModel @Inject constructor(
     val uiState: StateFlow<UiState<LoginResponse>>
         get() = _uiState
 
+
     fun getLoggedUserData(): Flow<String> = userDataStoreRepository.getLoggedUser()
 
     fun getUserData() {

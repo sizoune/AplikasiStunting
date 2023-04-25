@@ -4,7 +4,9 @@ import com.google.android.gms.auth.api.identity.BeginSignInRequest
 import com.google.android.gms.auth.api.identity.SignInClient
 import com.google.firebase.auth.AuthCredential
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.messaging.FirebaseMessaging
 import com.kominfotabalong.simasganteng.data.model.GoogleAuthResponse
+import com.kominfotabalong.simasganteng.data.remote.FCMTokenResponse
 import com.kominfotabalong.simasganteng.data.remote.GoogleAuthInterface
 import com.kominfotabalong.simasganteng.data.remote.OneTapSignInResponse
 import com.kominfotabalong.simasganteng.data.remote.SignInWithGoogleResponse
@@ -48,6 +50,16 @@ class GoogleAuthRepo @Inject constructor(
             val authResult = auth.signInWithCredential(googleCredential).await()
             val isNewUser = authResult.additionalUserInfo?.isNewUser ?: false
             GoogleAuthResponse.Success(auth.currentUser)
+        } catch (e: Exception) {
+            GoogleAuthResponse.Failure(e)
+        }
+    }
+
+    override suspend fun getFCMToken(): FCMTokenResponse {
+        return try {
+            val fcmReq = FirebaseMessaging.getInstance().token.await()
+            println("fcmReq = $fcmReq")
+            GoogleAuthResponse.Success(fcmReq)
         } catch (e: Exception) {
             GoogleAuthResponse.Failure(e)
         }

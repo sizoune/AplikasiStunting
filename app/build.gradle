@@ -82,7 +82,10 @@ dependencies {
     implementation 'androidx.datastore:datastore-preferences:1.0.0'
     implementation 'com.jaredrummler:android-device-names:2.1.0'
     implementation 'androidx.lifecycle:lifecycle-runtime-compose:2.6.1'
+    implementation "androidx.work:work-runtime-ktx:2.8.1"
+    implementation "androidx.hilt:hilt-work:1.0.0"
     kapt "com.google.dagger:hilt-android-compiler:$hilt_version"
+    kapt "androidx.hilt:hilt-compiler:1.0.0"
 
     //Nav Lib
     implementation "io.github.raamcosta.compose-destinations:animations-core:$compose_dest_version"
@@ -92,6 +95,7 @@ dependencies {
     implementation 'com.google.firebase:firebase-crashlytics-ktx'
     implementation 'com.google.firebase:firebase-analytics-ktx'
     implementation 'com.google.firebase:firebase-auth-ktx'
+    implementation 'com.google.firebase:firebase-messaging-ktx'
     implementation 'com.google.android.gms:play-services-auth:20.5.0'
 
     //google maps

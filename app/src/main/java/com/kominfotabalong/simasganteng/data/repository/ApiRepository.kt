@@ -79,6 +79,36 @@ class ApiRepository @Inject constructor(
         }
     }.flowOn(Dispatchers.IO)
 
+    suspend fun postFCMToken(
+        token: String, fcmToken: String?
+    ) = flow {
+        when (val data = apiService.postFCMToken(
+            "Bearer $token", createJsonRequestBody(
+                "token" to fcmToken,
+            )
+        )) {
+            is NetworkResponse.Success -> {
+                emit(
+                    NetworkResponse.Success(
+                        data, null, 200
+                    )
+                )
+            }
+
+            is NetworkResponse.ServerError -> {
+                emit(NetworkResponse.ServerError(data.body, data.code))
+            }
+
+            is NetworkResponse.NetworkError -> {
+                emit(NetworkResponse.NetworkError(data.error))
+            }
+
+            is NetworkResponse.UnknownError -> {
+                emit(NetworkResponse.UnknownError(data.error))
+            }
+        }
+    }.flowOn(Dispatchers.IO)
+
     suspend fun getTabalongDistricts(
         token: String,
     ) = flow {
@@ -140,7 +170,7 @@ class ApiRepository @Inject constructor(
                 "village_code" to dataLaporan.village_code,
                 "nama_anak" to dataLaporan.nama_anak,
                 "jenis_kelamin" to dataLaporan.jenis_kelamin,
-                "anak_ke" to dataLaporan.nama_anak,
+                "anak_ke" to dataLaporan.anak_ke,
                 "nomor_kk" to dataLaporan.nomor_kk,
                 "nik_anak" to dataLaporan.nik_anak,
                 "tempat_lahir" to dataLaporan.tempat_lahir,
@@ -156,7 +186,8 @@ class ApiRepository @Inject constructor(
                 "nik_ortu" to dataLaporan.nik_ortu,
                 "whatsapp" to dataLaporan.whatsapp,
                 "lat" to dataLaporan.lat,
-                "lng" to dataLaporan.lng
+                "lng" to dataLaporan.lng,
+                "tanggal" to dataLaporan.tanggal,
             )
         )) {
             is NetworkResponse.Success -> {

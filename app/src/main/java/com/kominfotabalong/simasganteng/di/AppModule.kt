@@ -42,7 +42,6 @@ object AppModule {
     @Provides
     fun provideFirebaseAuth() = Firebase.auth
 
-
     @Provides
     fun provideOneTapClient(
         @ApplicationContext
