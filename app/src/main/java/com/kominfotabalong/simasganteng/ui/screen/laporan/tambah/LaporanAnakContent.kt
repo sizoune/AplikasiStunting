@@ -50,7 +50,13 @@ fun LaporanAnakContent(
 
     var jkError by remember { mutableStateOf(false) }
     var selectedJK by remember {
-        mutableStateOf(if (currentRequest.jenis_kelamin == "L") "Laki-laki" else "Perempuan")
+        mutableStateOf(
+            when (currentRequest.jenis_kelamin) {
+                "L" -> "Laki-laki"
+                "P" -> "Perempuan"
+                else -> ""
+            }
+        )
     }
 
     var anakKeError by remember { mutableStateOf(false) }

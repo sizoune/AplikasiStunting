@@ -211,4 +211,7 @@ class ApiRepository @Inject constructor(
             }
         }
     }.flowOn(Dispatchers.IO)
+
+    suspend fun getDataLaporan(userToken: String, url: String) =
+        apiService.getLaporanData("Bearer $userToken", url)
 }

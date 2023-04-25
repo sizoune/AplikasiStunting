@@ -1,6 +1,5 @@
 package com.kominfotabalong.simasganteng.ui.screen.dashboard
 
-import android.content.pm.PackageManager
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
@@ -25,12 +24,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
-import androidx.core.content.ContextCompat
 import com.kominfotabalong.simasganteng.R
 import com.kominfotabalong.simasganteng.data.model.LoginResponse
 import com.kominfotabalong.simasganteng.ui.component.ObserveLoggedUser
 import com.kominfotabalong.simasganteng.ui.component.WarningDialog
 import com.kominfotabalong.simasganteng.ui.destinations.AddLaporanScreenDestination
+import com.kominfotabalong.simasganteng.ui.destinations.ListLaporanMasukScreenDestination
+import com.kominfotabalong.simasganteng.ui.destinations.ListLaporanRejectedScreenDestination
+import com.kominfotabalong.simasganteng.ui.destinations.ListLaporanVerifiedScreenDestination
 import com.kominfotabalong.simasganteng.ui.destinations.LogoutHandlerDestination
 import com.kominfotabalong.simasganteng.ui.destinations.MapScreenDestination
 import com.kominfotabalong.simasganteng.util.showToast
@@ -210,7 +211,9 @@ fun DashboardScreen(
                         iconImage = R.drawable.in_report,
                         menuTitle = "Laporan Masuk",
                         menuDesc = "Lihat laporan anak terindikasi stunting dari masyarakat",
-                        menuOnClick = {}
+                        menuOnClick = {
+                            navigator.navigate(ListLaporanMasukScreenDestination)
+                        }
                     )
                     Spacer(
                         modifier = modifier
@@ -222,7 +225,9 @@ fun DashboardScreen(
                         iconImage = R.drawable.verif_report,
                         menuTitle = "Laporan Terverifikasi",
                         menuDesc = "Lihat balita yang telah diverifikasi petugas kesehatan",
-                        menuOnClick = {}
+                        menuOnClick = {
+                            navigator.navigate(ListLaporanVerifiedScreenDestination)
+                        }
                     )
                     Spacer(
                         modifier = modifier
@@ -236,6 +241,20 @@ fun DashboardScreen(
                         menuDesc = "Lihat rekapitulasi pelaporan masuk dan balita terverifikasi",
                         menuOnClick = {
                             navigator.navigate(MapScreenDestination)
+                        }
+                    )
+                    Spacer(
+                        modifier = modifier
+                            .height(1.dp)
+                            .background(color = Color.LightGray)
+                            .fillMaxWidth()
+                    )
+                    DashboardMenu(
+                        iconImage = R.drawable.rejected,
+                        menuTitle = "Laporan Ditolak",
+                        menuDesc = "Lihat laporang yang ditolak",
+                        menuOnClick = {
+                            navigator.navigate(ListLaporanRejectedScreenDestination)
                         }
                     )
                 }

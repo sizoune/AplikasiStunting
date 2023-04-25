@@ -29,6 +29,9 @@ import com.kominfotabalong.simasganteng.ui.component.TopBar
 import com.kominfotabalong.simasganteng.ui.destinations.AddLaporanScreenDestination
 import com.kominfotabalong.simasganteng.ui.destinations.DashboardScreenDestination
 import com.kominfotabalong.simasganteng.ui.destinations.Destination
+import com.kominfotabalong.simasganteng.ui.destinations.ListLaporanMasukScreenDestination
+import com.kominfotabalong.simasganteng.ui.destinations.ListLaporanRejectedScreenDestination
+import com.kominfotabalong.simasganteng.ui.destinations.ListLaporanVerifiedScreenDestination
 import com.kominfotabalong.simasganteng.ui.destinations.LoginScreenDestination
 import com.kominfotabalong.simasganteng.ui.destinations.LogoutHandlerDestination
 import com.kominfotabalong.simasganteng.ui.destinations.MapScreenDestination
@@ -89,7 +92,12 @@ fun SiMasGantengApp(
 
     Scaffold(
         topBar = {
-            if (currentDestination == AddLaporanScreenDestination || currentDestination == MapScreenDestination)
+            if (currentDestination == AddLaporanScreenDestination
+                || currentDestination == MapScreenDestination
+                || currentDestination == ListLaporanMasukScreenDestination
+                || currentDestination == ListLaporanVerifiedScreenDestination
+                || currentDestination == ListLaporanRejectedScreenDestination
+            )
                 TopBar(
                     destination = currentDestination,
                     onBackClick = { navController.popBackStack() }

@@ -9,6 +9,9 @@ import android.os.Build
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.cachedIn
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
@@ -24,6 +27,7 @@ import com.kominfotabalong.simasganteng.data.model.ApiBaseResponse
 import com.kominfotabalong.simasganteng.data.model.Kecamatan
 import com.kominfotabalong.simasganteng.data.model.PuskesmasResponse
 import com.kominfotabalong.simasganteng.data.model.ResponseListObject
+import com.kominfotabalong.simasganteng.data.remote.LaporanPagingSource
 import com.kominfotabalong.simasganteng.data.repository.ApiRepository
 import com.kominfotabalong.simasganteng.ui.common.UiState
 import com.kominfotabalong.simasganteng.util.showToast
@@ -294,4 +298,8 @@ class LaporanViewModel @Inject constructor(
         }
         return addressText
     }
+
+    fun getLaporan(userToken: String, status: String) = Pager(PagingConfig(pageSize = 30)) {
+        LaporanPagingSource(apiRepository, userToken, status)
+    }.flow.cachedIn(viewModelScope)
 }

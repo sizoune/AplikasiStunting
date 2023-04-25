@@ -10,6 +10,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import com.kominfotabalong.simasganteng.ui.destinations.AddLaporanScreenDestination
 import com.kominfotabalong.simasganteng.ui.destinations.Destination
+import com.kominfotabalong.simasganteng.ui.destinations.ListLaporanMasukScreenDestination
+import com.kominfotabalong.simasganteng.ui.destinations.ListLaporanRejectedScreenDestination
+import com.kominfotabalong.simasganteng.ui.destinations.ListLaporanVerifiedScreenDestination
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -17,7 +20,7 @@ fun TopBar(
     destination: Destination,
     onBackClick: () -> Unit
 ) {
-    val titleColor=if (isSystemInDarkTheme()) Color.Black else Color.White
+    val titleColor = if (isSystemInDarkTheme()) Color.Black else Color.White
     TopAppBar(
         title = {
             Text(
@@ -49,6 +52,17 @@ fun Destination.topBarTitle(): String {
             // Here you can also call another Composable on another file like TaskScreenTopBar
             // 👇 access the same viewmodel instance the screen is using, by passing the back stack entry
             "Tambah Laporan"
+        }
+
+        ListLaporanMasukScreenDestination -> {
+            "Laporan Masuk"
+        }
+
+        ListLaporanVerifiedScreenDestination -> {
+            "Balita Terverifikasi"
+        }
+        ListLaporanRejectedScreenDestination -> {
+            "Laporan Ditolak"
         }
         else -> javaClass.simpleName.removeSuffix("Destination")
     }

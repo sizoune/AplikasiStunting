@@ -3,7 +3,9 @@ package com.kominfotabalong.simasganteng.data.remote
 import com.haroldadmin.cnradapter.NetworkResponse
 import com.kominfotabalong.simasganteng.data.model.ApiBaseResponse
 import com.kominfotabalong.simasganteng.data.model.Kecamatan
+import com.kominfotabalong.simasganteng.data.model.LaporanResponse
 import com.kominfotabalong.simasganteng.data.model.LoginResponse
+import com.kominfotabalong.simasganteng.data.model.PaginationObject
 import com.kominfotabalong.simasganteng.data.model.PuskesmasResponse
 import com.kominfotabalong.simasganteng.data.model.ResponseListObject
 import com.kominfotabalong.simasganteng.data.model.ResponseObject
@@ -13,6 +15,7 @@ import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.Headers
 import retrofit2.http.POST
+import retrofit2.http.Url
 
 interface ApiService {
     @POST("login")
@@ -49,4 +52,10 @@ interface ApiService {
         @Header("Authorization") token: String,
         @Body params: RequestBody,
     ): NetworkResponse<ApiBaseResponse, ApiBaseResponse>
+
+    @GET
+    suspend fun getLaporanData(
+        @Header("Authorization") token: String,
+        @Url page: String?,
+    ): NetworkResponse<ResponseObject<PaginationObject<LaporanResponse>>, ApiBaseResponse>
 }

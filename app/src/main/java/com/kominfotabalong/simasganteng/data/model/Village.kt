@@ -1,5 +1,9 @@
 package com.kominfotabalong.simasganteng.data.model
 
+import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
+
+@Parcelize
 data class Village(
     val code: String,
     val created_at: String,
@@ -8,4 +12,4 @@ data class Village(
     val meta: Meta,
     val name: String,
     val updated_at: String
-)
+):Parcelable

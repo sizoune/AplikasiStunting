@@ -48,7 +48,6 @@ import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import com.ramcosta.composedestinations.result.ResultRecipient
 
-@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 @Destination
 fun AddLaporanScreen(
@@ -240,8 +239,19 @@ fun AddLaporanScreen(
                     println("collectDataAnak ? $collectDataAnak")
                     println("collctDataAlamat ? $collectDataAlamat")
                     viewModel.collectData(currentStep)
-                    if (currentStep >= titleList.size)
-                        viewModel.addLaporan(userData.token, laporanRequest)
+                    if (currentStep >= titleList.size) {
+                        println("reqData = $laporanRequest")
+                        if (laporanRequest.properties.any { it.get().isBlank() }) {
+                            context.showToast(
+                                "Data masih belum lengkap, ${
+                                    laporanRequest.properties.filter {
+                                        it.get().isBlank()
+                                    }
+                                }"
+                            )
+                        } else
+                            viewModel.addLaporan(userData.token, laporanRequest)
+                    }
                 },
             ) {
                 if (currentStep == titleList.size)

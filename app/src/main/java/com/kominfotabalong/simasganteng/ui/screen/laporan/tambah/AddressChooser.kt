@@ -50,6 +50,7 @@ import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberMarkerState
 import com.kominfotabalong.simasganteng.R
 import com.kominfotabalong.simasganteng.data.model.AddressLoc
+import com.kominfotabalong.simasganteng.data.model.Kecamatan
 import com.kominfotabalong.simasganteng.ui.component.Loading
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.result.ResultBackNavigator
@@ -60,6 +61,8 @@ fun AddressChooser(
     modifier: Modifier = Modifier,
     viewModel: LaporanViewModel = hiltViewModel(),
     userLatLng: LatLng,
+    selectedKecamatan: Kecamatan? = null,
+    selectedDesaCode: String? = null,
     resultNavigator: ResultBackNavigator<AddressLoc>
 ) {
     val context = LocalContext.current
@@ -162,7 +165,9 @@ fun AddressChooser(
             resultNavigator.navigateBack(
                 result = AddressLoc(
                     myPosition = dragState.position,
-                    myAddress = currentAddress
+                    myAddress = currentAddress,
+                    selectedKec = selectedKecamatan,
+                    selectedDesaCode = selectedDesaCode
                 )
             )
         }, modifier = modifier

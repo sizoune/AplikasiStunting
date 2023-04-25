@@ -101,11 +101,11 @@ fun LaporanAlamatContent(
     }
 
     var puskesError by remember { mutableStateOf(false) }
-    var selectedPuskes by remember {
+    var selectedPuskes by rememberSaveable {
         mutableStateOf("")
     }
 
-    var selectedPuskesID by remember {
+    var selectedPuskesID by rememberSaveable {
         mutableStateOf(currentRequest.pkm_id)
     }
 
@@ -122,12 +122,12 @@ fun LaporanAlamatContent(
         mutableStateListOf<Village>()
     }
 
-    var selectedDesaValue by remember {
+    var selectedDesaValue by rememberSaveable {
         mutableStateOf("")
     }
 
     var desaError by remember { mutableStateOf(false) }
-    var selectedDesaCode by remember {
+    var selectedDesaCode by rememberSaveable {
         mutableStateOf(currentRequest.village_code)
     }
     val (showSnackBar, setShowSnackBar) = remember {
@@ -217,6 +217,21 @@ fun LaporanAlamatContent(
                 alamat = result.value.myAddress
                 myCurrentLat = result.value.myPosition.latitude
                 myCurrentLng = result.value.myPosition.longitude
+                result.value.selectedKec?.let { dataKec ->
+                    selectedKecamatan = dataKec.name
+                    result.value.selectedDesaCode?.let { villageCode ->
+                        selectedDesaCode = villageCode
+                        dataKec.villages.find { it.code == villageCode }?.let { desa ->
+                            selectedDesaValue = desa.name
+                        }
+                    }
+                    dataPuskes.find { it.nama.lowercase() == selectedKecamatan.lowercase() }
+                        ?.let {
+                            selectedPuskes = it.nama
+                            currentRequest.pkm_id = it.pkm_id.toString()
+                            selectedPuskesID = it.pkm_id.toString()
+                        }
+                }
             }
         }
     }
@@ -239,7 +254,13 @@ fun LaporanAlamatContent(
         } else {
             isLoading = false
             currentAddressStat = Constants.ADDRESS_NONE
-            navigator.navigate(AddressChooserDestination(LatLng(myCurrentLat, myCurrentLng)))
+            navigator.navigate(
+                AddressChooserDestination(
+                    LatLng(myCurrentLat, myCurrentLng),
+                    dataKecamatan.find { it.name == selectedKecamatan },
+                    selectedDesaCode
+                )
+            )
         }
     } else if (currentAddressStat == Constants.ADDRESS_NEXT) {
         if (myCurrentLat == (-1).toDouble() && myCurrentLng == (-1).toDouble()) {
@@ -410,7 +431,9 @@ fun LaporanAlamatContent(
                 IconButton(onClick = {
                     if (myCurrentLat != (-1).toDouble() && myCurrentLng != (-1).toDouble()) navigator.navigate(
                         AddressChooserDestination(
-                            LatLng(myCurrentLat, myCurrentLng)
+                            LatLng(myCurrentLat, myCurrentLng),
+                            dataKecamatan.find { it.name == selectedKecamatan },
+                            selectedDesaCode
                         )
                     ) else {
                         checkLocPerm = true
@@ -481,6 +504,11 @@ fun LaporanAlamatContent(
         viewModel.dataCollect.value.let { index ->
             if (index == 1) {
                 if (validateStepOne()) {
+                    currentRequest.village_code = selectedDesaCode
+                    currentRequest.pkm_id = selectedPuskesID
+                    currentRequest.alamat = alamat
+                    currentRequest.rt = rt
+                    currentRequest.rw = rw
                     onNextClick(currentRequest)
                 } else
                     viewModel.collectData(0)
