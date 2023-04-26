@@ -10,6 +10,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import com.kominfotabalong.simasganteng.ui.destinations.AddLaporanScreenDestination
 import com.kominfotabalong.simasganteng.ui.destinations.Destination
+import com.kominfotabalong.simasganteng.ui.destinations.DetailLaporanScreenDestination
 import com.kominfotabalong.simasganteng.ui.destinations.ListLaporanMasukScreenDestination
 import com.kominfotabalong.simasganteng.ui.destinations.ListLaporanRejectedScreenDestination
 import com.kominfotabalong.simasganteng.ui.destinations.ListLaporanVerifiedScreenDestination
@@ -61,9 +62,15 @@ fun Destination.topBarTitle(): String {
         ListLaporanVerifiedScreenDestination -> {
             "Balita Terverifikasi"
         }
+
         ListLaporanRejectedScreenDestination -> {
             "Laporan Ditolak"
         }
+
+        DetailLaporanScreenDestination -> {
+            "Periksa Laporan"
+        }
+
         else -> javaClass.simpleName.removeSuffix("Destination")
     }
 }

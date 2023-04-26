@@ -45,7 +45,6 @@ import com.kominfotabalong.simasganteng.data.model.LoginResponse
 import com.kominfotabalong.simasganteng.ui.common.UiState
 import com.kominfotabalong.simasganteng.ui.component.Loading
 import com.kominfotabalong.simasganteng.ui.component.NoData
-import com.kominfotabalong.simasganteng.ui.component.ObserveLoggedUser
 import com.kominfotabalong.simasganteng.ui.component.ShowSnackbarWithAction
 import com.kominfotabalong.simasganteng.ui.component.WarningDialog
 import com.kominfotabalong.simasganteng.ui.destinations.AddLaporanScreenDestination
@@ -55,7 +54,6 @@ import com.kominfotabalong.simasganteng.ui.destinations.ListLaporanRejectedScree
 import com.kominfotabalong.simasganteng.ui.destinations.ListLaporanVerifiedScreenDestination
 import com.kominfotabalong.simasganteng.ui.destinations.LogoutHandlerDestination
 import com.kominfotabalong.simasganteng.ui.destinations.MapScreenDestination
-import com.kominfotabalong.simasganteng.util.showToast
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import java.util.*
@@ -67,6 +65,7 @@ fun DashboardScreen(
     modifier: Modifier = Modifier.navigationBarsPadding(),
     viewModel: MainViewModel = hiltViewModel(),
     snackbarHostState: SnackbarHostState,
+    userData: LoginResponse,
     navigator: DestinationsNavigator
 ) {
     val rightNow: Calendar = Calendar.getInstance()
@@ -74,9 +73,6 @@ fun DashboardScreen(
     val titleColor = if (isSystemInDarkTheme()) Color.Black else Color.White
     var showLogoutDialog by remember {
         mutableStateOf(false)
-    }
-    var userData by remember {
-        mutableStateOf(LoginResponse())
     }
     var doLogout by remember {
         mutableStateOf(false)
@@ -117,12 +113,6 @@ fun DashboardScreen(
     viewModel.isRefreshing.collectAsStateWithLifecycle().value.let { loadingState ->
         isLoading = loadingState
     }
-
-    ObserveLoggedUser(getData = userData.token == "", onUserObserved = {
-        userData = it
-    }, onError = {
-        context.showToast(it)
-    })
 
     WarningDialog(showDialog = showLogoutDialog,
         onDismiss = { dismiss -> showLogoutDialog = dismiss },
@@ -323,15 +313,16 @@ fun DashboardScreen(
                     elevation = CardDefaults.cardElevation(10.dp),
                     shape = RoundedCornerShape(20.dp)) {
                     Column {
-                        dataArtikel.forEach {
-                            ItemArtikel(artikelResp = it, menuOnClick = { clickedArticle ->
+                        dataArtikel.forEachIndexed { index, data ->
+                            ItemArtikel(artikelResp = data, menuOnClick = { clickedArticle ->
                                 navigator.navigate(DetailArtikelScreenDestination(clickedArticle))
                             })
-                            Divider(
-                                color = Color.LightGray,
-                                thickness = 1.dp,
-                                modifier = modifier.padding(top = 4.dp, bottom = 4.dp)
-                            )
+                            if (index + 1 < dataArtikel.size)
+                                Divider(
+                                    color = Color.LightGray,
+                                    thickness = 1.dp,
+                                    modifier = modifier.padding(top = 4.dp, bottom = 4.dp)
+                                )
                         }
                     }
                 }

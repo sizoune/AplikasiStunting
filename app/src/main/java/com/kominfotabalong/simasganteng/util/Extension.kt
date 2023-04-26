@@ -12,6 +12,8 @@ import androidx.compose.ui.graphics.luminance
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 @Composable
 fun ColorScheme.isLight() = this.background.luminance() > 0.5
@@ -42,4 +44,8 @@ fun <T : Any> rememberMutableStateListOf(vararg elements: T): SnapshotStateList<
     ) {
         elements.toList().toMutableStateList()
     }
+}
+
+fun String.toDate(format: String): LocalDate {
+    return LocalDate.parse(this, DateTimeFormatter.ofPattern(format))
 }

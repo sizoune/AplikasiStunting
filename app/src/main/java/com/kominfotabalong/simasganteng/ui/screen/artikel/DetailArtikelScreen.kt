@@ -17,7 +17,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowBackIos
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -103,7 +102,8 @@ fun DetailArtikelScreen(
                     .statusBarsPadding()
                     .drawBehind {
                         drawCircle(color = backBtnBG, radius = 40f)
-                    }.padding(16.dp)
+                    }
+                    .padding(16.dp)
                     .clickable { navigator.navigateUp() },
             )
         }
@@ -145,6 +145,14 @@ fun DetailArtikelScreen(
                         )
                     }
                 })
+
+                Text(
+                    text = "Sumber : ${artikelResp.sumber}",
+                    style = MaterialTheme.typography.labelMedium.copy(
+                        fontWeight = FontWeight.Bold
+                    ),
+                    modifier = modifier.padding(top = 16.dp)
+                )
             }
         }
 
@@ -164,7 +172,7 @@ fun DetailArtikelScreen(
                 text = artikelResp.judul,
                 color = Color.White,
                 style = MaterialTheme.typography.labelLarge,
-                modifier = modifier.padding(start = 2.dp, top=6.dp)
+                modifier = modifier.padding(start = 2.dp, top = 6.dp)
             )
         }
     }

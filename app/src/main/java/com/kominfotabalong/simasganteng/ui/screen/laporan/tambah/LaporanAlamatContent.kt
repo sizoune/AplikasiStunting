@@ -22,7 +22,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -49,11 +48,9 @@ import com.kominfotabalong.simasganteng.data.model.AddressLoc
 import com.kominfotabalong.simasganteng.data.model.Kecamatan
 import com.kominfotabalong.simasganteng.data.model.PuskesmasResponse
 import com.kominfotabalong.simasganteng.data.model.Village
-import com.kominfotabalong.simasganteng.ui.common.UiState
 import com.kominfotabalong.simasganteng.ui.component.Loading
 import com.kominfotabalong.simasganteng.ui.component.OutlinedSpinner
 import com.kominfotabalong.simasganteng.ui.component.OutlinedTextFieldComp
-import com.kominfotabalong.simasganteng.ui.component.ShowSnackbarWithAction
 import com.kominfotabalong.simasganteng.ui.component.WarningDialog
 import com.kominfotabalong.simasganteng.ui.destinations.AddressChooserDestination
 import com.kominfotabalong.simasganteng.util.Constants
@@ -66,15 +63,14 @@ import com.ramcosta.composedestinations.result.ResultRecipient
 fun LaporanAlamatContent(
     modifier: Modifier = Modifier,
     getData: Boolean,
-    userToken: String,
     currentRequest: AddLaporanRequest,
     viewModel: LaporanViewModel,
-    snackbarHostState: SnackbarHostState,
+    dataKecamatan: List<Kecamatan>,
+    dataPuskes: List<PuskesmasResponse>,
     onLocPermissionDeniedForever: () -> Unit,
     resultRecipient: ResultRecipient<AddressChooserDestination, AddressLoc>,
     navigator: DestinationsNavigator,
     onNextClick: (AddLaporanRequest) -> Unit,
-    onUnauthorized: () -> Unit,
 ) {
     var myCurrentLat by rememberSaveable {
         mutableStateOf(currentRequest.lat.toDouble())
@@ -96,9 +92,6 @@ fun LaporanAlamatContent(
     var rw by remember {
         mutableStateOf(currentRequest.rw)
     }
-    var dataPuskes by remember {
-        mutableStateOf(listOf<PuskesmasResponse>())
-    }
 
     var puskesError by remember { mutableStateOf(false) }
     var selectedPuskes by rememberSaveable {
@@ -107,10 +100,6 @@ fun LaporanAlamatContent(
 
     var selectedPuskesID by rememberSaveable {
         mutableStateOf(currentRequest.pkm_id)
-    }
-
-    var dataKecamatan by remember {
-        mutableStateOf(listOf<Kecamatan>())
     }
 
     var kecError by remember { mutableStateOf(false) }
@@ -129,9 +118,6 @@ fun LaporanAlamatContent(
     var desaError by remember { mutableStateOf(false) }
     var selectedDesaCode by rememberSaveable {
         mutableStateOf(currentRequest.village_code)
-    }
-    val (showSnackBar, setShowSnackBar) = remember {
-        mutableStateOf(false)
     }
 
     var isLoading by rememberSaveable {
@@ -271,54 +257,6 @@ fun LaporanAlamatContent(
         }
     }
 
-    LaunchedEffect(dataKecamatan.isEmpty() && userToken != "" && dataPuskes.isEmpty()) {
-        viewModel.getTabalongDistricts(userToken)
-        viewModel.getDaftarPuskes(userToken)
-    }
-
-    if (dataKecamatan.isEmpty())
-        ObserveDataTabalong(viewModel = viewModel,
-            onResultSuccess = {
-                dataKecamatan = it
-                if (currentRequest.village_code != "") {
-                    val des = dataKecamatan.asSequence().flatMap {
-                        it.villages
-                    }.find { desa ->
-                        desa.code == currentRequest.village_code
-                    }
-                    val kec = dataKecamatan.find {
-                        it.villages.contains(des)
-                    }
-                    selectedDesaValue = des?.name ?: ""
-                    selectedKecamatan = kec?.name ?: ""
-                }
-            }, onResultError = { errorMsg ->
-                ShowSnackbarWithAction(snackbarHostState = snackbarHostState,
-                    errorMsg = errorMsg,
-                    showSnackBar = showSnackBar,
-                    onRetryClick = { viewModel.getTabalongDistricts(userToken) },
-                    onDismiss = { setShowSnackBar(it) })
-            }, onUnauthorized = {
-                onUnauthorized()
-            })
-
-    if (dataPuskes.isEmpty())
-        ObserveDataPuskes(viewModel = viewModel, onResultSuccess = {
-            dataPuskes = it
-            if (currentRequest.pkm_id != "") {
-                dataPuskes.find { it.pkm_id == currentRequest.pkm_id.toInt() }?.let {
-                    selectedPuskes = it.nama
-                }
-            }
-        }, onResultError = { errorMsg ->
-            ShowSnackbarWithAction(snackbarHostState = snackbarHostState,
-                errorMsg = errorMsg,
-                showSnackBar = showSnackBar,
-                onRetryClick = { viewModel.getDaftarPuskes(userToken) },
-                onDismiss = { setShowSnackBar(it) })
-        }, onUnauthorized = {
-            onUnauthorized()
-        })
 
     fun validateStepOne(): Boolean {
         if (selectedKecamatan == "" || selectedKecamatan.lowercase() == "pilih kecamatan") {
@@ -514,67 +452,4 @@ fun LaporanAlamatContent(
                     viewModel.collectData(0)
             }
         }
-}
-
-@Composable
-fun ObserveDataTabalong(
-    viewModel: LaporanViewModel,
-    onResultSuccess: (List<Kecamatan>) -> Unit,
-    onResultError: @Composable (message: String) -> Unit,
-    onUnauthorized: @Composable () -> Unit
-) {
-    viewModel.kecamatanState.collectAsStateWithLifecycle().value.let { uiState ->
-        when (uiState) {
-
-            is UiState.Loading -> {
-            }
-
-            is UiState.Success -> {
-                uiState.data.data?.let {
-                    onResultSuccess(it)
-                }
-            }
-
-            is UiState.Error -> {
-                println("error = ${uiState.errorMessage}")
-                onResultError(uiState.errorMessage)
-            }
-
-            is UiState.Unauthorized -> {
-                onUnauthorized()
-            }
-        }
-    }
-}
-
-@Composable
-fun ObserveDataPuskes(
-    viewModel: LaporanViewModel,
-    onResultSuccess: (List<PuskesmasResponse>) -> Unit,
-    onResultError: @Composable (message: String) -> Unit,
-    onUnauthorized: @Composable () -> Unit
-) {
-    viewModel.pkmState.collectAsStateWithLifecycle().value.let { uiState ->
-        when (uiState) {
-
-            is UiState.Loading -> {
-
-            }
-
-            is UiState.Success -> {
-                uiState.data.data?.let {
-                    onResultSuccess(it)
-                }
-            }
-
-            is UiState.Error -> {
-                println("error = ${uiState.errorMessage}")
-                onResultError(uiState.errorMessage)
-            }
-
-            is UiState.Unauthorized -> {
-                onUnauthorized()
-            }
-        }
-    }
 }

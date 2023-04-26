@@ -8,10 +8,12 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBackIos
 import androidx.compose.material.icons.filled.ArrowForwardIos
-import androidx.compose.material3.Button
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
@@ -26,19 +28,20 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.kominfotabalong.simasganteng.data.model.AddLaporanRequest
 import com.kominfotabalong.simasganteng.data.model.AddressLoc
+import com.kominfotabalong.simasganteng.data.model.Kecamatan
 import com.kominfotabalong.simasganteng.data.model.LoginResponse
+import com.kominfotabalong.simasganteng.data.model.PuskesmasResponse
 import com.kominfotabalong.simasganteng.ui.common.UiState
 import com.kominfotabalong.simasganteng.ui.component.Loading
-import com.kominfotabalong.simasganteng.ui.component.ObserveLoggedUser
 import com.kominfotabalong.simasganteng.ui.component.ShowSnackbarWithAction
 import com.kominfotabalong.simasganteng.ui.component.StepperComp
 import com.kominfotabalong.simasganteng.ui.component.SuccessDialog
@@ -52,17 +55,17 @@ import com.ramcosta.composedestinations.result.ResultRecipient
 @Composable
 @Destination
 fun AddLaporanScreen(
-    modifier: Modifier = Modifier.navigationBarsPadding(),
+    modifier: Modifier = Modifier,
     viewModel: LaporanViewModel = hiltViewModel(),
     navigator: DestinationsNavigator,
     snackbarHostState: SnackbarHostState,
+    userData: LoginResponse,
+    dataKecamatan: List<Kecamatan>,
+    dataPuskes: List<PuskesmasResponse>,
     onLocPermissionDeniedForever: () -> Unit,
     resultRecipient: ResultRecipient<AddressChooserDestination, AddressLoc>
 ) {
     val context = LocalContext.current
-    var userData by remember {
-        mutableStateOf(LoginResponse())
-    }
     var laporanRequest by remember {
         mutableStateOf(AddLaporanRequest())
     }
@@ -78,13 +81,6 @@ fun AddLaporanScreen(
         if (currentStep != 1) currentStep--
         else navigator.navigateUp()
     }
-
-    ObserveLoggedUser(getData = userData.token == "",
-        onUserObserved = {
-            userData = it
-        }, onError = {
-            context.showToast(it)
-        })
 
     var isLoading by rememberSaveable {
         mutableStateOf(false)
@@ -110,10 +106,13 @@ fun AddLaporanScreen(
         mutableStateOf(false)
     }
 
+    val scrollState = rememberScrollState()
+
     ConstraintLayout(
         modifier = modifier
             .fillMaxSize()
-
+            .navigationBarsPadding()
+            .verticalScroll(scrollState)
     ) {
 
         val (stepper, contentAlamat, contentAnak, contentOrtu, prevButton, nextButton) = createRefs()
@@ -145,21 +144,18 @@ fun AddLaporanScreen(
         ) {
             LaporanAlamatContent(
                 getData = collectDataAlamat,
-                userToken = userData.token,
                 viewModel = viewModel,
                 currentRequest = laporanRequest,
-                snackbarHostState = snackbarHostState,
                 onLocPermissionDeniedForever = onLocPermissionDeniedForever,
                 resultRecipient = resultRecipient,
                 navigator = navigator,
+                dataKecamatan = dataKecamatan,
+                dataPuskes = dataPuskes,
                 onNextClick = {
                     laporanRequest = it
                     collectDataAlamat = false
                     currentStep = 2
                 },
-                onUnauthorized = {
-                    navigator.navigate(LogoutHandlerDestination("Sesi login anda telah berakhir"))
-                }
             )
         }
 
@@ -171,6 +167,7 @@ fun AddLaporanScreen(
                 top.linkTo(stepper.bottom)
                 start.linkTo(parent.start)
                 end.linkTo(parent.end)
+                height = Dimension.fillToConstraints
             }
         ) {
             LaporanAnakContent(
@@ -208,60 +205,58 @@ fun AddLaporanScreen(
 
         AnimatedVisibility(visible = currentStep != 1, modifier = modifier
             .constrainAs(prevButton) {
-                bottom.linkTo(parent.bottom)
+                if (currentStep != 2)
+                    bottom.linkTo(parent.bottom)
+                else
+                    top.linkTo(contentAnak.bottom)
                 start.linkTo(parent.start)
             }
             .padding(16.dp)) {
-            Button(
-                onClick = {
-                    if (currentStep != 1) currentStep--
-                },
-            ) {
+            FloatingActionButton(onClick = {
+                if (currentStep != 1) currentStep--
+            }) {
                 Icon(
                     imageVector = Icons.Filled.ArrowBackIos,
                     contentDescription = "selanjutnya",
-                    modifier.padding()
                 )
             }
         }
 
         AnimatedVisibility(visible = true, modifier = modifier
             .constrainAs(nextButton) {
-                bottom.linkTo(parent.bottom)
+                if (currentStep != 2)
+                    bottom.linkTo(parent.bottom)
+                else
+                    top.linkTo(contentAnak.bottom)
                 end.linkTo(parent.end)
+                if (currentStep == titleList.size) {
+                    start.linkTo(prevButton.end)
+                    width = Dimension.fillToConstraints
+                }
             }
             .padding(16.dp)) {
-            Button(
-                onClick = {
-                    collectDataAlamat = currentStep == 1
-                    collectDataAnak = currentStep == 2
-                    collectDataOrtu = currentStep == 3
-                    println("collectDataAlamat ? $collectDataAlamat")
-                    println("collectDataAnak ? $collectDataAnak")
-                    println("collctDataAlamat ? $collectDataAlamat")
-                    viewModel.collectData(currentStep)
-                    if (currentStep >= titleList.size) {
-                        println("reqData = $laporanRequest")
-                        if (laporanRequest.properties.any { it.get().isBlank() }) {
-                            context.showToast(
-                                "Data masih belum lengkap, ${
-                                    laporanRequest.properties.filter {
-                                        it.get().isBlank()
-                                    }
-                                }"
-                            )
-                        } else
-                            viewModel.addLaporan(userData.token, laporanRequest)
-                    }
-                },
-            ) {
+            FloatingActionButton(onClick = {
+                collectDataAlamat = currentStep == 1
+                collectDataAnak = currentStep == 2
+                collectDataOrtu = currentStep == 3
+                viewModel.collectData(currentStep)
+                if (currentStep >= titleList.size) {
+                    println("reqData = $laporanRequest")
+                    if (laporanRequest.properties.any { it.get().isBlank() }) {
+                        context.showToast("Masih ada data yang kosong!, silahkan periksa kembali")
+                        println(laporanRequest.properties.filter {
+                            it.get().isBlank()
+                        })
+                    } else
+                        viewModel.addLaporan(userData.token, laporanRequest)
+                }
+            }) {
                 if (currentStep == titleList.size)
-                    Text(text = "Submit")
+                    Text(text = "Submit", textAlign = TextAlign.Center)
                 if (currentStep < titleList.size)
                     Icon(
                         imageVector = Icons.Filled.ArrowForwardIos,
                         contentDescription = "selanjutnya",
-                        modifier.padding()
                     )
             }
         }
@@ -281,7 +276,7 @@ fun AddLaporanScreen(
         ShowSnackbarWithAction(snackbarHostState = snackbarHostState,
             errorMsg = errorMsg,
             showSnackBar = showSnackBar,
-            onRetryClick = { viewModel.getDaftarPuskes(userData.token) },
+            onRetryClick = { viewModel.addLaporan(userData.token, laporanRequest) },
             onDismiss = { setShowSnackBar(it) })
     }, onUnauthorized = {
         navigator.navigate(LogoutHandlerDestination("Sesi login anda telah berakhir"))

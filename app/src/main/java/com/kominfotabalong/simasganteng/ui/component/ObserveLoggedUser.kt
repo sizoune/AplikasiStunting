@@ -2,38 +2,23 @@ package com.kominfotabalong.simasganteng.ui.component
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.kominfotabalong.simasganteng.MainViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.kominfotabalong.simasganteng.data.model.LoginResponse
-import com.kominfotabalong.simasganteng.ui.common.UiState
+import com.kominfotabalong.simasganteng.ui.screen.login.LoginViewModel
 
 @Composable
 fun ObserveLoggedUser(
-    mainViewModel: MainViewModel = hiltViewModel(),
-    getData: Boolean,
+    mainViewModel: LoginViewModel = hiltViewModel(),
     onUserObserved: @Composable (data: LoginResponse) -> Unit,
-    onError: @Composable (errorMsg: String) -> Unit,
 ) {
-    LaunchedEffect(getData) {
-        mainViewModel.getUserData()
+
+    LaunchedEffect(Unit) {
+        mainViewModel.getUserDataV2()
     }
 
-    mainViewModel.uiState.collectAsState().value.let { uiState ->
-        when (uiState) {
-            is UiState.Loading -> {
-
-            }
-
-            is UiState.Success -> {
-                onUserObserved(uiState.data)
-            }
-
-            is UiState.Error -> {
-                onError(uiState.errorMessage)
-            }
-
-            is UiState.Unauthorized -> {}
-        }
+    mainViewModel.userState.collectAsStateWithLifecycle().value.let {
+        onUserObserved(it)
     }
+
 }

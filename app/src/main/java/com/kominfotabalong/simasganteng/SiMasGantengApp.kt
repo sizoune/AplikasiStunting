@@ -11,6 +11,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -22,15 +23,23 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import com.google.accompanist.navigation.material.ExperimentalMaterialNavigationApi
+import com.google.gson.Gson
+import com.kominfotabalong.simasganteng.data.model.Kecamatan
+import com.kominfotabalong.simasganteng.data.model.LoginResponse
+import com.kominfotabalong.simasganteng.data.model.PuskesmasResponse
 import com.kominfotabalong.simasganteng.ui.NavGraphs
 import com.kominfotabalong.simasganteng.ui.appCurrentDestinationAsState
+import com.kominfotabalong.simasganteng.ui.common.UiState
+import com.kominfotabalong.simasganteng.ui.component.ObserveLoggedUser
 import com.kominfotabalong.simasganteng.ui.component.TopBar
 import com.kominfotabalong.simasganteng.ui.destinations.AddLaporanScreenDestination
 import com.kominfotabalong.simasganteng.ui.destinations.DashboardScreenDestination
 import com.kominfotabalong.simasganteng.ui.destinations.Destination
+import com.kominfotabalong.simasganteng.ui.destinations.DetailLaporanScreenDestination
 import com.kominfotabalong.simasganteng.ui.destinations.ListLaporanMasukScreenDestination
 import com.kominfotabalong.simasganteng.ui.destinations.ListLaporanRejectedScreenDestination
 import com.kominfotabalong.simasganteng.ui.destinations.ListLaporanVerifiedScreenDestination
@@ -55,7 +64,8 @@ import com.ramcosta.composedestinations.scope.resultRecipient
 @Composable
 fun SiMasGantengApp(
     modifier: Modifier = Modifier,
-    mainViewModel: LoginViewModel = hiltViewModel(),
+    loginViewModel: LoginViewModel = hiltViewModel(),
+    mainViewModel: MainViewModel = hiltViewModel(),
     navController: NavHostController = rememberAnimatedNavController(),
 ) {
     val currentDestination: Destination = navController.appCurrentDestinationAsState().value
@@ -70,27 +80,68 @@ fun SiMasGantengApp(
     }
 
     var loggedUser by remember {
-        mutableStateOf("")
+        mutableStateOf(LoginResponse())
     }
     var isFinishDoLogin by remember {
         mutableStateOf(false)
     }
 
-    mainViewModel.getLoggedUserData().collectAsState(initial = "").value.let { userData ->
-        println("userData = $userData")
-        loggedUser = userData
+    var getDataKecamatanRemotely by remember {
+        mutableStateOf(false)
+    }
+    var getDataPuskesRemotely by remember {
+        mutableStateOf(false)
     }
 
-    mainViewModel.isFinishLogin.collectAsState().value.let {
+    var dataKecamatan by remember {
+        mutableStateOf(listOf<Kecamatan>())
+    }
+    var dataPuskesmas by remember {
+        mutableStateOf(listOf<PuskesmasResponse>())
+    }
+
+    ObserveLoggedUser(onUserObserved = {
+        loggedUser = it
+    })
+
+    loginViewModel.isFinishLogin.collectAsState().value.let {
         isFinishDoLogin = it
     }
 
     val startRoute =
-        if (isSplashLoaded) (if (loggedUser.isNotEmpty() && isFinishDoLogin) DashboardScreenDestination else LoginScreenDestination)
+        if (isSplashLoaded) (if (loggedUser.token.isNotEmpty() && isFinishDoLogin) DashboardScreenDestination else LoginScreenDestination)
         else NavGraphs.root.startRoute
 
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
+
+    ObserveKecamatanLocally(mainViewModel = mainViewModel) {
+        dataKecamatan = it
+        getDataKecamatanRemotely = dataKecamatan.isEmpty()
+    }
+
+    ObservePuskesmasLocally(mainViewModel = mainViewModel) {
+        dataPuskesmas = it
+        getDataPuskesRemotely = dataPuskesmas.isEmpty()
+    }
+
+    if (getDataKecamatanRemotely && loggedUser.token.isNotEmpty()) {
+        println("observeData")
+        mainViewModel.getTabalongDistricts(loggedUser.token)
+        ObserveDataTabalongRemotely(viewModel = mainViewModel) {
+            dataKecamatan = it
+            mainViewModel.saveDataToLocal(it)
+        }
+    }
+
+    if (getDataPuskesRemotely && loggedUser.token.isNotEmpty()) {
+        println("observeDataPuskes")
+        mainViewModel.getDaftarPuskes(loggedUser.token)
+        ObserveDataPuskesmasRemotely(viewModel = mainViewModel) {
+            dataPuskesmas = it
+            mainViewModel.saveDataPuskesToLocal(it)
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -99,6 +150,7 @@ fun SiMasGantengApp(
                 || currentDestination == ListLaporanMasukScreenDestination
                 || currentDestination == ListLaporanVerifiedScreenDestination
                 || currentDestination == ListLaporanRejectedScreenDestination
+                || currentDestination == DetailLaporanScreenDestination
             )
                 TopBar(
                     destination = currentDestination,
@@ -117,18 +169,22 @@ fun SiMasGantengApp(
             modifier = Modifier.padding(innerPadding),
             dependenciesContainerBuilder = {
                 dependency(snackbarHostState)
-                dependency(LogoutHandlerDestination) { mainViewModel }
+                dependency(Gson())
+                dependency(loggedUser)
+                dependency(dataKecamatan)
+                dependency(dataPuskesmas)
+                dependency(LogoutHandlerDestination) { loginViewModel }
             }
         ) {
             animatedComposable(SplashScreenDestination) {
                 SplashScreen {
                     isSplashLoaded = true
-                    mainViewModel.setLoginStatus(loggedUser.isNotEmpty())
+                    loginViewModel.setLoginStatus(loggedUser.token.isNotEmpty())
                 }
             }
             animatedComposable(LoginScreenDestination) {
                 LoginScreen(snackbarHostState = snackbarHostState, onLoginSuccess = {
-                    mainViewModel.setLoginStatus(true)
+                    loginViewModel.setLoginStatus(true)
                 })
             }
             animatedComposable(AddLaporanScreenDestination) {
@@ -136,6 +192,9 @@ fun SiMasGantengApp(
                     navigator = destinationsNavigator,
                     snackbarHostState = snackbarHostState,
                     resultRecipient = resultRecipient(),
+                    dataKecamatan = dataKecamatan,
+                    dataPuskes = dataPuskesmas,
+                    userData = loggedUser,
                     onLocPermissionDeniedForever = {
                         context.showToast("Izin lokasi tidak diberikan!, silahkan mengizinkan aplikasi untuk menggunakan lokasi anda!")
                         gotoSetting(context)
@@ -143,6 +202,94 @@ fun SiMasGantengApp(
                 )
             }
         }
+    }
+
+}
+
+@Composable
+fun ObserveDataTabalongRemotely(
+    viewModel: MainViewModel,
+    onResultSuccess: @Composable (List<Kecamatan>) -> Unit,
+) {
+    viewModel.kecamatanState.collectAsStateWithLifecycle().value.let { uiState ->
+        when (uiState) {
+
+            is UiState.Loading -> {
+            }
+
+            is UiState.Success -> {
+                uiState.data.data?.let {
+                    onResultSuccess(it)
+                }
+            }
+
+            is UiState.Error -> {
+                println("error = ${uiState.errorMessage}")
+            }
+
+            is UiState.Unauthorized -> {
+
+            }
+        }
+    }
+}
+
+@Composable
+fun ObserveKecamatanLocally(
+    mainViewModel: MainViewModel,
+    onKecamatanObserved: @Composable (data: List<Kecamatan>) -> Unit,
+) {
+
+    LaunchedEffect(Unit) {
+        mainViewModel.getDataKecamatanInLocal()
+    }
+
+    mainViewModel.kecState.collectAsStateWithLifecycle().value.let {
+        onKecamatanObserved(it)
+    }
+
+}
+
+@Composable
+fun ObserveDataPuskesmasRemotely(
+    viewModel: MainViewModel,
+    onResultSuccess: @Composable (List<PuskesmasResponse>) -> Unit,
+) {
+    viewModel.pkmState.collectAsStateWithLifecycle().value.let { uiState ->
+        when (uiState) {
+
+            is UiState.Loading -> {
+            }
+
+            is UiState.Success -> {
+                uiState.data.data?.let {
+                    onResultSuccess(it)
+                }
+            }
+
+            is UiState.Error -> {
+                println("error = ${uiState.errorMessage}")
+            }
+
+            is UiState.Unauthorized -> {
+
+            }
+        }
+    }
+}
+
+@Composable
+fun ObservePuskesmasLocally(
+    mainViewModel: MainViewModel,
+    onKecamatanObserved: @Composable (data: List<PuskesmasResponse>) -> Unit,
+) {
+
+    LaunchedEffect(Unit) {
+        mainViewModel.getDataPuskesInLocal()
+    }
+
+    mainViewModel.puskesState.collectAsStateWithLifecycle().value.let {
+        onKecamatanObserved(it)
     }
 
 }

@@ -16,6 +16,8 @@ import com.haroldadmin.cnradapter.NetworkResponseAdapterFactory
 import com.jaredrummler.android.device.DeviceName
 import com.kominfotabalong.simasganteng.BuildConfig
 import com.kominfotabalong.simasganteng.R
+import com.kominfotabalong.simasganteng.data.local.TabalongDataStore
+import com.kominfotabalong.simasganteng.data.local.PuskesmasDataStore
 import com.kominfotabalong.simasganteng.data.local.UserDataStore
 import com.kominfotabalong.simasganteng.data.remote.ApiService
 import com.kominfotabalong.simasganteng.data.remote.GoogleAuthInterface
@@ -144,6 +146,14 @@ object AppModule {
     @Provides
     @Singleton
     fun provideUserPrefs(@ApplicationContext context: Context) = UserDataStore(context)
+
+    @Provides
+    @Singleton
+    fun provideTabalongPrefs(@ApplicationContext context: Context) = TabalongDataStore(context)
+
+    @Provides
+    @Singleton
+    fun providePuskesPrefs(@ApplicationContext context: Context) = PuskesmasDataStore(context)
 
     @Provides
     @Singleton

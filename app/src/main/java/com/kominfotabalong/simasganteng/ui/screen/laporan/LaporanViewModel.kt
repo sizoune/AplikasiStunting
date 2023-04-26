@@ -58,16 +58,6 @@ class LaporanViewModel @Inject constructor(
     val myAddr: StateFlow<String>
         get() = _myAddr
 
-    private val _kecamatanState: MutableStateFlow<UiState<ResponseListObject<Kecamatan>>> =
-        MutableStateFlow(UiState.Loading)
-    val kecamatanState: StateFlow<UiState<ResponseListObject<Kecamatan>>>
-        get() = _kecamatanState
-
-    private val _pkmState: MutableStateFlow<UiState<ResponseListObject<PuskesmasResponse>>> =
-        MutableStateFlow(UiState.Loading)
-    val pkmState: StateFlow<UiState<ResponseListObject<PuskesmasResponse>>>
-        get() = _pkmState
-
     private val _addLaporanState: MutableStateFlow<UiState<ApiBaseResponse>> =
         MutableStateFlow(UiState.Loading)
     val addLaporanState: StateFlow<UiState<ApiBaseResponse>>
@@ -83,96 +73,6 @@ class LaporanViewModel @Inject constructor(
     fun collectData(dataIndex: Int) {
         println("currentStep = $dataIndex")
         dataCollect.value = dataIndex
-    }
-
-    fun getTabalongDistricts(token: String) {
-        _isLoading.value = true
-        viewModelScope.launch {
-            apiRepository.getTabalongDistricts(token).catch {
-                _isLoading.value = false
-                _kecamatanState.value = UiState.Error(it.message.toString())
-
-            }.collect { response ->
-                when (response) {
-                    is NetworkResponse.Success -> {
-                        _isLoading.value = false
-                        _kecamatanState.value = UiState.Success(response.body.body)
-                    }
-
-                    is NetworkResponse.ServerError -> {
-                        _isLoading.value = false
-                        if (response.code == 401) {
-                            _kecamatanState.value = UiState.Unauthorized
-                        } else {
-                            _kecamatanState.value = UiState.Error(
-                                response.body?.message
-                                    ?: "Terjadi kesalahan saat memproses data"
-                            )
-                        }
-                    }
-
-                    is NetworkResponse.NetworkError -> {
-                        _isLoading.value = false
-                        _kecamatanState.value = UiState.Error(
-                            response.error.localizedMessage ?: "Tolong periksa koneksi anda!"
-                        )
-                    }
-
-                    is NetworkResponse.UnknownError -> {
-                        _isLoading.value = false
-                        _kecamatanState.value = UiState.Error(
-                            response.error.localizedMessage
-                                ?: "Unknown Error"
-                        )
-                    }
-                }
-            }
-        }
-    }
-
-    fun getDaftarPuskes(token: String) {
-        _isLoading.value = true
-        viewModelScope.launch {
-            apiRepository.getDaftarPuskes(token).catch {
-                _isLoading.value = false
-                _pkmState.value = UiState.Error(it.message.toString())
-
-            }.collect { response ->
-                when (response) {
-                    is NetworkResponse.Success -> {
-                        _isLoading.value = false
-                        _pkmState.value = UiState.Success(response.body.body)
-                    }
-
-                    is NetworkResponse.ServerError -> {
-                        _isLoading.value = false
-                        if (response.code == 401) {
-                            _kecamatanState.value = UiState.Unauthorized
-                        } else {
-                            _kecamatanState.value = UiState.Error(
-                                response.body?.message
-                                    ?: "Terjadi kesalahan saat memproses data"
-                            )
-                        }
-                    }
-
-                    is NetworkResponse.NetworkError -> {
-                        _isLoading.value = false
-                        _pkmState.value = UiState.Error(
-                            response.error.localizedMessage ?: "Tolong periksa koneksi anda!"
-                        )
-                    }
-
-                    is NetworkResponse.UnknownError -> {
-                        _isLoading.value = false
-                        _pkmState.value = UiState.Error(
-                            response.error.localizedMessage
-                                ?: "Unknown Error"
-                        )
-                    }
-                }
-            }
-        }
     }
 
     fun addLaporan(token: String, dataLaporan: AddLaporanRequest) {

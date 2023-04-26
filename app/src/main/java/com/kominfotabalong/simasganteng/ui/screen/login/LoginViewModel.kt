@@ -13,6 +13,7 @@ import androidx.work.WorkManager
 import androidx.work.WorkRequest
 import com.google.android.gms.auth.api.identity.SignInClient
 import com.google.firebase.auth.AuthCredential
+import com.google.gson.Gson
 import com.haroldadmin.cnradapter.NetworkResponse
 import com.kominfotabalong.simasganteng.data.model.ApiBaseResponse
 import com.kominfotabalong.simasganteng.data.model.GoogleAuthResponse
@@ -42,6 +43,7 @@ class LoginViewModel @Inject constructor(
     private val apiRepository: ApiRepository,
     private val userDataStoreRepository: UserDataStoreRepository,
     private val application: Application,
+    private val gson: Gson,
     val oneTapClient: SignInClient,
 ) : ViewModel() {
 
@@ -52,6 +54,19 @@ class LoginViewModel @Inject constructor(
         private set
 
     fun getLoggedUserData(): Flow<String> = userDataStoreRepository.getLoggedUser()
+
+    private val _userState: MutableStateFlow<LoginResponse> =
+        MutableStateFlow(LoginResponse())
+    val userState: StateFlow<LoginResponse>
+        get() = _userState
+    fun getUserDataV2() {
+        viewModelScope.launch {
+            getLoggedUserData().collect {
+                if (it != "")
+                    _userState.value = gson.fromJson(it, LoginResponse::class.java)
+            }
+        }
+    }
 
     var oneTapSignInResponse by mutableStateOf<OneTapSignInResponse>(GoogleAuthResponse.Success(null))
         private set

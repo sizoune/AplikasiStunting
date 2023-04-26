@@ -25,11 +25,12 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val systemUiController = rememberSystemUiController()
+            val darkIcon = !isSystemInDarkTheme()
             val isDarkTheme = isSystemInDarkTheme()
             SideEffect {
                 systemUiController.setSystemBarsColor(
                     color = if (isDarkTheme) OverlayLight30 else OverlayDark30,
-                    darkIcons = false
+                    darkIcons = darkIcon
                 )
             }
             SIMASGANTENGTheme {

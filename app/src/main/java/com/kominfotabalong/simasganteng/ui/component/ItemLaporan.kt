@@ -2,14 +2,18 @@ package com.kominfotabalong.simasganteng.ui.component
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowForwardIos
 import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -18,6 +22,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -38,63 +43,70 @@ fun ItemLaporan(
     onClick: (Int) -> Unit,
 ) {
     val childIcon = if (jenisKelamin == "L") R.drawable.male_child else R.drawable.female_child
-    Row(modifier = modifier
-        .fillMaxWidth()
-        .clickable(
-            interactionSource = remember { MutableInteractionSource() },
-            indication = rememberRipple(bounded = true), // You can also change the color and radius of the ripple
-            onClick = { onClick(idAnak) }
-        ), verticalAlignment = Alignment.Top) {
-        Icon(
-            painter = painterResource(childIcon),
-            contentDescription = "child icon",
-            tint = MaterialTheme.colorScheme.primary,
-            modifier = modifier.size(48.dp)
-        )
-        Column(
-            modifier = modifier
-                .padding(start = 6.dp)
-                .weight(1f)
-        ) {
 
-            Text(text = "Nama Anak", fontWeight = FontWeight.ExtraBold, fontSize = 10.sp)
-            Text(
-                text = nama,
-                style = MaterialTheme.typography.labelMedium
-            )
-
-            Text(
-                text = "Desa",
-                fontWeight = FontWeight.ExtraBold,
-                fontSize = 10.sp,
-                modifier = modifier.padding(top = 4.dp)
-            )
-            Text(
-                text = desa,
-                style = MaterialTheme.typography.labelMedium
-            )
-
-            Text(
-                text = "Alamat",
-                fontWeight = FontWeight.ExtraBold,
-                fontSize = 10.sp,
-                modifier = modifier.padding(top = 4.dp)
-            )
-            Text(
-                text = alamat,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-                style = MaterialTheme.typography.labelMedium
-            )
-        }
-        IconButton(onClick = { onClick(idAnak) }) {
+    Card(
+        elevation = CardDefaults.cardElevation(10.dp),
+        shape = RoundedCornerShape(20.dp)
+    ) {
+        Row(modifier = modifier
+            .fillMaxWidth()
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = rememberRipple(bounded = true), // You can also change the color and radius of the ripple
+                onClick = { onClick(idAnak) }
+            ).padding(16.dp), verticalAlignment = Alignment.Top) {
             Icon(
-                imageVector = Icons.Filled.ArrowForwardIos,
-                contentDescription = "detail",
-                tint = MaterialTheme.colorScheme.primary,
+                painter = painterResource(childIcon),
+                contentDescription = "child icon",
+                tint = if (isSystemInDarkTheme()) Color.White else Color.Black,
+                modifier = modifier.size(48.dp)
             )
+            Column(
+                modifier = modifier
+                    .padding(start = 6.dp)
+                    .weight(1f)
+            ) {
+
+                Text(text = "Nama Anak", fontWeight = FontWeight.ExtraBold, fontSize = 10.sp)
+                Text(
+                    text = nama,
+                    style = MaterialTheme.typography.labelMedium
+                )
+
+                Text(
+                    text = "Desa",
+                    fontWeight = FontWeight.ExtraBold,
+                    fontSize = 10.sp,
+                    modifier = modifier.padding(top = 4.dp)
+                )
+                Text(
+                    text = desa,
+                    style = MaterialTheme.typography.labelMedium
+                )
+
+                Text(
+                    text = "Alamat",
+                    fontWeight = FontWeight.ExtraBold,
+                    fontSize = 10.sp,
+                    modifier = modifier.padding(top = 4.dp)
+                )
+                Text(
+                    text = alamat,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    style = MaterialTheme.typography.labelMedium
+                )
+            }
+            IconButton(onClick = { onClick(idAnak) }) {
+                Icon(
+                    imageVector = Icons.Filled.ArrowForwardIos,
+                    contentDescription = "detail",
+                    tint = if (isSystemInDarkTheme()) Color.White else Color.Black,
+                )
+            }
         }
     }
+
 }
 
 @Preview

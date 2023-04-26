@@ -1,5 +1,9 @@
 package com.kominfotabalong.simasganteng.data.model
 
+import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
+
+@Parcelize
 data class LaporanResponse(
     val added_by: Int,
     val alamat: String,
@@ -15,7 +19,7 @@ data class LaporanResponse(
     val nama_anak: String,
     val nama_ortu: String,
     val nik_anak: String,
-    val nik_ortu: String,
+    val nik_ortu: String?,
     val nomor_kk: String,
     val pkm_id: Int,
     val rt: String,
@@ -28,4 +32,4 @@ data class LaporanResponse(
     val updated_at: String,
     val village_code: Long,
     val whatsapp: String
-)
+) : Parcelable
