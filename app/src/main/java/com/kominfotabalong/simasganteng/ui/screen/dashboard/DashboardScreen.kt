@@ -357,11 +357,11 @@ fun DashboardScreen(
                             .background(color = Color.LightGray)
                             .fillMaxWidth()
                     )
-                    DashboardMenu(iconImage = R.drawable.recap,
-                        menuTitle = "Rekapitulasi Pelaporan",
-                        menuDesc = "Lihat rekapitulasi pelaporan masuk dan balita terverifikasi",
+                    DashboardMenu(iconImage = R.drawable.rejected,
+                        menuTitle = "Laporan Ditolak",
+                        menuDesc = "Lihat laporan yang ditolak",
                         menuOnClick = {
-                            navigator.navigate(MapScreenDestination)
+                            navigator.navigate(ListLaporanRejectedScreenDestination)
                         })
                     Spacer(
                         modifier = modifier
@@ -369,12 +369,13 @@ fun DashboardScreen(
                             .background(color = Color.LightGray)
                             .fillMaxWidth()
                     )
-                    DashboardMenu(iconImage = R.drawable.rejected,
-                        menuTitle = "Laporan Ditolak",
-                        menuDesc = "Lihat laporan yang ditolak",
+                    DashboardMenu(iconImage = R.drawable.sebaran,
+                        menuTitle = "Peta Sebaran",
+                        menuDesc = "Lihat Peta Sebaran Stunting",
                         menuOnClick = {
-                            navigator.navigate(ListLaporanRejectedScreenDestination)
+                            navigator.navigate(MapScreenDestination)
                         })
+
                 }
             }
         }

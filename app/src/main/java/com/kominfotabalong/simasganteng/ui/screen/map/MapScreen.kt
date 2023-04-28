@@ -1,93 +1,216 @@
 package com.kominfotabalong.simasganteng.ui.screen.map
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.android.gms.maps.CameraUpdateFactory
-import com.google.android.gms.maps.GoogleMap
+import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
-import com.google.android.gms.maps.model.PolygonOptions
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapEffect
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapType
-import com.google.maps.android.compose.MapUiSettings
-import com.google.maps.android.data.kml.KmlLayer
-import com.google.maps.android.data.kml.KmlPolygon
-import com.kominfotabalong.simasganteng.R
+import com.google.maps.android.compose.Polygon
+import com.kominfotabalong.simasganteng.data.model.Feature
+import com.kominfotabalong.simasganteng.data.model.Kecamatan
+import com.kominfotabalong.simasganteng.data.model.TabalongGeoJsonModel
+import com.kominfotabalong.simasganteng.ui.common.UiState
+import com.kominfotabalong.simasganteng.ui.component.OutlinedSpinner
+import com.kominfotabalong.simasganteng.util.showToast
 import com.ramcosta.composedestinations.annotation.Destination
 
 @Composable
 @Destination
 fun MapScreen(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    dataKecamatan: List<Kecamatan>,
+    viewModel: MapViewModel = hiltViewModel(),
+    snackbarHostState: SnackbarHostState,
 ) {
     val context = LocalContext.current
-    var uiSettings by remember { mutableStateOf(MapUiSettings()) }
     var properties by remember {
         mutableStateOf(MapProperties(mapType = MapType.TERRAIN))
     }
 //    val singapore = LatLng(1.35, 103.87)
-//    val cameraPositionState = rememberCameraPositionState {
-//        position = CameraPosition.fromLatLngZoom(singapore, 10f)
-//    }
-    Box(modifier = modifier.fillMaxSize()) {
-        GoogleMap(
-            modifier = modifier,
-            properties = properties,
-            uiSettings = uiSettings
-        ) {
-            val config = LocalConfiguration.current
-            MapEffect { gMap ->
-                val kmlLayer = KmlLayer(gMap, R.raw.kecamatan, context)
-                kmlLayer.addLayerToMap()
-                gMap.addPolygon(getPolyData("tanjung", kmlLayer))
-                kmlLayer.removeLayerFromMap()
-                moveCameraToKml(kmlLayer, gMap, config.screenWidthDp, config.screenHeightDp)
+
+    var selectedKecamatan by rememberSaveable {
+        mutableStateOf("")
+    }
+    var dataTabalong by remember {
+        mutableStateOf(TabalongGeoJsonModel())
+    }
+    val dataPoly = remember {
+        mutableStateListOf(listOf<LatLng>())
+    }
+    var filteredVillage by remember {
+        mutableStateOf(listOf<Feature>())
+    }
+
+    LaunchedEffect(key1 = Unit) {
+        viewModel.getTabalongGeoData()
+    }
+
+    viewModel.tabalongState.collectAsState().value.let { tabalongState ->
+        when (tabalongState) {
+            is UiState.Loading -> {}
+            is UiState.Unauthorized -> {}
+            is UiState.Success -> {
+                dataTabalong = tabalongState.data
+//                println(dataTabalong)
             }
         }
     }
+
+    LaunchedEffect(selectedKecamatan) {
+        if (dataPoly.isNotEmpty()) dataPoly.clear()
+        dataKecamatan.find { it.name == selectedKecamatan }?.let { kecamatan ->
+            filteredVillage =
+                dataTabalong.features.filter { it.properties.Kecamatan.lowercase() == kecamatan.name.lowercase() }
+            println("${filteredVillage.map { it.properties.Name }}, Kec = ${filteredVillage.map { it.properties.Kecamatan }}")
+            for (desa in filteredVillage) {
+                dataPoly.add(
+                    desa.geometry.coordinates[0].map {
+                        LatLng(it[1], it[0])
+                    }
+                )
+            }
+        }
+        println("dataTabalong feature Size = ${dataTabalong.features.size}, data poly size = ${dataPoly.size}")
+    }
+
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .navigationBarsPadding()
+    ) {
+
+        Card(
+            elevation = CardDefaults.cardElevation(10.dp),
+            shape = RoundedCornerShape(20.dp),
+            modifier = modifier
+                .zIndex(5f)
+                .fillMaxWidth()
+                .padding(16.dp)
+                .align(Alignment.TopStart)
+        ) {
+            Column(modifier = modifier.padding(12.dp)) {
+                OutlinedSpinner(
+                    options = dataKecamatan.map { it.name },
+                    label = "Pilih Kecamatan",
+                    value = selectedKecamatan,
+                    onOptionSelected = { selectedVal ->
+                        selectedKecamatan = selectedVal
+                    },
+                    modifier = modifier
+                )
+            }
+        }
+
+        GoogleMap(
+            modifier = modifier,
+            properties = properties,
+        ) {
+            dataPoly.forEachIndexed { index, data ->
+                Polygon(
+                    points = data,
+                    tag = filteredVillage[index].properties.FID,
+                    fillColor = Color(filteredVillage[index].fillColor),
+                    clickable = true,
+                    onClick = { clickedPoly ->
+                        context.showToast(filteredVillage[index].properties.Name)
+                    }
+                )
+            }
+            if (selectedKecamatan != "")
+                MapEffect(selectedKecamatan) { map ->
+                    val builder = LatLngBounds.Builder()
+                    for (data in dataPoly) {
+                        data.map { builder.include(it) }
+                    }
+                    map.animateCamera(
+                        CameraUpdateFactory.newLatLngBounds(
+                            builder.build(),
+                            0
+                        )
+                    )
+                }
+        }
+
+        AnimatedVisibility(
+            selectedKecamatan != "",
+            modifier = modifier
+                .align(Alignment.BottomStart)
+                .zIndex(5f)
+        ) {
+            Card(
+                elevation = CardDefaults.cardElevation(10.dp),
+                shape = RoundedCornerShape(20.dp),
+                modifier = modifier
+                    .padding(8.dp)
+            ) {
+                Column(modifier = modifier.padding(16.dp)) {
+                    filteredVillage.forEach { data ->
+                        DrawLegend(boxColor = Color(data.fillColor), desc = data.properties.Name)
+                    }
+                }
+            }
+        }
+    }
+
 }
 
-private fun getPolyData(polyKey: String, kmlLayer: KmlLayer): PolygonOptions {
-    var container = kmlLayer.containers.iterator().next()
-    //Retrieve a nested container within the first container
-    container = container.containers.iterator().next()
-    val findedData =
-        container.placemarks.find { it.getProperty("name").lowercase().contains(polyKey) }
-    val polygon = findedData?.geometry as KmlPolygon
-    val option = PolygonOptions().clickable(true).fillColor(0x4D000000)
-    for (latLng in polygon.outerBoundaryCoordinates) {
-        option.add(latLng)
-    }
-    return option
-}
+@Composable
+fun DrawLegend(
+    modifier: Modifier = Modifier,
+    boxColor: Color,
+    desc: String
+) {
+    Row(
+        modifier.padding(4.dp),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = modifier
+                .size(18.dp)
+                .background(boxColor)
+        ) {
 
-private fun moveCameraToKml(kmlLayer: KmlLayer, mMap: GoogleMap, currWidth: Int, currHeight: Int) {
-    //Retrieve the first container in the KML layer
-    var container = kmlLayer.containers.iterator().next()
-    //Retrieve a nested container within the first container
-    container = container.containers.iterator().next()
-    //Retrieve the first placemark in the nested container
-    val placemark = container.placemarks.iterator().next()
-    val kelua = container.placemarks.find { it.getProperty("name").lowercase().contains("kelua") }
-    println("kelua = ${kelua?.properties}")
-    for (placemark in container.placemarks) {
-        println("place = ${placemark.geometry}")
+        }
+        Text(
+            modifier=modifier.padding(start = 8.dp),
+            text = desc,
+            fontSize = 11.sp
+        )
     }
-    //Retrieve a polygon object in a placemark
-    val polygon = placemark.geometry as KmlPolygon
-    //Create LatLngBounds of the outer coordinates of the polygon
-    val builder = LatLngBounds.Builder()
-    for (latLng in polygon.outerBoundaryCoordinates) {
-        builder.include(latLng)
-    }
-    mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(builder.build(), currWidth, currHeight, 1))
 }

@@ -14,6 +14,7 @@ import com.kominfotabalong.simasganteng.ui.destinations.DetailLaporanScreenDesti
 import com.kominfotabalong.simasganteng.ui.destinations.ListLaporanMasukScreenDestination
 import com.kominfotabalong.simasganteng.ui.destinations.ListLaporanRejectedScreenDestination
 import com.kominfotabalong.simasganteng.ui.destinations.ListLaporanVerifiedScreenDestination
+import com.kominfotabalong.simasganteng.ui.destinations.MapScreenDestination
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -69,6 +70,10 @@ fun Destination.topBarTitle(): String {
 
         DetailLaporanScreenDestination -> {
             "Periksa Laporan"
+        }
+
+        MapScreenDestination -> {
+            "Peta Sebaran Stunting"
         }
 
         else -> javaClass.simpleName.removeSuffix("Destination")
