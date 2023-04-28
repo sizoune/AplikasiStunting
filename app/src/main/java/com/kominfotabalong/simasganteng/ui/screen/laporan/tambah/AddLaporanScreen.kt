@@ -47,6 +47,7 @@ import com.kominfotabalong.simasganteng.ui.component.StepperComp
 import com.kominfotabalong.simasganteng.ui.component.SuccessDialog
 import com.kominfotabalong.simasganteng.ui.destinations.AddressChooserDestination
 import com.kominfotabalong.simasganteng.ui.destinations.LogoutHandlerDestination
+import com.kominfotabalong.simasganteng.ui.screen.laporan.tambah.LaporanAlamatContent
 import com.kominfotabalong.simasganteng.util.showToast
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
@@ -61,17 +62,13 @@ fun AddLaporanScreen(
     snackbarHostState: SnackbarHostState,
     userData: LoginResponse,
     dataKecamatan: List<Kecamatan>,
-    dataPuskes: List<PuskesmasResponse>,
-    onLocPermissionDeniedForever: () -> Unit,
+    dataPuskesmas: List<PuskesmasResponse>,
+
     resultRecipient: ResultRecipient<AddressChooserDestination, AddressLoc>
 ) {
     val context = LocalContext.current
     var laporanRequest by remember {
         mutableStateOf(AddLaporanRequest())
-    }
-
-    val (showSnackBar, setShowSnackBar) = remember {
-        mutableStateOf(false)
     }
 
     var currentStep by rememberSaveable { mutableStateOf(1) }
@@ -107,6 +104,17 @@ fun AddLaporanScreen(
     }
 
     val scrollState = rememberScrollState()
+
+    viewModel.isError.collectAsStateWithLifecycle().value.let {
+        if (it != "")
+            ShowSnackbarWithAction(
+                snackbarHostState = snackbarHostState,
+                errorMsg = it,
+                onRetryClick = {
+                    viewModel.addLaporan(userData.token, laporanRequest)
+                },
+            )
+    }
 
     ConstraintLayout(
         modifier = modifier
@@ -146,11 +154,10 @@ fun AddLaporanScreen(
                 getData = collectDataAlamat,
                 viewModel = viewModel,
                 currentRequest = laporanRequest,
-                onLocPermissionDeniedForever = onLocPermissionDeniedForever,
                 resultRecipient = resultRecipient,
                 navigator = navigator,
                 dataKecamatan = dataKecamatan,
-                dataPuskes = dataPuskes,
+                dataPuskesmas = dataPuskesmas,
                 onNextClick = {
                     laporanRequest = it
                     collectDataAlamat = false
@@ -272,12 +279,6 @@ fun AddLaporanScreen(
                 navigator.navigateUp()
             },
         )
-    }, onResultError = { errorMsg ->
-        ShowSnackbarWithAction(snackbarHostState = snackbarHostState,
-            errorMsg = errorMsg,
-            showSnackBar = showSnackBar,
-            onRetryClick = { viewModel.addLaporan(userData.token, laporanRequest) },
-            onDismiss = { setShowSnackBar(it) })
     }, onUnauthorized = {
         navigator.navigate(LogoutHandlerDestination("Sesi login anda telah berakhir"))
     })
@@ -287,7 +288,6 @@ fun AddLaporanScreen(
 fun ObserveTambahLaporan(
     viewModel: LaporanViewModel,
     onResultSuccess: @Composable (String) -> Unit,
-    onResultError: @Composable (message: String) -> Unit,
     onUnauthorized: @Composable () -> Unit
 ) {
     viewModel.addLaporanState.collectAsState().value.let { uiState ->
@@ -299,11 +299,6 @@ fun ObserveTambahLaporan(
 
             is UiState.Success -> {
                 onResultSuccess(uiState.data.message ?: "Laporan berhasil disubmit!")
-            }
-
-            is UiState.Error -> {
-                println("error = ${uiState.errorMessage}")
-                onResultError(uiState.errorMessage)
             }
 
             is UiState.Unauthorized -> {

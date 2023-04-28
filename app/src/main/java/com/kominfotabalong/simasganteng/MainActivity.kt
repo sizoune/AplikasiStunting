@@ -9,7 +9,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.Modifier
+import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updatePadding
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.kominfotabalong.simasganteng.ui.theme.OverlayDark30
 import com.kominfotabalong.simasganteng.ui.theme.OverlayLight30
@@ -22,6 +25,12 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
+
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(android.R.id.content)) { view, insets ->
+            val bottom = insets.getInsets(WindowInsetsCompat.Type.ime()).bottom
+            view.updatePadding(bottom = bottom)
+            insets
+        }
 
         setContent {
             val systemUiController = rememberSystemUiController()

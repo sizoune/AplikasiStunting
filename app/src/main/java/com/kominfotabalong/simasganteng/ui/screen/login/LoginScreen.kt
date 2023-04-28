@@ -4,6 +4,7 @@ import android.app.Activity.RESULT_OK
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,7 +12,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
@@ -33,9 +38,13 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.focus.onFocusEvent
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
@@ -43,6 +52,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.google.android.gms.auth.api.identity.BeginSignInResult
 import com.google.android.gms.common.api.ApiException
 import com.google.firebase.auth.GoogleAuthProvider.getCredential
@@ -61,6 +71,7 @@ import com.ramcosta.composedestinations.annotation.Destination
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 @Destination
 fun LoginScreen(
@@ -71,6 +82,9 @@ fun LoginScreen(
 ) {
     val context = LocalContext.current
     val coroutine = rememberCoroutineScope()
+    val focusManager = LocalFocusManager.current
+    val bringIntoViewRequester = BringIntoViewRequester()
+
     val launcher =
         rememberLauncherForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result ->
             if (result.resultCode == RESULT_OK) {
@@ -108,6 +122,15 @@ fun LoginScreen(
             mutableStateOf(VisualTransformation.None)
     }
 
+    fun doLogin() {
+        if (usernameText != "" && passwordText != "") {
+            loginState = LOGIN_ADMIN
+            viewModel.doLogin(usernameText, passwordText)
+        } else {
+            context.showToast("Username  / Password tidak boleh kosong!")
+        }
+    }
+
     ConstraintLayout(
         modifier = modifier
             .fillMaxSize()
@@ -142,6 +165,12 @@ fun LoginScreen(
                     placeholderText = "Username",
                     query = usernameText,
                     onQueryChange = { usernameText = it },
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                    keyboardActions = KeyboardActions(
+                        onNext = {
+                            focusManager.moveFocus(FocusDirection.Down)
+                        }
+                    ),
                     modifier = modifier
                 )
                 OutlinedTextFieldComp(
@@ -167,18 +196,24 @@ fun LoginScreen(
                         }
                     },
                     query = passwordText,
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                    keyboardActions = KeyboardActions(
+                        onDone = {
+                            doLogin()
+                        }
+                    ),
                     onQueryChange = { passwordText = it },
-                    modifier = modifier
+                    modifier = modifier.onFocusEvent { event ->
+                        if (event.isFocused) {
+                            coroutine.launch {
+                                bringIntoViewRequester.bringIntoView()
+                            }
+                        }
+                    }
                 )
                 Button(
                     onClick = {
-                        if (usernameText != "" && passwordText != "") {
-                            loginState = LOGIN_ADMIN
-                            viewModel.doLogin(usernameText, passwordText)
-                        } else {
-                            context.showToast("Username  / Password tidak boleh kosong!")
-                        }
-
+                        doLogin()
                     }, modifier = modifier
                         .padding(top = 16.dp)
                         .fillMaxWidth()
@@ -201,6 +236,7 @@ fun LoginScreen(
                     }, modifier = modifier
                         .padding(top = 16.dp)
                         .fillMaxWidth()
+                        .bringIntoViewRequester(bringIntoViewRequester)
                 ) {
                     Image(
                         painter = painterResource(id = R.drawable.google),
@@ -260,8 +296,23 @@ fun LoginScreen(
     var userToken by remember {
         mutableStateOf("")
     }
-    val (showSnackBar, setShowSnackBar) = remember {
-        mutableStateOf(false)
+
+    viewModel.isError.collectAsStateWithLifecycle().value.let {
+        if (it != "")
+            ShowSnackbarWithAction(
+                snackbarHostState = snackbarHostState,
+                errorMsg = it,
+                onRetryClick = {
+                    if (loginState == LOGIN_ADMIN)
+                        viewModel.doLogin(usernameText, passwordText)
+                    else if (loginState == LOGIN_GOOGLE)
+                        viewModel.doLoginWithGoogle(
+                            email = currentEmail,
+                            name = currentName,
+                            firebaseToken = currentFirebaseToken
+                        )
+                },
+            )
     }
 
     SignInWithGoogle(
@@ -299,56 +350,26 @@ fun LoginScreen(
             onResultSuccess = {
                 onLoginSuccess()
             },
-            onResultError = {
-                ShowSnackbarWithAction(snackbarHostState = snackbarHostState,
-                    errorMsg = it,
-                    showSnackBar = showSnackBar,
-                    onRetryClick = {
-                        viewModel.postFCMToken(
-                            userToken = userToken,
-                            fcmToken = fcmToken
-                        )
-                    },
-                    onDismiss = { setShowSnackBar(it) })
-            },
             onUnauthorized = {})
 
+    viewModel.isRefreshing.collectAsStateWithLifecycle().value.let {
+        if (it)
+            Dialog(onDismissRequest = {}) {
+                Loading()
+            }
+    }
 
     if (loginState != "")
-        viewModel.uiState.collectAsState().value.let { uiState ->
+        viewModel.uiState.collectAsStateWithLifecycle().value.let { uiState ->
             when (uiState) {
                 is UiState.Loading -> {
-                    Dialog(onDismissRequest = {}) {
-                        Loading()
-                    }
+
                 }
 
                 is UiState.Success -> {
                     viewModel.getFCMToken()
                     userToken = uiState.data.data.token
                     viewModel.saveUserData(uiState.data.data)
-                }
-
-                is UiState.Error -> {
-                    println("error = ${uiState.errorMessage}")
-                    ShowSnackbarWithAction(snackbarHostState = snackbarHostState,
-                        errorMsg = uiState.errorMessage,
-                        showSnackBar = showSnackBar,
-                        onRetryClick = {
-                            setShowSnackBar(false)
-                            if (loginState == LOGIN_ADMIN)
-                                viewModel.doLogin(usernameText, passwordText)
-                            else
-                                viewModel.doLoginWithGoogle(
-                                    email = currentEmail,
-                                    name = currentName,
-                                    firebaseToken = currentFirebaseToken
-                                )
-                        },
-                        onDismiss = {
-                            loginState = ""
-                            setShowSnackBar(it)
-                        })
                 }
 
                 is UiState.Unauthorized -> {}
@@ -378,7 +399,6 @@ fun GetFCMToken(viewModel: LoginViewModel, onTokenObserved: @Composable (String)
 fun ObservePostFCM(
     viewModel: LoginViewModel,
     onResultSuccess: @Composable (String) -> Unit,
-    onResultError: @Composable (message: String) -> Unit,
     onUnauthorized: @Composable () -> Unit
 ) {
     viewModel.fcmState.collectAsState().value.let { uiState ->
@@ -392,11 +412,6 @@ fun ObservePostFCM(
 
             is UiState.Success -> {
                 onResultSuccess(uiState.data.message ?: "FCM Submitted successfully!")
-            }
-
-            is UiState.Error -> {
-                println("error = ${uiState.errorMessage}")
-                onResultError(uiState.errorMessage)
             }
 
             is UiState.Unauthorized -> {

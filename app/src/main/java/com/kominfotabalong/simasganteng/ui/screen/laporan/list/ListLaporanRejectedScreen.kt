@@ -2,7 +2,9 @@ package com.kominfotabalong.simasganteng.ui.screen.laporan.list
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.SnackbarHostState
@@ -31,7 +33,7 @@ import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 @Composable
 @Destination
 fun ListLaporanRejectedScreen(
-    modifier: Modifier = Modifier.navigationBarsPadding(),
+    modifier: Modifier = Modifier,
     viewModel: LaporanViewModel = hiltViewModel(),
     navigator: DestinationsNavigator,
     dataKecamatan: List<Kecamatan>,
@@ -45,7 +47,7 @@ fun ListLaporanRejectedScreen(
     val daftarLaporan = viewModel.getLaporan(userData.token, "ditolak").collectAsLazyPagingItems()
 
 
-    LazyColumn(contentPadding = PaddingValues(8.dp)) {
+    LazyColumn(contentPadding = PaddingValues(8.dp), modifier = Modifier.navigationBarsPadding()) {
 
         items(items = daftarLaporan, key = { it.id }) { data ->
             data?.let { dataReport ->
@@ -55,7 +57,8 @@ fun ListLaporanRejectedScreen(
                 }.find { desa ->
                     desa.code == dataReport.village_code.toString()
                 }
-                ItemLaporan(idAnak = dataReport.id,
+                ItemLaporan(
+                    idAnak = dataReport.id,
                     jenisKelamin = dataReport.jenis_kelamin,
                     nama = dataReport.nama_anak,
                     desa = desa?.name ?: "",
@@ -63,11 +66,13 @@ fun ListLaporanRejectedScreen(
                     onClick = {
                         navigator.navigate(
                             DetailLaporanScreenDestination(
-                                dataReport
+                                dataReport,
+                                userToken = userData.token,
+                                isHandled = true
                             )
                         )
                     })
-                Spacer(modifier = modifier.size(8.dp))
+                Spacer(modifier = modifier.size(16.dp))
             }
         }
 
@@ -84,9 +89,7 @@ fun ListLaporanRejectedScreen(
             }
             ShowSnackbarWithAction(snackbarHostState = snackbarHostState,
                 errorMsg = error.localizedMessage ?: "Terjadi kesalahn saat memuat data!",
-                showSnackBar = showSnackBar,
-                onRetryClick = { viewModel.getLaporan(userData.token, "ditolak") },
-                onDismiss = { setShowSnackBar(it) })
+                onRetryClick = { viewModel.getLaporan(userData.token, "masuk") })
         }
         if (refreshState is LoadState.NotLoading && daftarLaporan.itemCount == 0) item {
             NoData(emptyDesc = "Tidak ada Data !")

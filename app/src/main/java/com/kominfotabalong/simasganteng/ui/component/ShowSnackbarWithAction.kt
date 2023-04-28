@@ -9,19 +9,15 @@ import androidx.compose.runtime.LaunchedEffect
 fun ShowSnackbarWithAction(
     snackbarHostState: SnackbarHostState,
     errorMsg: String,
-    showSnackBar: Boolean,
     onRetryClick: () -> Unit,
-    onDismiss: (Boolean) -> Unit
 ) {
-    LaunchedEffect(showSnackBar) {
+    LaunchedEffect(Unit) {
         when (snackbarHostState.showSnackbar(errorMsg, "Retry", true)) {
             SnackbarResult.ActionPerformed -> {
-                onDismiss(false)
                 onRetryClick()
             }
 
             SnackbarResult.Dismissed -> {
-                onDismiss(false)
             }
         }
     }

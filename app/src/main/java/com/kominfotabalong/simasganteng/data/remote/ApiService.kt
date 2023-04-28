@@ -16,6 +16,8 @@ import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.Headers
 import retrofit2.http.POST
+import retrofit2.http.PUT
+import retrofit2.http.Path
 import retrofit2.http.Url
 
 interface ApiService {
@@ -55,6 +57,14 @@ interface ApiService {
     @POST("laporan")
     suspend fun tambahLaporan(
         @Header("Authorization") token: String,
+        @Body params: RequestBody,
+    ): NetworkResponse<ApiBaseResponse, ApiBaseResponse>
+
+    @Headers("Accept: application/json")
+    @PUT("laporan/update-status/{id}")
+    suspend fun updateStatusLaporan(
+        @Header("Authorization") token: String,
+        @Path("id") laporanID: Int,
         @Body params: RequestBody,
     ): NetworkResponse<ApiBaseResponse, ApiBaseResponse>
 

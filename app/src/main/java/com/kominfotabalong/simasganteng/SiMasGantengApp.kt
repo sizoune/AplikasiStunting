@@ -1,9 +1,5 @@
 package com.kominfotabalong.simasganteng
 
-import android.content.Context
-import android.content.Intent
-import android.net.Uri
-import android.provider.Settings
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
@@ -20,7 +16,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -52,7 +47,6 @@ import com.kominfotabalong.simasganteng.ui.screen.login.LoginScreen
 import com.kominfotabalong.simasganteng.ui.screen.login.LoginViewModel
 import com.kominfotabalong.simasganteng.ui.screen.splash.SplashScreen
 import com.kominfotabalong.simasganteng.ui.startAppDestination
-import com.kominfotabalong.simasganteng.util.showToast
 import com.ramcosta.composedestinations.DestinationsNavHost
 import com.ramcosta.composedestinations.animations.defaults.RootNavGraphDefaultAnimations
 import com.ramcosta.composedestinations.animations.rememberAnimatedNavHostEngine
@@ -104,7 +98,7 @@ fun SiMasGantengApp(
         loggedUser = it
     })
 
-    loginViewModel.isFinishLogin.collectAsState().value.let {
+    loginViewModel.isFinishLogin.collectAsStateWithLifecycle().value.let {
         isFinishDoLogin = it
     }
 
@@ -113,7 +107,10 @@ fun SiMasGantengApp(
         else NavGraphs.root.startRoute
 
     val snackbarHostState = remember { SnackbarHostState() }
-    val context = LocalContext.current
+
+    mainViewModel.isError.collectAsStateWithLifecycle().value.let {
+        if (it != "") println("Error $it")
+    }
 
     ObserveKecamatanLocally(mainViewModel = mainViewModel) {
         dataKecamatan = it
@@ -172,7 +169,6 @@ fun SiMasGantengApp(
                 dependency(Gson())
                 dependency(loggedUser)
                 dependency(dataKecamatan)
-                dependency(dataPuskesmas)
                 dependency(LogoutHandlerDestination) { loginViewModel }
             }
         ) {
@@ -193,12 +189,8 @@ fun SiMasGantengApp(
                     snackbarHostState = snackbarHostState,
                     resultRecipient = resultRecipient(),
                     dataKecamatan = dataKecamatan,
-                    dataPuskes = dataPuskesmas,
+                    dataPuskesmas = dataPuskesmas,
                     userData = loggedUser,
-                    onLocPermissionDeniedForever = {
-                        context.showToast("Izin lokasi tidak diberikan!, silahkan mengizinkan aplikasi untuk menggunakan lokasi anda!")
-                        gotoSetting(context)
-                    },
                 )
             }
         }
@@ -221,10 +213,6 @@ fun ObserveDataTabalongRemotely(
                 uiState.data.data?.let {
                     onResultSuccess(it)
                 }
-            }
-
-            is UiState.Error -> {
-                println("error = ${uiState.errorMessage}")
             }
 
             is UiState.Unauthorized -> {
@@ -267,10 +255,6 @@ fun ObserveDataPuskesmasRemotely(
                 }
             }
 
-            is UiState.Error -> {
-                println("error = ${uiState.errorMessage}")
-            }
-
             is UiState.Unauthorized -> {
 
             }
@@ -292,12 +276,5 @@ fun ObservePuskesmasLocally(
         onKecamatanObserved(it)
     }
 
-}
-
-private fun gotoSetting(context: Context) {
-    context.startActivity(Intent().apply {
-        action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
-        data = Uri.fromParts("package", context.packageName, null)
-    })
 }
 

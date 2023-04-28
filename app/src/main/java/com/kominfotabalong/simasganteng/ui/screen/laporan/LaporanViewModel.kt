@@ -24,13 +24,9 @@ import com.google.android.gms.tasks.OnTokenCanceledListener
 import com.haroldadmin.cnradapter.NetworkResponse
 import com.kominfotabalong.simasganteng.data.model.AddLaporanRequest
 import com.kominfotabalong.simasganteng.data.model.ApiBaseResponse
-import com.kominfotabalong.simasganteng.data.model.Kecamatan
-import com.kominfotabalong.simasganteng.data.model.PuskesmasResponse
-import com.kominfotabalong.simasganteng.data.model.ResponseListObject
 import com.kominfotabalong.simasganteng.data.remote.LaporanPagingSource
 import com.kominfotabalong.simasganteng.data.repository.ApiRepository
 import com.kominfotabalong.simasganteng.ui.common.UiState
-import com.kominfotabalong.simasganteng.util.showToast
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -63,10 +59,20 @@ class LaporanViewModel @Inject constructor(
     val addLaporanState: StateFlow<UiState<ApiBaseResponse>>
         get() = _addLaporanState
 
+    private val _updateLaporanState: MutableStateFlow<UiState<ApiBaseResponse>> =
+        MutableStateFlow(UiState.Loading)
+    val updateLaporanState: StateFlow<UiState<ApiBaseResponse>>
+        get() = _updateLaporanState
+
     private val _isLoading: MutableStateFlow<Boolean> =
         MutableStateFlow(false)
     val isLoading: StateFlow<Boolean>
         get() = _isLoading
+
+    private val _isError: MutableStateFlow<String> =
+        MutableStateFlow("")
+    val isError: StateFlow<String>
+        get() = _isError
 
     var dataCollect = mutableStateOf(0)
 
@@ -77,11 +83,11 @@ class LaporanViewModel @Inject constructor(
 
     fun addLaporan(token: String, dataLaporan: AddLaporanRequest) {
         _isLoading.value = true
+        _isError.value = ""
         viewModelScope.launch {
             apiRepository.tambahLaporan(token, dataLaporan).catch {
                 _isLoading.value = false
-                _addLaporanState.value = UiState.Error(it.message.toString())
-
+                _isError.value = it.message.toString()
             }.collect { response ->
                 _isLoading.value = false
                 when (response) {
@@ -91,26 +97,57 @@ class LaporanViewModel @Inject constructor(
 
                     is NetworkResponse.ServerError -> {
                         if (response.code == 401) {
-                            _addLaporanState.value = UiState.Unauthorized
+                            _updateLaporanState.value = UiState.Unauthorized
                         } else {
-                            _addLaporanState.value = UiState.Error(
-                                response.body?.message
-                                    ?: "Terjadi kesalahan saat memproses data"
-                            )
+                            _isError.value = response.body?.message
+                                ?: "Terjadi kesalahan saat memproses data"
                         }
                     }
 
                     is NetworkResponse.NetworkError -> {
-                        _addLaporanState.value = UiState.Error(
-                            response.error.localizedMessage ?: "Tolong periksa koneksi anda!"
-                        )
+                        _isError.value = response.error.localizedMessage
+                            ?: "Terjadi kesalahan saat memproses data"
                     }
 
                     is NetworkResponse.UnknownError -> {
-                        _addLaporanState.value = UiState.Error(
-                            response.error.localizedMessage
-                                ?: "Unknown Error"
-                        )
+                        _isError.value = response.error.localizedMessage ?: "Unknown Error"
+                    }
+                }
+            }
+        }
+    }
+
+    fun updateLaporan(token: String, laporanID: Int, status: String) {
+        _isError.value = ""
+        _isLoading.value = true
+        viewModelScope.launch {
+            apiRepository.updateStatusLaporan(token, laporanID, status).catch {
+                _isLoading.value = false
+                _isError.value = it.message.toString()
+            }.collect { response ->
+                _isLoading.value = false
+                when (response) {
+                    is NetworkResponse.Success -> {
+                        println("sukses")
+                        _updateLaporanState.value = UiState.Success(response.body.body)
+                    }
+
+                    is NetworkResponse.ServerError -> {
+                        if (response.code == 401) {
+                            _updateLaporanState.value = UiState.Unauthorized
+                        } else {
+                            _isError.value = response.body?.message
+                                ?: "Terjadi kesalahan saat memproses data"
+                        }
+                    }
+
+                    is NetworkResponse.NetworkError -> {
+                        _isError.value = response.error.localizedMessage
+                            ?: "Terjadi kesalahan saat memproses data"
+                    }
+
+                    is NetworkResponse.UnknownError -> {
+                        _isError.value = response.error.localizedMessage ?: "Unknown Error"
                     }
                 }
             }
@@ -182,7 +219,7 @@ class LaporanViewModel @Inject constructor(
                 println("addresses = $addresses")
             }
         } catch (ex: Exception) {
-            ex.localizedMessage?.let { context.showToast(it) }
+            _isError.value = ex.localizedMessage ?: "Unknown Error"
             ex.printStackTrace()
         }
     }

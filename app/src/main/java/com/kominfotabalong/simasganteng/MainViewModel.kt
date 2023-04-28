@@ -46,12 +46,18 @@ class MainViewModel @Inject constructor(
     val pkmState: StateFlow<UiState<ResponseListObject<PuskesmasResponse>>>
         get() = _pkmState
 
+    private val _isError: MutableStateFlow<String> =
+        MutableStateFlow("")
+    val isError: StateFlow<String>
+        get() = _isError
+
     fun getDaftarArtikel() {
         viewModelScope.launch {
             _isRefreshing.emit(true)
+            _isError.value = ""
             apiRepository.getDaftarArtikel().catch {
                 _isRefreshing.emit(false)
-                _artikelState.value = UiState.Error(it.message.toString())
+                _isError.value = it.message.toString()
 
             }.collect { response ->
                 _isRefreshing.emit(false)
@@ -61,23 +67,17 @@ class MainViewModel @Inject constructor(
                     }
 
                     is NetworkResponse.ServerError -> {
-                        _artikelState.value = UiState.Error(
-                            response.body?.message
-                                ?: "Terjadi kesalahan saat memproses data"
-                        )
+                        _isError.value = response.body?.message
+                            ?: "Terjadi kesalahan saat memproses data"
                     }
 
                     is NetworkResponse.NetworkError -> {
-                        _artikelState.value = UiState.Error(
-                            "Tolong periksa koneksi anda!"
-                        )
+                        _isError.value = "Tolong periksa koneksi anda!"
                     }
 
                     is NetworkResponse.UnknownError -> {
-                        _artikelState.value = UiState.Error(
-                            response.error.localizedMessage
-                                ?: "Unknown Error"
-                        )
+                        _isError.value =response.error.localizedMessage
+                            ?: "Unknown Error"
                     }
                 }
             }
@@ -86,12 +86,14 @@ class MainViewModel @Inject constructor(
 
     fun getTabalongDistricts(token: String) {
         _isRefreshing.value = true
+        _isError.value = ""
         viewModelScope.launch {
             apiRepository.getTabalongDistricts(token).catch {
                 _isRefreshing.value = false
-                _kecamatanState.value = UiState.Error(it.message.toString())
+                _isError.value = it.message.toString()
 
             }.collect { response ->
+                _isRefreshing.value = false
                 when (response) {
                     is NetworkResponse.Success -> {
                         _isRefreshing.value = false
@@ -99,30 +101,17 @@ class MainViewModel @Inject constructor(
                     }
 
                     is NetworkResponse.ServerError -> {
-                        _isRefreshing.value = false
-                        if (response.code == 401) {
-                            _kecamatanState.value = UiState.Unauthorized
-                        } else {
-                            _kecamatanState.value = UiState.Error(
-                                response.body?.message
-                                    ?: "Terjadi kesalahan saat memproses data"
-                            )
-                        }
+                        _isError.value = response.body?.message
+                            ?: "Terjadi kesalahan saat memproses data"
                     }
 
                     is NetworkResponse.NetworkError -> {
-                        _isRefreshing.value = false
-                        _kecamatanState.value = UiState.Error(
-                            response.error.localizedMessage ?: "Tolong periksa koneksi anda!"
-                        )
+                        _isError.value = "Tolong periksa koneksi anda!"
                     }
 
                     is NetworkResponse.UnknownError -> {
-                        _isRefreshing.value = false
-                        _kecamatanState.value = UiState.Error(
-                            response.error.localizedMessage
-                                ?: "Unknown Error"
-                        )
+                        _isError.value =response.error.localizedMessage
+                            ?: "Unknown Error"
                     }
                 }
             }
@@ -131,10 +120,11 @@ class MainViewModel @Inject constructor(
 
     fun getDaftarPuskes(token: String) {
         _isRefreshing.value = true
+        _isError.value = ""
         viewModelScope.launch {
             apiRepository.getDaftarPuskes(token).catch {
                 _isRefreshing.value = false
-                _pkmState.value = UiState.Error(it.message.toString())
+                _isError.value = it.message.toString()
 
             }.collect { response ->
                 when (response) {
@@ -144,30 +134,17 @@ class MainViewModel @Inject constructor(
                     }
 
                     is NetworkResponse.ServerError -> {
-                        _isRefreshing.value = false
-                        if (response.code == 401) {
-                            _kecamatanState.value = UiState.Unauthorized
-                        } else {
-                            _kecamatanState.value = UiState.Error(
-                                response.body?.message
-                                    ?: "Terjadi kesalahan saat memproses data"
-                            )
-                        }
+                        _isError.value = response.body?.message
+                            ?: "Terjadi kesalahan saat memproses data"
                     }
 
                     is NetworkResponse.NetworkError -> {
-                        _isRefreshing.value = false
-                        _pkmState.value = UiState.Error(
-                            response.error.localizedMessage ?: "Tolong periksa koneksi anda!"
-                        )
+                        _isError.value = "Tolong periksa koneksi anda!"
                     }
 
                     is NetworkResponse.UnknownError -> {
-                        _isRefreshing.value = false
-                        _pkmState.value = UiState.Error(
-                            response.error.localizedMessage
-                                ?: "Unknown Error"
-                        )
+                        _isError.value =response.error.localizedMessage
+                            ?: "Unknown Error"
                     }
                 }
             }
@@ -180,11 +157,9 @@ class MainViewModel @Inject constructor(
         MutableStateFlow(listOf())
     val kecState: StateFlow<List<Kecamatan>>
         get() = _kecState
-
-    private fun getKecamatanLocally(): Flow<String> = userDataStoreRepository.getDataTabalong()
     fun getDataKecamatanInLocal() {
         viewModelScope.launch {
-            getKecamatanLocally().collect {
+            userDataStoreRepository.getDataTabalong().collect {
                 if (it != "") {
                     val itemType = object : TypeToken<List<Kecamatan>>() {}.type
                     _kecState.value = gson.fromJson(it, itemType)
@@ -192,21 +167,20 @@ class MainViewModel @Inject constructor(
             }
         }
     }
-
     fun saveDataToLocal(data: List<Kecamatan>) = viewModelScope.launch {
         userDataStoreRepository.saveDataTabalong(data)
     }
+
+
 
     //local puskes data
     private val _puskesState: MutableStateFlow<List<PuskesmasResponse>> =
         MutableStateFlow(listOf())
     val puskesState: StateFlow<List<PuskesmasResponse>>
         get() = _puskesState
-
-    private fun getPuskesLocally(): Flow<String> = userDataStoreRepository.getDataPuskes()
     fun getDataPuskesInLocal() {
         viewModelScope.launch {
-            getPuskesLocally().collect {
+            userDataStoreRepository.getDataPuskes().collect {
                 if (it != "") {
                     val itemType = object : TypeToken<List<PuskesmasResponse>>() {}.type
                     _puskesState.value = gson.fromJson(it, itemType)
@@ -214,7 +188,6 @@ class MainViewModel @Inject constructor(
             }
         }
     }
-
     fun saveDataPuskesToLocal(data: List<PuskesmasResponse>) = viewModelScope.launch {
         userDataStoreRepository.saveDataPuskes(data)
     }

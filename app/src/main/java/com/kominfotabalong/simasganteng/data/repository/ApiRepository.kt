@@ -237,6 +237,36 @@ class ApiRepository @Inject constructor(
         }
     }.flowOn(Dispatchers.IO)
 
+    suspend fun updateStatusLaporan(
+        token: String, laporanID: Int, status: String
+    ) = flow {
+        when (val data = apiService.updateStatusLaporan(
+            "Bearer $token", laporanID, createJsonRequestBody(
+                "status" to status,
+            )
+        )) {
+            is NetworkResponse.Success -> {
+                emit(
+                    NetworkResponse.Success(
+                        data, null, 200
+                    )
+                )
+            }
+
+            is NetworkResponse.ServerError -> {
+                emit(NetworkResponse.ServerError(data.body, data.code))
+            }
+
+            is NetworkResponse.NetworkError -> {
+                emit(NetworkResponse.NetworkError(data.error))
+            }
+
+            is NetworkResponse.UnknownError -> {
+                emit(NetworkResponse.UnknownError(data.error))
+            }
+        }
+    }.flowOn(Dispatchers.IO)
+
     suspend fun getDataLaporan(userToken: String, url: String) =
         apiService.getLaporanData("Bearer $userToken", url)
 }

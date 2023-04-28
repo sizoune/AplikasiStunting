@@ -59,6 +59,7 @@ class LoginViewModel @Inject constructor(
         MutableStateFlow(LoginResponse())
     val userState: StateFlow<LoginResponse>
         get() = _userState
+
     fun getUserDataV2() {
         viewModelScope.launch {
             getLoggedUserData().collect {
@@ -138,14 +139,18 @@ class LoginViewModel @Inject constructor(
     val fcmState: StateFlow<UiState<ApiBaseResponse>>
         get() = _fcmState
 
+    private val _isError: MutableStateFlow<String> =
+        MutableStateFlow("")
+    val isError: StateFlow<String>
+        get() = _isError
 
     fun doLogin(username: String, pass: String) {
         viewModelScope.launch {
+            _isError.value = ""
             _isRefreshing.emit(true)
             apiRepository.doLogin(username, pass).catch {
                 _isRefreshing.emit(false)
-                _uiState.value = UiState.Error(it.message.toString())
-
+                _isError.value = it.message.toString()
             }.collect { response ->
                 when (response) {
                     is NetworkResponse.Success -> {
@@ -155,25 +160,19 @@ class LoginViewModel @Inject constructor(
 
                     is NetworkResponse.ServerError -> {
                         _isRefreshing.emit(false)
-                        _uiState.value = UiState.Error(
-                            response.body?.message
-                                ?: "Terjadi kesalahan saat memproses data"
-                        )
+                        _isError.value = response.body?.message
+                            ?: "Terjadi kesalahan saat memproses data"
                     }
 
                     is NetworkResponse.NetworkError -> {
                         _isRefreshing.emit(false)
-                        _uiState.value = UiState.Error(
-                            "Tolong periksa koneksi anda!"
-                        )
+                        _isError.value = "Tolong periksa koneksi anda!"
                     }
 
                     is NetworkResponse.UnknownError -> {
                         _isRefreshing.emit(false)
-                        _uiState.value = UiState.Error(
-                            response.error.localizedMessage
-                                ?: "Unknown Error"
-                        )
+                        _isError.value = response.error.localizedMessage
+                            ?: "Unknown Error"
                     }
                 }
             }
@@ -182,11 +181,11 @@ class LoginViewModel @Inject constructor(
 
     fun doLoginWithGoogle(email: String, name: String, firebaseToken: String) {
         viewModelScope.launch {
+            _isError.value = ""
             _isRefreshing.emit(true)
             apiRepository.doLoginWithGoogle(email, name, firebaseToken).catch {
                 _isRefreshing.emit(false)
-                _uiState.value = UiState.Error(it.message.toString())
-
+                _isError.value = it.message.toString()
             }.collect { response ->
                 when (response) {
                     is NetworkResponse.Success -> {
@@ -196,25 +195,19 @@ class LoginViewModel @Inject constructor(
 
                     is NetworkResponse.ServerError -> {
                         _isRefreshing.emit(false)
-                        _uiState.value = UiState.Error(
-                            response.body?.message
-                                ?: "Terjadi kesalahan saat memproses data"
-                        )
+                        _isError.value = response.body?.message
+                            ?: "Terjadi kesalahan saat memproses data"
                     }
 
                     is NetworkResponse.NetworkError -> {
                         _isRefreshing.emit(false)
-                        _uiState.value = UiState.Error(
-                            "Tolong periksa koneksi anda!"
-                        )
+                        _isError.value = "Tolong periksa koneksi anda!"
                     }
 
                     is NetworkResponse.UnknownError -> {
                         _isRefreshing.emit(false)
-                        _uiState.value = UiState.Error(
-                            response.error.localizedMessage
-                                ?: "Unknown Error"
-                        )
+                        _isError.value = response.error.localizedMessage
+                            ?: "Unknown Error"
                     }
                 }
             }
@@ -223,11 +216,11 @@ class LoginViewModel @Inject constructor(
 
     fun postFCMToken(userToken: String, fcmToken: String?) {
         viewModelScope.launch {
+            _isError.value = ""
             _isRefreshing.emit(true)
             apiRepository.postFCMToken(userToken, fcmToken).catch {
                 _isRefreshing.emit(false)
-                _fcmState.value = UiState.Error(it.message.toString())
-
+                _isError.value = it.message.toString()
             }.collect { response ->
                 when (response) {
                     is NetworkResponse.Success -> {
@@ -237,25 +230,19 @@ class LoginViewModel @Inject constructor(
 
                     is NetworkResponse.ServerError -> {
                         _isRefreshing.emit(false)
-                        _fcmState.value = UiState.Error(
-                            response.body?.message
-                                ?: "Terjadi kesalahan saat memproses data"
-                        )
+                        _isError.value = response.body?.message
+                            ?: "Terjadi kesalahan saat memproses data"
                     }
 
                     is NetworkResponse.NetworkError -> {
                         _isRefreshing.emit(false)
-                        _fcmState.value = UiState.Error(
-                            "Tolong periksa koneksi anda!"
-                        )
+                        _isError.value = "Tolong periksa koneksi anda!"
                     }
 
                     is NetworkResponse.UnknownError -> {
                         _isRefreshing.emit(false)
-                        _fcmState.value = UiState.Error(
-                            response.error.localizedMessage
-                                ?: "Unknown Error"
-                        )
+                        _isError.value = response.error.localizedMessage
+                            ?: "Unknown Error"
                     }
                 }
             }

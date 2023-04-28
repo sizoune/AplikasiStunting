@@ -1,17 +1,52 @@
 package com.kominfotabalong.simasganteng.ui.screen.dashboard
 
+import android.Manifest
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
+import android.os.Build
+import android.provider.Settings
 import android.text.TextUtils
 import android.widget.TextView
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.DrawableRes
-import androidx.compose.foundation.*
-import androidx.compose.foundation.layout.*
+import androidx.annotation.RequiresApi
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.basicMarquee
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.paddingFromBaseline
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowForwardIos
 import androidx.compose.material.icons.filled.Logout
-import androidx.compose.material3.*
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Divider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -37,6 +72,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.rememberPermissionState
+import com.google.accompanist.permissions.shouldShowRationale
 import com.kominfotabalong.simasganteng.BuildConfig
 import com.kominfotabalong.simasganteng.MainViewModel
 import com.kominfotabalong.simasganteng.R
@@ -54,11 +92,16 @@ import com.kominfotabalong.simasganteng.ui.destinations.ListLaporanRejectedScree
 import com.kominfotabalong.simasganteng.ui.destinations.ListLaporanVerifiedScreenDestination
 import com.kominfotabalong.simasganteng.ui.destinations.LogoutHandlerDestination
 import com.kominfotabalong.simasganteng.ui.destinations.MapScreenDestination
+import com.kominfotabalong.simasganteng.util.showToast
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
-import java.util.*
+import java.util.Calendar
 
-@OptIn(ExperimentalFoundationApi::class)
+
+@RequiresApi(Build.VERSION_CODES.TIRAMISU)
+@OptIn(
+    ExperimentalFoundationApi::class, ExperimentalPermissionsApi::class
+)
 @Composable
 @Destination
 fun DashboardScreen(
@@ -71,20 +114,60 @@ fun DashboardScreen(
     val rightNow: Calendar = Calendar.getInstance()
     val textBg = if (isSystemInDarkTheme()) Color.DarkGray else Color.LightGray
     val titleColor = if (isSystemInDarkTheme()) Color.Black else Color.White
-    var showLogoutDialog by remember {
-        mutableStateOf(false)
-    }
+
     var doLogout by remember {
         mutableStateOf(false)
+    }
+    var showWarningDialog by remember {
+        mutableStateOf(false)
+    }
+    var warningMsg by remember {
+        mutableStateOf("")
     }
     var dataArtikel by remember {
         mutableStateOf(listOf<ArtikelResponse>())
     }
-    val (showSnackBar, setShowSnackBar) = remember {
-        mutableStateOf(false)
-    }
     val context = LocalContext.current
 
+    var isPostNotifAccessGranted by remember {
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(
+                context, Manifest.permission.POST_NOTIFICATIONS
+            ) == PackageManager.PERMISSION_GRANTED
+        )
+    }
+
+    val postNotifPermissionsState = rememberPermissionState(
+        Manifest.permission.POST_NOTIFICATIONS,
+    )
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+        onResult = { isGranted ->
+            if (isGranted) isPostNotifAccessGranted = true
+            else {
+                val neverAskAgain = !postNotifPermissionsState.status.shouldShowRationale
+                if (neverAskAgain) {
+                    context.showToast("Izin POST Notifikasi dibutuhkan !")
+                    context.startActivity(Intent().apply {
+                        action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
+                        data = Uri.fromParts("package", context.packageName, null)
+                    })
+                } else {
+                    showWarningDialog = true
+                    warningMsg =
+                        "Akses Push Notifikasi dibutuhkan agar kamu bisa mendapatkan notifikasi!"
+                }
+            }
+        }
+    )
+
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        SideEffect {
+            permissionLauncher.launch(
+                Manifest.permission.POST_NOTIFICATIONS
+            )
+        }
+    }
 
     fun writeWelcomeUser(): String {
         return when (rightNow.get(Calendar.HOUR_OF_DAY)) {
@@ -113,12 +196,27 @@ fun DashboardScreen(
     viewModel.isRefreshing.collectAsStateWithLifecycle().value.let { loadingState ->
         isLoading = loadingState
     }
+    viewModel.isError.collectAsStateWithLifecycle().value.let {
+        if (it != "")
+            ShowSnackbarWithAction(
+                snackbarHostState = snackbarHostState,
+                errorMsg = it,
+                onRetryClick = {
+                    viewModel.getDaftarArtikel()
+                },
+            )
+    }
 
-    WarningDialog(showDialog = showLogoutDialog,
-        onDismiss = { dismiss -> showLogoutDialog = dismiss },
-        dialogDesc = "Apakah anda yakin ingin keluar dari aplikasi?",
+    WarningDialog(showDialog = showWarningDialog,
+        onDismiss = { dismiss ->
+            if (doLogout) doLogout = false
+            showWarningDialog = dismiss
+        },
+        dialogDesc = warningMsg,
         onOkClick = {
-            doLogout = true
+            println("logoutstate = $doLogout")
+            if (doLogout) navigator.navigate(LogoutHandlerDestination())
+            else postNotifPermissionsState.launchPermissionRequest()
         })
 
     LaunchedEffect(Unit) {
@@ -127,16 +225,7 @@ fun DashboardScreen(
 
     ObserveDataArtikel(viewModel = viewModel, onResultSuccess = {
         dataArtikel = it
-    }, onResultError = { errorMsg ->
-        ShowSnackbarWithAction(snackbarHostState = snackbarHostState,
-            errorMsg = errorMsg,
-            showSnackBar = showSnackBar,
-            onRetryClick = { viewModel.getDaftarArtikel() },
-            onDismiss = { setShowSnackBar(it) })
     }, onUnauthorized = {})
-
-    if (doLogout) navigator.navigate(LogoutHandlerDestination(""))
-
 
     ConstraintLayout(
         modifier = modifier
@@ -194,7 +283,10 @@ fun DashboardScreen(
                     }
                 }
                 IconButton(onClick = {
-                    showLogoutDialog = true
+                    showWarningDialog = true
+                    doLogout = true
+                    warningMsg = "Apakah anda yakin ingin keluar dari aplikasi ?"
+
                 }, modifier = modifier.weight(0.1f)) {
                     Icon(
                         imageVector = Icons.Filled.Logout,
@@ -353,7 +445,6 @@ fun DashboardScreen(
 fun ObserveDataArtikel(
     viewModel: MainViewModel,
     onResultSuccess: (List<ArtikelResponse>) -> Unit,
-    onResultError: @Composable (message: String) -> Unit,
     onUnauthorized: @Composable () -> Unit
 ) {
     viewModel.artikelState.collectAsStateWithLifecycle().value.let { uiState ->
@@ -366,11 +457,6 @@ fun ObserveDataArtikel(
                 uiState.data.data?.let {
                     onResultSuccess(it)
                 }
-            }
-
-            is UiState.Error -> {
-                println("error = ${uiState.errorMessage}")
-                onResultError(uiState.errorMessage)
             }
 
             is UiState.Unauthorized -> {

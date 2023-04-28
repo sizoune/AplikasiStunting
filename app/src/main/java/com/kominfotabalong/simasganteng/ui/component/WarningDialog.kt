@@ -92,8 +92,8 @@ fun WarningDialog(
                         TextButton(
                             modifier = Modifier.weight(1f),
                             onClick = {
-                                onDismiss(false)
                                 onOkClick()
+                                onDismiss(false)
                             }
                         ) {
                             Text(

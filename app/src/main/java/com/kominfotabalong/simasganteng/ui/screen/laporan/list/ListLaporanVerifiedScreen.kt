@@ -31,7 +31,7 @@ import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 @Composable
 @Destination
 fun ListLaporanVerifiedScreen(
-    modifier: Modifier = Modifier.navigationBarsPadding(),
+    modifier: Modifier = Modifier,
     viewModel: LaporanViewModel = hiltViewModel(),
     navigator: DestinationsNavigator,
     dataKecamatan: List<Kecamatan>,
@@ -46,7 +46,7 @@ fun ListLaporanVerifiedScreen(
         viewModel.getLaporan(userData.token, "terverifikasi").collectAsLazyPagingItems()
 
 
-    LazyColumn(contentPadding = PaddingValues(8.dp)) {
+    LazyColumn(contentPadding = PaddingValues(8.dp), modifier = Modifier.navigationBarsPadding()) {
 
         items(items = daftarLaporan, key = { it.id }) { data ->
             data?.let { dataReport ->
@@ -65,12 +65,14 @@ fun ListLaporanVerifiedScreen(
                     onClick = {
                         navigator.navigate(
                             DetailLaporanScreenDestination(
-                                dataReport
+                                dataReport,
+                                userToken = userData.token,
+                                isHandled = true
                             )
                         )
                     }
                 )
-                Spacer(modifier = modifier.size(8.dp))
+                Spacer(modifier = modifier.size(16.dp))
             }
         }
 
@@ -89,9 +91,7 @@ fun ListLaporanVerifiedScreen(
                 }
                 ShowSnackbarWithAction(snackbarHostState = snackbarHostState,
                     errorMsg = error.localizedMessage ?: "Terjadi kesalahn saat memuat data!",
-                    showSnackBar = showSnackBar,
-                    onRetryClick = { viewModel.getLaporan(userData.token, "terverifikasi") },
-                    onDismiss = { setShowSnackBar(it) })
+                    onRetryClick = { viewModel.getLaporan(userData.token, "masuk") })
             }
         if (refreshState is LoadState.NotLoading && daftarLaporan.itemCount == 0)
             item {

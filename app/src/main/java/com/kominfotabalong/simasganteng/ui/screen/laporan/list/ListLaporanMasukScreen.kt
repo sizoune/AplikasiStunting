@@ -2,7 +2,6 @@ package com.kominfotabalong.simasganteng.ui.screen.laporan.list
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -16,7 +15,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.items
-import com.google.gson.Gson
 import com.kominfotabalong.simasganteng.data.model.Kecamatan
 import com.kominfotabalong.simasganteng.data.model.LoginResponse
 import com.kominfotabalong.simasganteng.ui.component.ItemLaporan
@@ -46,7 +44,7 @@ fun ListLaporanMasukScreen(
     val daftarLaporan = viewModel.getLaporan(userData.token, "masuk").collectAsLazyPagingItems()
 
 
-    LazyColumn(contentPadding = PaddingValues(8.dp), modifier = modifier.fillMaxSize()) {
+    LazyColumn(contentPadding = PaddingValues(8.dp), modifier = Modifier.navigationBarsPadding()) {
 
         items(items = daftarLaporan, key = { it.id }) { data ->
             data?.let { dataReport ->
@@ -65,12 +63,13 @@ fun ListLaporanMasukScreen(
                     onClick = {
                         navigator.navigate(
                             DetailLaporanScreenDestination(
-                                dataReport
+                                dataReport,
+                                userData.token
                             )
                         )
                     }
                 )
-                Spacer(modifier = modifier.size(8.dp))
+                Spacer(modifier = modifier.size(16.dp))
             }
         }
 
@@ -89,9 +88,7 @@ fun ListLaporanMasukScreen(
                 }
                 ShowSnackbarWithAction(snackbarHostState = snackbarHostState,
                     errorMsg = error.localizedMessage ?: "Terjadi kesalahn saat memuat data!",
-                    showSnackBar = showSnackBar,
-                    onRetryClick = { viewModel.getLaporan(userData.token, "masuk") },
-                    onDismiss = { setShowSnackBar(it) })
+                    onRetryClick = { viewModel.getLaporan(userData.token, "masuk") })
             }
         if (refreshState is LoadState.NotLoading && daftarLaporan.itemCount == 0)
             item {
