@@ -13,10 +13,8 @@ import com.kominfotabalong.simasganteng.data.repository.ApiRepository
 import com.kominfotabalong.simasganteng.data.repository.UserDataStoreRepository
 import com.kominfotabalong.simasganteng.ui.common.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -32,9 +30,6 @@ class MainViewModel @Inject constructor(
     val artikelState: StateFlow<UiState<ResponseListObject<ArtikelResponse>>>
         get() = _artikelState
 
-    private val _isRefreshing = MutableStateFlow(false)
-    val isRefreshing: StateFlow<Boolean>
-        get() = _isRefreshing.asStateFlow()
 
     private val _kecamatanState: MutableStateFlow<UiState<ResponseListObject<Kecamatan>>> =
         MutableStateFlow(UiState.Loading)
@@ -46,38 +41,35 @@ class MainViewModel @Inject constructor(
     val pkmState: StateFlow<UiState<ResponseListObject<PuskesmasResponse>>>
         get() = _pkmState
 
-    private val _isError: MutableStateFlow<String> =
-        MutableStateFlow("")
-    val isError: StateFlow<String>
-        get() = _isError
 
     fun getDaftarArtikel() {
         viewModelScope.launch {
-            _isRefreshing.emit(true)
-            _isError.value = ""
+            _artikelState.emit(UiState.Loading)
             apiRepository.getDaftarArtikel().catch {
-                _isRefreshing.emit(false)
-                _isError.value = it.message.toString()
+                _artikelState.value = UiState.Error(it.message.toString())
 
             }.collect { response ->
-                _isRefreshing.emit(false)
                 when (response) {
                     is NetworkResponse.Success -> {
                         _artikelState.value = UiState.Success(response.body.body)
                     }
 
                     is NetworkResponse.ServerError -> {
-                        _isError.value = response.body?.message
-                            ?: "Terjadi kesalahan saat memproses data"
+                        _artikelState.value = UiState.Error(
+                            response.body?.message
+                                ?: "Terjadi kesalahan saat memproses data"
+                        )
                     }
 
                     is NetworkResponse.NetworkError -> {
-                        _isError.value = "Tolong periksa koneksi anda!"
+                        _artikelState.value = UiState.Error("Tolong periksa koneksi anda!")
                     }
 
                     is NetworkResponse.UnknownError -> {
-                        _isError.value =response.error.localizedMessage
-                            ?: "Unknown Error"
+                        _artikelState.value = UiState.Error(
+                            response.error.localizedMessage
+                                ?: "Unknown Error"
+                        )
                     }
                 }
             }
@@ -85,33 +77,33 @@ class MainViewModel @Inject constructor(
     }
 
     fun getTabalongDistricts(token: String) {
-        _isRefreshing.value = true
-        _isError.value = ""
+        _kecamatanState.value = UiState.Loading
         viewModelScope.launch {
             apiRepository.getTabalongDistricts(token).catch {
-                _isRefreshing.value = false
-                _isError.value = it.message.toString()
+                _kecamatanState.value = UiState.Error(it.message.toString())
 
             }.collect { response ->
-                _isRefreshing.value = false
                 when (response) {
                     is NetworkResponse.Success -> {
-                        _isRefreshing.value = false
                         _kecamatanState.value = UiState.Success(response.body.body)
                     }
 
                     is NetworkResponse.ServerError -> {
-                        _isError.value = response.body?.message
-                            ?: "Terjadi kesalahan saat memproses data"
+                        _kecamatanState.value = UiState.Error(
+                            response.body?.message
+                                ?: "Terjadi kesalahan saat memproses data"
+                        )
                     }
 
                     is NetworkResponse.NetworkError -> {
-                        _isError.value = "Tolong periksa koneksi anda!"
+                        _kecamatanState.value = UiState.Error("Tolong periksa koneksi anda!")
                     }
 
                     is NetworkResponse.UnknownError -> {
-                        _isError.value =response.error.localizedMessage
-                            ?: "Unknown Error"
+                        _kecamatanState.value = UiState.Error(
+                            response.error.localizedMessage
+                                ?: "Unknown Error"
+                        )
                     }
                 }
             }
@@ -119,32 +111,33 @@ class MainViewModel @Inject constructor(
     }
 
     fun getDaftarPuskes(token: String) {
-        _isRefreshing.value = true
-        _isError.value = ""
         viewModelScope.launch {
+            _pkmState.value = UiState.Loading
             apiRepository.getDaftarPuskes(token).catch {
-                _isRefreshing.value = false
-                _isError.value = it.message.toString()
+                _pkmState.value = UiState.Error(it.message.toString())
 
             }.collect { response ->
                 when (response) {
                     is NetworkResponse.Success -> {
-                        _isRefreshing.value = false
                         _pkmState.value = UiState.Success(response.body.body)
                     }
 
                     is NetworkResponse.ServerError -> {
-                        _isError.value = response.body?.message
-                            ?: "Terjadi kesalahan saat memproses data"
+                        _pkmState.value = UiState.Error(
+                            response.body?.message
+                                ?: "Terjadi kesalahan saat memproses data"
+                        )
                     }
 
                     is NetworkResponse.NetworkError -> {
-                        _isError.value = "Tolong periksa koneksi anda!"
+                        _pkmState.value = UiState.Error("Tolong periksa koneksi anda!")
                     }
 
                     is NetworkResponse.UnknownError -> {
-                        _isError.value =response.error.localizedMessage
-                            ?: "Unknown Error"
+                        _pkmState.value = UiState.Error(
+                            response.error.localizedMessage
+                                ?: "Unknown Error"
+                        )
                     }
                 }
             }
@@ -157,6 +150,7 @@ class MainViewModel @Inject constructor(
         MutableStateFlow(listOf())
     val kecState: StateFlow<List<Kecamatan>>
         get() = _kecState
+
     fun getDataKecamatanInLocal() {
         viewModelScope.launch {
             userDataStoreRepository.getDataTabalong().collect {
@@ -167,10 +161,10 @@ class MainViewModel @Inject constructor(
             }
         }
     }
+
     fun saveDataToLocal(data: List<Kecamatan>) = viewModelScope.launch {
         userDataStoreRepository.saveDataTabalong(data)
     }
-
 
 
     //local puskes data
@@ -178,6 +172,7 @@ class MainViewModel @Inject constructor(
         MutableStateFlow(listOf())
     val puskesState: StateFlow<List<PuskesmasResponse>>
         get() = _puskesState
+
     fun getDataPuskesInLocal() {
         viewModelScope.launch {
             userDataStoreRepository.getDataPuskes().collect {
@@ -188,6 +183,7 @@ class MainViewModel @Inject constructor(
             }
         }
     }
+
     fun saveDataPuskesToLocal(data: List<PuskesmasResponse>) = viewModelScope.launch {
         userDataStoreRepository.saveDataPuskes(data)
     }

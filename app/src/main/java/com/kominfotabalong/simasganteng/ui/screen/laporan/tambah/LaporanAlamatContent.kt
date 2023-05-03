@@ -30,7 +30,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -83,12 +82,8 @@ fun LaporanAlamatContent(
     navigator: DestinationsNavigator,
     onNextClick: (AddLaporanRequest) -> Unit,
 ) {
-    var myCurrentLat by rememberSaveable {
-        mutableStateOf(currentRequest.lat.toDouble())
-    }
-    var myCurrentLng by rememberSaveable {
-        mutableStateOf(currentRequest.lat.toDouble())
-    }
+    val myCurrentLat by viewModel.myLat.collectAsStateWithLifecycle()
+    val myCurrentLng by viewModel.myLng.collectAsStateWithLifecycle()
     var alamatError by remember { mutableStateOf(false) }
     var alamat by remember {
         mutableStateOf(currentRequest.alamat)
@@ -131,16 +126,6 @@ fun LaporanAlamatContent(
         mutableStateOf(currentRequest.village_code)
     }
 
-    var isLoading by rememberSaveable {
-        mutableStateOf(false)
-    }
-    if (isLoading)
-        Dialog(onDismissRequest = { isLoading = false }) {
-            Loading()
-        }
-    viewModel.isLoading.collectAsStateWithLifecycle().value.let { loading ->
-        isLoading = loading
-    }
 
     var checkLocPerm by remember {
         mutableStateOf(false)
@@ -170,6 +155,13 @@ fun LaporanAlamatContent(
             Manifest.permission.ACCESS_COARSE_LOCATION
         )
     )
+
+    val isLocLoading by viewModel.locLoading.collectAsStateWithLifecycle()
+    println("isLocLoading = $isLocLoading")
+    if (isLocLoading)
+        Dialog(onDismissRequest = { }) {
+            Loading()
+        }
 
     val launcherPermission = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -206,7 +198,22 @@ fun LaporanAlamatContent(
         checkLocPerm = false
     }
 
-
+    if (currentRequest.village_code != "")
+        LaunchedEffect(key1 = Unit, block = {
+            dataKecamatan.find { kecamatan ->
+                kecamatan.villages.contains(kecamatan.villages.find { it.code == currentRequest.village_code })
+            }?.let { kecamatan ->
+                dataDesa.addAll(kecamatan.villages)
+                selectedKecamatan = kecamatan.name
+                kecamatan.villages.find { it.code == currentRequest.village_code }
+                    ?.let { village -> selectedDesaValue = village.name }
+                dataPuskesmas.find { it.nama.lowercase() == selectedKecamatan.lowercase() }
+                    ?.let {
+                        selectedPuskes = it.nama
+                        selectedPuskesID = it.pkm_id.toString()
+                    }
+            }
+        })
 
     WarningDialog(showDialog = showWarningDialog,
         dialogDesc = "Izin mengakses lokasi dibutuhkan!",
@@ -220,9 +227,13 @@ fun LaporanAlamatContent(
 
             is NavResult.Value -> {
                 alamat = result.value.myAddress
-                myCurrentLat = result.value.myPosition.latitude
-                myCurrentLng = result.value.myPosition.longitude
+                viewModel.setLatLng(
+                    result.value.myPosition
+                )
+                rt = result.value.rt
+                rw = result.value.rw
                 result.value.selectedKec?.let { dataKec ->
+                    dataDesa.addAll(dataKec.villages)
                     selectedKecamatan = dataKec.name
                     result.value.selectedDesaCode?.let { villageCode ->
                         selectedDesaCode = villageCode
@@ -233,7 +244,6 @@ fun LaporanAlamatContent(
                     dataPuskesmas.find { it.nama.lowercase() == selectedKecamatan.lowercase() }
                         ?.let {
                             selectedPuskes = it.nama
-                            currentRequest.pkm_id = it.pkm_id.toString()
                             selectedPuskesID = it.pkm_id.toString()
                         }
                 }
@@ -241,38 +251,34 @@ fun LaporanAlamatContent(
         }
     }
 
-    LaunchedEffect(isLocAccessGranted) {
-        println("lat : $myCurrentLat, long:$myCurrentLng")
-        viewModel.getUserLocation(context)
-    }
+    println("lat : $myCurrentLat, lng : $myCurrentLng")
 
-    viewModel.myLat.collectAsState().value.let {
-        myCurrentLat = it
-    }
-    viewModel.myLng.collectAsState().value.let {
-        myCurrentLng = it
-    }
+    if (isLocAccessGranted)
+        LaunchedEffect(Unit) {
+            if (myCurrentLat == (-1).toDouble() && myCurrentLng == (-1).toDouble())
+                viewModel.getUserLocation(context)
+        }
+
 
     if (currentAddressStat == Constants.ADDRESS_CHOOSE) {
         if (myCurrentLat == (-1).toDouble() && myCurrentLng == (-1).toDouble()) {
-            isLoading = true
         } else {
-            isLoading = false
             currentAddressStat = Constants.ADDRESS_NONE
             navigator.navigate(
                 AddressChooserDestination(
-                    LatLng(myCurrentLat, myCurrentLng),
-                    dataKecamatan.find { it.name == selectedKecamatan },
-                    selectedDesaCode
+                    userLatLng = LatLng(myCurrentLat, myCurrentLng),
+                    selectedKecamatan = dataKecamatan.find { it.name == selectedKecamatan },
+                    selectedDesaCode = selectedDesaCode,
+                    rt = rt,
+                    rw = rw,
                 )
             )
         }
     } else if (currentAddressStat == Constants.ADDRESS_NEXT) {
         if (myCurrentLat == (-1).toDouble() && myCurrentLng == (-1).toDouble()) {
-            isLoading = true
         } else {
-            isLoading = false
             currentAddressStat = Constants.ADDRESS_NONE
+            viewModel.collectData(1)
         }
     }
 
@@ -295,6 +301,10 @@ fun LaporanAlamatContent(
             return false
         } else if (rw == "") {
             rwError = true
+            return false
+        } else if (myCurrentLat == (-1).toDouble() && myCurrentLng == (-1).toDouble()) {
+            checkLocPerm = true
+            currentAddressStat = Constants.ADDRESS_NEXT
             return false
         }
         return true
@@ -397,9 +407,11 @@ fun LaporanAlamatContent(
                 IconButton(onClick = {
                     if (myCurrentLat != (-1).toDouble() && myCurrentLng != (-1).toDouble()) navigator.navigate(
                         AddressChooserDestination(
-                            LatLng(myCurrentLat, myCurrentLng),
-                            dataKecamatan.find { it.name == selectedKecamatan },
-                            selectedDesaCode
+                            userLatLng = LatLng(myCurrentLat, myCurrentLng),
+                            selectedKecamatan = dataKecamatan.find { it.name == selectedKecamatan },
+                            selectedDesaCode = selectedDesaCode,
+                            rt = rt,
+                            rw = rw,
                         )
                     ) else {
                         checkLocPerm = true
@@ -499,6 +511,8 @@ fun LaporanAlamatContent(
                     currentRequest.alamat = alamat
                     currentRequest.rt = rt
                     currentRequest.rw = rw
+                    currentRequest.lat = myCurrentLat.toString()
+                    currentRequest.lng = myCurrentLng.toString()
                     onNextClick(currentRequest)
                 } else
                     viewModel.collectData(0)

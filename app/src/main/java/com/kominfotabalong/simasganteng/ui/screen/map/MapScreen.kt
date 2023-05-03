@@ -18,7 +18,6 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -33,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
@@ -80,13 +80,18 @@ fun MapScreen(
         viewModel.getTabalongGeoData()
     }
 
-    viewModel.tabalongState.collectAsState().value.let { tabalongState ->
+    viewModel.tabalongState.collectAsStateWithLifecycle().value.let { tabalongState ->
         when (tabalongState) {
             is UiState.Loading -> {}
             is UiState.Unauthorized -> {}
             is UiState.Success -> {
                 dataTabalong = tabalongState.data
 //                println(dataTabalong)
+            }
+
+            is UiState.Error -> {
+                println("error get tabalong data : ${tabalongState.errorMessage}")
+                context.showToast(tabalongState.errorMessage)
             }
         }
     }
@@ -208,7 +213,7 @@ fun DrawLegend(
 
         }
         Text(
-            modifier=modifier.padding(start = 8.dp),
+            modifier = modifier.padding(start = 8.dp),
             text = desc,
             fontSize = 11.sp
         )

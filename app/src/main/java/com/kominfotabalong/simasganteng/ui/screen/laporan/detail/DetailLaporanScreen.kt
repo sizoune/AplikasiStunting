@@ -1,4 +1,4 @@
-package com.kominfotabalong.simasganteng.ui.screen.laporan.list
+package com.kominfotabalong.simasganteng.ui.screen.laporan.detail
 
 import android.content.Intent
 import android.net.Uri
@@ -30,7 +30,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -78,15 +77,8 @@ fun DetailLaporanScreen(
     var currentStatus by remember {
         mutableStateOf("")
     }
-    var isLoading by rememberSaveable {
+    var doUpdateStatus by remember {
         mutableStateOf(false)
-    }
-    if (isLoading)
-        Dialog(onDismissRequest = { isLoading = false }) {
-            Loading()
-        }
-    viewModel.isLoading.collectAsStateWithLifecycle().value.let { loadingState ->
-        isLoading = loadingState
     }
 
     ConstraintLayout(
@@ -439,6 +431,7 @@ fun DetailLaporanScreen(
                 Button(
                     onClick = {
                         currentStatus = "ditolak"
+                        doUpdateStatus = true
                         viewModel.updateLaporan(userToken, dataLaporan.id, "ditolak")
                     },
                     colors = ButtonDefaults.buttonColors(Red800),
@@ -446,6 +439,7 @@ fun DetailLaporanScreen(
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Close,
+                        tint = Color.White,
                         contentDescription = "tolak",
                         modifier = modifier.size(24.dp)
                     )
@@ -459,6 +453,7 @@ fun DetailLaporanScreen(
                 Button(
                     onClick = {
                         currentStatus = "terverifikasi"
+                        doUpdateStatus = true
                         viewModel.updateLaporan(userToken, dataLaporan.id, "terverifikasi")
                     },
                     colors = ButtonDefaults.buttonColors(Green800),
@@ -466,6 +461,7 @@ fun DetailLaporanScreen(
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Done,
+                        tint = Color.White,
                         contentDescription = "Verifikasi",
                         modifier = modifier.size(24.dp)
                     )
@@ -485,33 +481,33 @@ fun DetailLaporanScreen(
                 .size(16.dp))
     }
 
-    ObserveUpdateLaporan(
-        viewModel = viewModel,
-        onResultSuccess = { successMsg ->
-            SuccessDialog(
-                showDialog = showSuccessDialog,
-                dialogDesc = successMsg,
-                onDismiss = {
-                    showSuccessDialog = it
-                    navigator.navigateUp()
-                },
-            )
+    if (doUpdateStatus)
+        ObserveUpdateLaporan(
+            viewModel = viewModel,
+            onResultSuccess = { successMsg ->
+                SuccessDialog(
+                    showDialog = showSuccessDialog,
+                    dialogDesc = successMsg,
+                    onDismiss = {
+                        showSuccessDialog = it
+                        navigator.navigateUp()
+                    },
+                )
 
-        },
-        onUnauthorized = {
-            navigator.navigate(LogoutHandlerDestination("Sesi login anda telah berakhir"))
-        })
+            }, onError = { errorMsg ->
+                ShowSnackbarWithAction(
+                    snackbarHostState = snackbarHostState,
+                    errorMsg = errorMsg,
+                    onRetryClick = {
+                        viewModel.updateLaporan(userToken, dataLaporan.id, currentStatus)
+                    },
+                )
 
-    viewModel.isError.collectAsStateWithLifecycle().value.let {
-        if (it != "")
-            ShowSnackbarWithAction(
-                snackbarHostState = snackbarHostState,
-                errorMsg = it,
-                onRetryClick = {
-                    viewModel.updateLaporan(userToken, dataLaporan.id, currentStatus)
-                },
-            )
-    }
+            },
+            onUnauthorized = {
+                navigator.navigate(LogoutHandlerDestination("Sesi login anda telah berakhir"))
+            })
+
 
 }
 
@@ -519,12 +515,17 @@ fun DetailLaporanScreen(
 fun ObserveUpdateLaporan(
     viewModel: LaporanViewModel,
     onResultSuccess: @Composable (String) -> Unit,
-    onUnauthorized: @Composable () -> Unit
+    onUnauthorized: @Composable () -> Unit,
+    onError: @Composable (String) -> Unit,
 ) {
     viewModel.updateLaporanState.collectAsStateWithLifecycle().value.let { uiState ->
+        println("uiState = $uiState")
         when (uiState) {
 
             is UiState.Loading -> {
+                Dialog(onDismissRequest = { }) {
+                    Loading()
+                }
             }
 
             is UiState.Success -> {
@@ -533,6 +534,10 @@ fun ObserveUpdateLaporan(
 
             is UiState.Unauthorized -> {
                 onUnauthorized()
+            }
+
+            is UiState.Error -> {
+                onError(uiState.errorMessage)
             }
         }
     }

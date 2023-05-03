@@ -122,10 +122,6 @@ class LoginViewModel @Inject constructor(
     val uiState: StateFlow<UiState<ResponseObject<LoginResponse>>>
         get() = _uiState
 
-    private val _isRefreshing = MutableStateFlow(false)
-    val isRefreshing: StateFlow<Boolean>
-        get() = _isRefreshing.asStateFlow()
-
     private val _isFinishLogin = MutableStateFlow(false)
     val isFinishLogin: StateFlow<Boolean>
         get() = _isFinishLogin.asStateFlow()
@@ -139,40 +135,38 @@ class LoginViewModel @Inject constructor(
     val fcmState: StateFlow<UiState<ApiBaseResponse>>
         get() = _fcmState
 
-    private val _isError: MutableStateFlow<String> =
-        MutableStateFlow("")
-    val isError: StateFlow<String>
-        get() = _isError
 
     fun doLogin(username: String, pass: String) {
         viewModelScope.launch {
-            _isError.value = ""
-            _isRefreshing.emit(true)
+            _uiState.emit(UiState.Loading)
             apiRepository.doLogin(username, pass).catch {
-                _isRefreshing.emit(false)
-                _isError.value = it.message.toString()
+                _uiState.value = UiState.Error(it.message.toString())
             }.collect { response ->
                 when (response) {
                     is NetworkResponse.Success -> {
-                        _isRefreshing.emit(false)
                         _uiState.value = UiState.Success(response.body.body)
                     }
 
                     is NetworkResponse.ServerError -> {
-                        _isRefreshing.emit(false)
-                        _isError.value = response.body?.message
-                            ?: "Terjadi kesalahan saat memproses data"
+                        _uiState.emit(
+                            UiState.Error(
+                                response.body?.message
+                                    ?: "Terjadi kesalahan saat memproses data"
+                            )
+                        )
                     }
 
                     is NetworkResponse.NetworkError -> {
-                        _isRefreshing.emit(false)
-                        _isError.value = "Tolong periksa koneksi anda!"
+                        _uiState.emit(UiState.Error("Tolong periksa koneksi anda!"))
                     }
 
                     is NetworkResponse.UnknownError -> {
-                        _isRefreshing.emit(false)
-                        _isError.value = response.error.localizedMessage
-                            ?: "Unknown Error"
+                        _uiState.emit(
+                            UiState.Error(
+                                response.error.localizedMessage
+                                    ?: "Unknown Error"
+                            )
+                        )
                     }
                 }
             }
@@ -181,33 +175,35 @@ class LoginViewModel @Inject constructor(
 
     fun doLoginWithGoogle(email: String, name: String, firebaseToken: String) {
         viewModelScope.launch {
-            _isError.value = ""
-            _isRefreshing.emit(true)
+            _uiState.emit(UiState.Loading)
             apiRepository.doLoginWithGoogle(email, name, firebaseToken).catch {
-                _isRefreshing.emit(false)
-                _isError.value = it.message.toString()
+                _uiState.value = UiState.Error(it.message.toString())
             }.collect { response ->
                 when (response) {
                     is NetworkResponse.Success -> {
-                        _isRefreshing.emit(false)
                         _uiState.value = UiState.Success(response.body.body)
                     }
 
                     is NetworkResponse.ServerError -> {
-                        _isRefreshing.emit(false)
-                        _isError.value = response.body?.message
-                            ?: "Terjadi kesalahan saat memproses data"
+                        _uiState.emit(
+                            UiState.Error(
+                                response.body?.message
+                                    ?: "Terjadi kesalahan saat memproses data"
+                            )
+                        )
                     }
 
                     is NetworkResponse.NetworkError -> {
-                        _isRefreshing.emit(false)
-                        _isError.value = "Tolong periksa koneksi anda!"
+                        _uiState.emit(UiState.Error("Tolong periksa koneksi anda!"))
                     }
 
                     is NetworkResponse.UnknownError -> {
-                        _isRefreshing.emit(false)
-                        _isError.value = response.error.localizedMessage
-                            ?: "Unknown Error"
+                        _uiState.emit(
+                            UiState.Error(
+                                response.error.localizedMessage
+                                    ?: "Unknown Error"
+                            )
+                        )
                     }
                 }
             }
@@ -216,33 +212,35 @@ class LoginViewModel @Inject constructor(
 
     fun postFCMToken(userToken: String, fcmToken: String?) {
         viewModelScope.launch {
-            _isError.value = ""
-            _isRefreshing.emit(true)
+            _fcmState.emit(UiState.Loading)
             apiRepository.postFCMToken(userToken, fcmToken).catch {
-                _isRefreshing.emit(false)
-                _isError.value = it.message.toString()
+                _fcmState.emit(UiState.Error(it.message.toString()))
             }.collect { response ->
                 when (response) {
                     is NetworkResponse.Success -> {
-                        _isRefreshing.emit(false)
                         _fcmState.value = UiState.Success(response.body.body)
                     }
 
                     is NetworkResponse.ServerError -> {
-                        _isRefreshing.emit(false)
-                        _isError.value = response.body?.message
-                            ?: "Terjadi kesalahan saat memproses data"
+                        _fcmState.emit(
+                            UiState.Error(
+                                response.body?.message
+                                    ?: "Terjadi kesalahan saat memproses data"
+                            )
+                        )
                     }
 
                     is NetworkResponse.NetworkError -> {
-                        _isRefreshing.emit(false)
-                        _isError.value = "Tolong periksa koneksi anda!"
+                        _fcmState.emit(UiState.Error("Tolong periksa koneksi anda!"))
                     }
 
                     is NetworkResponse.UnknownError -> {
-                        _isRefreshing.emit(false)
-                        _isError.value = response.error.localizedMessage
-                            ?: "Unknown Error"
+                        _fcmState.emit(
+                            UiState.Error(
+                                response.error.localizedMessage
+                                    ?: "Unknown Error"
+                            )
+                        )
                     }
                 }
             }

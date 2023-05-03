@@ -8,7 +8,6 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -108,9 +107,6 @@ fun SiMasGantengApp(
 
     val snackbarHostState = remember { SnackbarHostState() }
 
-    mainViewModel.isError.collectAsStateWithLifecycle().value.let {
-        if (it != "") println("Error $it")
-    }
 
     ObserveKecamatanLocally(mainViewModel = mainViewModel) {
         dataKecamatan = it
@@ -218,6 +214,10 @@ fun ObserveDataTabalongRemotely(
             is UiState.Unauthorized -> {
 
             }
+
+            is UiState.Error -> {
+                println("FailedToObtainData Tabalong : ${uiState.errorMessage}")
+            }
         }
     }
 }
@@ -257,6 +257,10 @@ fun ObserveDataPuskesmasRemotely(
 
             is UiState.Unauthorized -> {
 
+            }
+
+            is UiState.Error -> {
+                println("FailedToObtainData Puskes : ${uiState.errorMessage}")
             }
         }
     }

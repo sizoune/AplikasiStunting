@@ -44,6 +44,8 @@ class MapViewModel @Inject constructor(
                 UiState.Success(convertedData)
         } catch (ex: Exception) {
             ex.printStackTrace()
+            _tabalongState.value =
+                UiState.Error(ex.message.toString())
         }
     }
 }

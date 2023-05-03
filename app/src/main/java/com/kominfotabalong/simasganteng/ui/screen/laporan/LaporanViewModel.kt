@@ -39,13 +39,11 @@ import javax.inject.Inject
 class LaporanViewModel @Inject constructor(
     private val apiRepository: ApiRepository
 ) : ViewModel() {
-    private val _myLat: MutableStateFlow<Double> =
-        MutableStateFlow((-1).toDouble())
+    private val _myLat: MutableStateFlow<Double> = MutableStateFlow((-1).toDouble())
     val myLat: StateFlow<Double>
         get() = _myLat
 
-    private val _myLng: MutableStateFlow<Double> =
-        MutableStateFlow((-1).toDouble())
+    private val _myLng: MutableStateFlow<Double> = MutableStateFlow((-1).toDouble())
     val myLng: StateFlow<Double>
         get() = _myLng
 
@@ -64,15 +62,11 @@ class LaporanViewModel @Inject constructor(
     val updateLaporanState: StateFlow<UiState<ApiBaseResponse>>
         get() = _updateLaporanState
 
-    private val _isLoading: MutableStateFlow<Boolean> =
+    private val _locLoading: MutableStateFlow<Boolean> =
         MutableStateFlow(false)
-    val isLoading: StateFlow<Boolean>
-        get() = _isLoading
+    val locLoading: StateFlow<Boolean>
+        get() = _locLoading
 
-    private val _isError: MutableStateFlow<String> =
-        MutableStateFlow("")
-    val isError: StateFlow<String>
-        get() = _isError
 
     var dataCollect = mutableStateOf(0)
 
@@ -81,15 +75,19 @@ class LaporanViewModel @Inject constructor(
         dataCollect.value = dataIndex
     }
 
-    fun addLaporan(token: String, dataLaporan: AddLaporanRequest) {
-        _isLoading.value = true
-        _isError.value = ""
+    fun setLatLng(latLng: LatLng) {
         viewModelScope.launch {
+            _myLat.emit(latLng.latitude)
+            _myLng.emit(latLng.longitude)
+        }
+    }
+
+    fun addLaporan(token: String, dataLaporan: AddLaporanRequest) {
+        viewModelScope.launch {
+            _addLaporanState.emit(UiState.Loading)
             apiRepository.tambahLaporan(token, dataLaporan).catch {
-                _isLoading.value = false
-                _isError.value = it.message.toString()
+                _addLaporanState.emit(UiState.Error(it.message.toString()))
             }.collect { response ->
-                _isLoading.value = false
                 when (response) {
                     is NetworkResponse.Success -> {
                         _addLaporanState.value = UiState.Success(response.body.body)
@@ -99,18 +97,30 @@ class LaporanViewModel @Inject constructor(
                         if (response.code == 401) {
                             _updateLaporanState.value = UiState.Unauthorized
                         } else {
-                            _isError.value = response.body?.message
-                                ?: "Terjadi kesalahan saat memproses data"
+                            _addLaporanState.emit(
+                                UiState.Error(
+                                    response.body?.message
+                                        ?: "Terjadi kesalahan saat memproses data"
+                                )
+                            )
                         }
                     }
 
                     is NetworkResponse.NetworkError -> {
-                        _isError.value = response.error.localizedMessage
-                            ?: "Terjadi kesalahan saat memproses data"
+                        _addLaporanState.emit(
+                            UiState.Error(
+                                response.error.localizedMessage
+                                    ?: "Terjadi kesalahan saat memproses data"
+                            )
+                        )
                     }
 
                     is NetworkResponse.UnknownError -> {
-                        _isError.value = response.error.localizedMessage ?: "Unknown Error"
+                        _addLaporanState.emit(
+                            UiState.Error(
+                                response.error.localizedMessage ?: "Unknown Error"
+                            )
+                        )
                     }
                 }
             }
@@ -118,14 +128,11 @@ class LaporanViewModel @Inject constructor(
     }
 
     fun updateLaporan(token: String, laporanID: Int, status: String) {
-        _isError.value = ""
-        _isLoading.value = true
         viewModelScope.launch {
+            _updateLaporanState.emit(UiState.Loading)
             apiRepository.updateStatusLaporan(token, laporanID, status).catch {
-                _isLoading.value = false
-                _isError.value = it.message.toString()
+                _updateLaporanState.emit(UiState.Error(it.message.toString()))
             }.collect { response ->
-                _isLoading.value = false
                 when (response) {
                     is NetworkResponse.Success -> {
                         println("sukses")
@@ -136,18 +143,30 @@ class LaporanViewModel @Inject constructor(
                         if (response.code == 401) {
                             _updateLaporanState.value = UiState.Unauthorized
                         } else {
-                            _isError.value = response.body?.message
-                                ?: "Terjadi kesalahan saat memproses data"
+                            _updateLaporanState.emit(
+                                UiState.Error(
+                                    response.body?.message
+                                        ?: "Terjadi kesalahan saat memproses data"
+                                )
+                            )
                         }
                     }
 
                     is NetworkResponse.NetworkError -> {
-                        _isError.value = response.error.localizedMessage
-                            ?: "Terjadi kesalahan saat memproses data"
+                        _updateLaporanState.emit(
+                            UiState.Error(
+                                response.error.localizedMessage
+                                    ?: "Terjadi kesalahan saat memproses data"
+                            )
+                        )
                     }
 
                     is NetworkResponse.UnknownError -> {
-                        _isError.value = response.error.localizedMessage ?: "Unknown Error"
+                        _updateLaporanState.emit(
+                            UiState.Error(
+                                response.error.localizedMessage ?: "Unknown Error"
+                            )
+                        )
                     }
                 }
             }
@@ -156,6 +175,9 @@ class LaporanViewModel @Inject constructor(
 
     @SuppressLint("MissingPermission")
     fun getUserLocation(context: Context) {
+        viewModelScope.launch {
+            _locLoading.emit(true)
+        }
         LocationServices.getFusedLocationProviderClient(context)
             .getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, object : CancellationToken() {
                 override fun onCanceledRequested(p0: OnTokenCanceledListener) =
@@ -164,40 +186,48 @@ class LaporanViewModel @Inject constructor(
                 override fun isCancellationRequested() = false
             })
             .addOnSuccessListener { location: Location? ->
-                if (location == null)
-                    trackUserLoc(context)
-                else {
-                    _myLat.value = location.latitude
-                    _myLng.value = location.longitude
+                viewModelScope.launch {
+                    _locLoading.emit(false)
+                    if (location == null)
+                        trackUserLoc(context)
+                    else {
+                        _myLat.emit(location.latitude)
+                        _myLng.emit(location.longitude)
+                    }
                 }
-
             }
+
     }
 
     @SuppressLint("MissingPermission")
     fun trackUserLoc(context: Context) {
         viewModelScope.launch {
-            val locationRequest: LocationRequest =
-                LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 1000)
-                    .setWaitForAccurateLocation(false)
-                    .setMaxUpdates(1)
-                    .build()
+            _locLoading.emit(true)
+        }
+        val locationRequest: LocationRequest =
+            LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 1000)
+                .setWaitForAccurateLocation(false)
+                .setMaxUpdates(1)
+                .build()
 
-            val locationCallback = object : LocationCallback() {
-                override fun onLocationResult(locationResult: LocationResult) {
-                    for (location in locationResult.locations) {
-                        if (location != null) {
-                            _myLat.value = location.latitude
-                            _myLng.value = location.longitude
+        val locationCallback = object : LocationCallback() {
+            override fun onLocationResult(locationResult: LocationResult) {
+                for (location in locationResult.locations) {
+                    if (location != null) {
+                        viewModelScope.launch {
+                            _locLoading.emit(false)
+                            _myLat.emit(location.latitude)
+                            _myLng.emit(location.longitude)
                         }
                     }
                 }
             }
-            LocationServices
-                .getFusedLocationProviderClient(context)
-                .requestLocationUpdates(locationRequest, locationCallback, null)
         }
+        LocationServices
+            .getFusedLocationProviderClient(context)
+            .requestLocationUpdates(locationRequest, locationCallback, null)
     }
+
 
     @Suppress("DEPRECATION")
     fun getAddressFromLocation(context: Context, latLng: LatLng) {
@@ -219,7 +249,6 @@ class LaporanViewModel @Inject constructor(
                 println("addresses = $addresses")
             }
         } catch (ex: Exception) {
-            _isError.value = ex.localizedMessage ?: "Unknown Error"
             ex.printStackTrace()
         }
     }

@@ -62,6 +62,8 @@ fun AddressChooser(
     modifier: Modifier = Modifier.systemBarsPadding(),
     viewModel: LaporanViewModel = hiltViewModel(),
     userLatLng: LatLng,
+    rt: String = "",
+    rw: String = "",
     selectedKecamatan: Kecamatan? = null,
     selectedDesaCode: String? = null,
     resultNavigator: ResultBackNavigator<AddressLoc>
@@ -168,7 +170,9 @@ fun AddressChooser(
                     myPosition = dragState.position,
                     myAddress = currentAddress,
                     selectedKec = selectedKecamatan,
-                    selectedDesaCode = selectedDesaCode
+                    selectedDesaCode = selectedDesaCode,
+                    rt = rt,
+                    rw = rw
                 )
             )
         }, modifier = modifier

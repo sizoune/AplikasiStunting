@@ -161,7 +161,7 @@ fun DashboardScreen(
         }
     )
 
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !isPostNotifAccessGranted) {
         SideEffect {
             permissionLauncher.launch(
                 Manifest.permission.POST_NOTIFICATIONS
@@ -193,19 +193,6 @@ fun DashboardScreen(
         mutableStateOf(false)
     }
 
-    viewModel.isRefreshing.collectAsStateWithLifecycle().value.let { loadingState ->
-        isLoading = loadingState
-    }
-    viewModel.isError.collectAsStateWithLifecycle().value.let {
-        if (it != "")
-            ShowSnackbarWithAction(
-                snackbarHostState = snackbarHostState,
-                errorMsg = it,
-                onRetryClick = {
-                    viewModel.getDaftarArtikel()
-                },
-            )
-    }
 
     WarningDialog(showDialog = showWarningDialog,
         onDismiss = { dismiss ->
@@ -224,8 +211,20 @@ fun DashboardScreen(
     }
 
     ObserveDataArtikel(viewModel = viewModel, onResultSuccess = {
+        isLoading = false
         dataArtikel = it
-    }, onUnauthorized = {})
+    }, onError = { errorMsg ->
+        isLoading = false
+        ShowSnackbarWithAction(
+            snackbarHostState = snackbarHostState,
+            errorMsg = errorMsg,
+            onRetryClick = {
+                viewModel.getDaftarArtikel()
+            },
+        )
+    }, onUnauthorized = {}, onLoading = {
+        isLoading = true
+    })
 
     ConstraintLayout(
         modifier = modifier
@@ -446,12 +445,15 @@ fun DashboardScreen(
 fun ObserveDataArtikel(
     viewModel: MainViewModel,
     onResultSuccess: (List<ArtikelResponse>) -> Unit,
+    onLoading: () -> Unit,
+    onError: @Composable (String) -> Unit,
     onUnauthorized: @Composable () -> Unit
 ) {
     viewModel.artikelState.collectAsStateWithLifecycle().value.let { uiState ->
         when (uiState) {
 
             is UiState.Loading -> {
+                onLoading()
             }
 
             is UiState.Success -> {
@@ -462,6 +464,10 @@ fun ObserveDataArtikel(
 
             is UiState.Unauthorized -> {
                 onUnauthorized()
+            }
+
+            is UiState.Error -> {
+                onError(uiState.errorMessage)
             }
         }
     }

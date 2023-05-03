@@ -19,7 +19,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -70,6 +69,9 @@ fun AddLaporanScreen(
     var laporanRequest by remember {
         mutableStateOf(AddLaporanRequest())
     }
+    var isSubmitted by remember {
+        mutableStateOf(false)
+    }
 
     var currentStep by rememberSaveable { mutableStateOf(1) }
     val titleList = arrayListOf("Data Alamat", "Data Anak", "Data Orang Tua")
@@ -77,17 +79,6 @@ fun AddLaporanScreen(
     BackHandler {
         if (currentStep != 1) currentStep--
         else navigator.navigateUp()
-    }
-
-    var isLoading by rememberSaveable {
-        mutableStateOf(false)
-    }
-    if (isLoading)
-        Dialog(onDismissRequest = { isLoading = false }) {
-            Loading()
-        }
-    viewModel.isLoading.collectAsStateWithLifecycle().value.let { loadingState ->
-        isLoading = loadingState
     }
 
     var showSuccessDialog by remember {
@@ -104,17 +95,6 @@ fun AddLaporanScreen(
     }
 
     val scrollState = rememberScrollState()
-
-    viewModel.isError.collectAsStateWithLifecycle().value.let {
-        if (it != "")
-            ShowSnackbarWithAction(
-                snackbarHostState = snackbarHostState,
-                errorMsg = it,
-                onRetryClick = {
-                    viewModel.addLaporan(userData.token, laporanRequest)
-                },
-            )
-    }
 
     ConstraintLayout(
         modifier = modifier
@@ -254,8 +234,11 @@ fun AddLaporanScreen(
                         println(laporanRequest.properties.filter {
                             it.get().isBlank()
                         })
-                    } else
+                    } else {
+                        isSubmitted = true
                         viewModel.addLaporan(userData.token, laporanRequest)
+                    }
+
                 }
             }) {
                 if (currentStep == titleList.size)
@@ -270,31 +253,44 @@ fun AddLaporanScreen(
 
     }
 
-    ObserveTambahLaporan(viewModel = viewModel, onResultSuccess = { successMsg ->
-        SuccessDialog(
-            showDialog = showSuccessDialog,
-            dialogDesc = successMsg,
-            onDismiss = {
-                showSuccessDialog = it
-                navigator.navigateUp()
-            },
-        )
-    }, onUnauthorized = {
-        navigator.navigate(LogoutHandlerDestination("Sesi login anda telah berakhir"))
-    })
+    if (isSubmitted)
+        ObserveTambahLaporan(viewModel = viewModel, onResultSuccess = { successMsg ->
+            SuccessDialog(
+                showDialog = showSuccessDialog,
+                dialogDesc = successMsg,
+                onDismiss = {
+                    showSuccessDialog = it
+                    navigator.navigateUp()
+                },
+            )
+        }, onError = { errorMsg ->
+            ShowSnackbarWithAction(
+                snackbarHostState = snackbarHostState,
+                errorMsg = errorMsg,
+                onRetryClick = {
+                    viewModel.addLaporan(userData.token, laporanRequest)
+                },
+            )
+
+        }, onUnauthorized = {
+            navigator.navigate(LogoutHandlerDestination("Sesi login anda telah berakhir"))
+        })
 }
 
 @Composable
 fun ObserveTambahLaporan(
     viewModel: LaporanViewModel,
     onResultSuccess: @Composable (String) -> Unit,
-    onUnauthorized: @Composable () -> Unit
+    onUnauthorized: @Composable () -> Unit,
+    onError: @Composable (String) -> Unit,
 ) {
-    viewModel.addLaporanState.collectAsState().value.let { uiState ->
+    viewModel.addLaporanState.collectAsStateWithLifecycle().value.let { uiState ->
         when (uiState) {
 
             is UiState.Loading -> {
-
+                Dialog(onDismissRequest = { }) {
+                    Loading()
+                }
             }
 
             is UiState.Success -> {
@@ -303,6 +299,10 @@ fun ObserveTambahLaporan(
 
             is UiState.Unauthorized -> {
                 onUnauthorized()
+            }
+
+            is UiState.Error -> {
+                onError(uiState.errorMessage)
             }
         }
     }

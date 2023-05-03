@@ -131,6 +131,8 @@ fun LoginScreen(
         }
     }
 
+    println("loginState = $loginState")
+
     ConstraintLayout(
         modifier = modifier
             .fillMaxSize()
@@ -297,23 +299,6 @@ fun LoginScreen(
         mutableStateOf("")
     }
 
-    viewModel.isError.collectAsStateWithLifecycle().value.let {
-        if (it != "")
-            ShowSnackbarWithAction(
-                snackbarHostState = snackbarHostState,
-                errorMsg = it,
-                onRetryClick = {
-                    if (loginState == LOGIN_ADMIN)
-                        viewModel.doLogin(usernameText, passwordText)
-                    else if (loginState == LOGIN_GOOGLE)
-                        viewModel.doLoginWithGoogle(
-                            email = currentEmail,
-                            name = currentName,
-                            firebaseToken = currentFirebaseToken
-                        )
-                },
-            )
-    }
 
     SignInWithGoogle(
         navigateToHomeScreen = { currentUser ->
@@ -352,24 +337,37 @@ fun LoginScreen(
             },
             onUnauthorized = {})
 
-    viewModel.isRefreshing.collectAsStateWithLifecycle().value.let {
-        if (it)
-            Dialog(onDismissRequest = {}) {
-                Loading()
-            }
-    }
-
     if (loginState != "")
         viewModel.uiState.collectAsStateWithLifecycle().value.let { uiState ->
             when (uiState) {
                 is UiState.Loading -> {
-
+                    println("show loading")
+                    Dialog(onDismissRequest = {}) {
+                        Loading()
+                    }
                 }
 
                 is UiState.Success -> {
                     viewModel.getFCMToken()
                     userToken = uiState.data.data.token
                     viewModel.saveUserData(uiState.data.data)
+                }
+
+                is UiState.Error -> {
+                    ShowSnackbarWithAction(
+                        snackbarHostState = snackbarHostState,
+                        errorMsg = uiState.errorMessage,
+                        onRetryClick = {
+                            if (loginState == LOGIN_ADMIN)
+                                viewModel.doLogin(usernameText, passwordText)
+                            else if (loginState == LOGIN_GOOGLE)
+                                viewModel.doLoginWithGoogle(
+                                    email = currentEmail,
+                                    name = currentName,
+                                    firebaseToken = currentFirebaseToken
+                                )
+                        },
+                    )
                 }
 
                 is UiState.Unauthorized -> {}
@@ -416,6 +414,10 @@ fun ObservePostFCM(
 
             is UiState.Unauthorized -> {
                 onUnauthorized()
+            }
+
+            is UiState.Error -> {
+                println("postFCM Error ${uiState.errorMessage}")
             }
         }
     }
