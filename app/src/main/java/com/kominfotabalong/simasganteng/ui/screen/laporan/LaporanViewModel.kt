@@ -24,6 +24,7 @@ import com.google.android.gms.tasks.OnTokenCanceledListener
 import com.haroldadmin.cnradapter.NetworkResponse
 import com.kominfotabalong.simasganteng.data.model.AddLaporanRequest
 import com.kominfotabalong.simasganteng.data.model.ApiBaseResponse
+import com.kominfotabalong.simasganteng.data.remote.BalitaPagingSource
 import com.kominfotabalong.simasganteng.data.remote.LaporanPagingSource
 import com.kominfotabalong.simasganteng.data.repository.ApiRepository
 import com.kominfotabalong.simasganteng.ui.common.UiState
@@ -267,5 +268,9 @@ class LaporanViewModel @Inject constructor(
 
     fun getLaporan(userToken: String, status: String) = Pager(PagingConfig(pageSize = 30)) {
         LaporanPagingSource(apiRepository, userToken, status)
+    }.flow.cachedIn(viewModelScope)
+
+    fun getDaftarBalita(userToken: String) = Pager(PagingConfig(pageSize = 30)) {
+        BalitaPagingSource(apiRepository, userToken)
     }.flow.cachedIn(viewModelScope)
 }

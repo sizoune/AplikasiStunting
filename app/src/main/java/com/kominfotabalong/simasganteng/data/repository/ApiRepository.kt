@@ -267,6 +267,37 @@ class ApiRepository @Inject constructor(
         }
     }.flowOn(Dispatchers.IO)
 
+    suspend fun getDaftarPengukuran(
+        token: String, balitaID: Int,
+    ) = flow {
+        when (val data = apiService.getDaftarPengukuran(
+            "Bearer $token", balitaID
+        )) {
+            is NetworkResponse.Success -> {
+                emit(
+                    NetworkResponse.Success(
+                        data, null, 200
+                    )
+                )
+            }
+
+            is NetworkResponse.ServerError -> {
+                emit(NetworkResponse.ServerError(data.body, data.code))
+            }
+
+            is NetworkResponse.NetworkError -> {
+                emit(NetworkResponse.NetworkError(data.error))
+            }
+
+            is NetworkResponse.UnknownError -> {
+                emit(NetworkResponse.UnknownError(data.error))
+            }
+        }
+    }.flowOn(Dispatchers.IO)
+
     suspend fun getDataLaporan(userToken: String, url: String) =
         apiService.getLaporanData("Bearer $userToken", url)
+
+    suspend fun getDaftarBalita(userToken: String, url: String) =
+        apiService.getDaftarBalita("Bearer $userToken", url)
 }

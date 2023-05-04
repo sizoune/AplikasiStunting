@@ -33,13 +33,9 @@ import com.kominfotabalong.simasganteng.ui.component.TopBar
 import com.kominfotabalong.simasganteng.ui.destinations.AddLaporanScreenDestination
 import com.kominfotabalong.simasganteng.ui.destinations.DashboardScreenDestination
 import com.kominfotabalong.simasganteng.ui.destinations.Destination
-import com.kominfotabalong.simasganteng.ui.destinations.DetailLaporanScreenDestination
-import com.kominfotabalong.simasganteng.ui.destinations.ListLaporanMasukScreenDestination
-import com.kominfotabalong.simasganteng.ui.destinations.ListLaporanRejectedScreenDestination
-import com.kominfotabalong.simasganteng.ui.destinations.ListLaporanVerifiedScreenDestination
+import com.kominfotabalong.simasganteng.ui.destinations.DetailArtikelScreenDestination
 import com.kominfotabalong.simasganteng.ui.destinations.LoginScreenDestination
 import com.kominfotabalong.simasganteng.ui.destinations.LogoutHandlerDestination
-import com.kominfotabalong.simasganteng.ui.destinations.MapScreenDestination
 import com.kominfotabalong.simasganteng.ui.destinations.SplashScreenDestination
 import com.kominfotabalong.simasganteng.ui.screen.laporan.AddLaporanScreen
 import com.kominfotabalong.simasganteng.ui.screen.login.LoginScreen
@@ -75,9 +71,7 @@ fun SiMasGantengApp(
     var loggedUser by remember {
         mutableStateOf(LoginResponse())
     }
-    var isFinishDoLogin by remember {
-        mutableStateOf(false)
-    }
+    val isFinishDoLogin by loginViewModel.isFinishLogin.collectAsStateWithLifecycle()
 
     var getDataKecamatanRemotely by remember {
         mutableStateOf(false)
@@ -96,10 +90,6 @@ fun SiMasGantengApp(
     ObserveLoggedUser(onUserObserved = {
         loggedUser = it
     })
-
-    loginViewModel.isFinishLogin.collectAsStateWithLifecycle().value.let {
-        isFinishDoLogin = it
-    }
 
     val startRoute =
         if (isSplashLoaded) (if (loggedUser.token.isNotEmpty() && isFinishDoLogin) DashboardScreenDestination else LoginScreenDestination)
@@ -138,12 +128,10 @@ fun SiMasGantengApp(
 
     Scaffold(
         topBar = {
-            if (currentDestination == AddLaporanScreenDestination
-                || currentDestination == MapScreenDestination
-                || currentDestination == ListLaporanMasukScreenDestination
-                || currentDestination == ListLaporanVerifiedScreenDestination
-                || currentDestination == ListLaporanRejectedScreenDestination
-                || currentDestination == DetailLaporanScreenDestination
+            if (currentDestination != SplashScreenDestination
+                && currentDestination != DashboardScreenDestination
+                && currentDestination != LoginScreenDestination
+                && currentDestination != DetailArtikelScreenDestination
             )
                 TopBar(
                     destination = currentDestination,
@@ -197,7 +185,7 @@ fun SiMasGantengApp(
 @Composable
 fun ObserveDataTabalongRemotely(
     viewModel: MainViewModel,
-    onResultSuccess: @Composable (List<Kecamatan>) -> Unit,
+    onResultSuccess: (List<Kecamatan>) -> Unit,
 ) {
     viewModel.kecamatanState.collectAsStateWithLifecycle().value.let { uiState ->
         when (uiState) {
@@ -225,7 +213,7 @@ fun ObserveDataTabalongRemotely(
 @Composable
 fun ObserveKecamatanLocally(
     mainViewModel: MainViewModel,
-    onKecamatanObserved: @Composable (data: List<Kecamatan>) -> Unit,
+    onKecamatanObserved: (data: List<Kecamatan>) -> Unit,
 ) {
 
     LaunchedEffect(Unit) {
@@ -241,7 +229,7 @@ fun ObserveKecamatanLocally(
 @Composable
 fun ObserveDataPuskesmasRemotely(
     viewModel: MainViewModel,
-    onResultSuccess: @Composable (List<PuskesmasResponse>) -> Unit,
+    onResultSuccess: (List<PuskesmasResponse>) -> Unit,
 ) {
     viewModel.pkmState.collectAsStateWithLifecycle().value.let { uiState ->
         when (uiState) {
@@ -269,7 +257,7 @@ fun ObserveDataPuskesmasRemotely(
 @Composable
 fun ObservePuskesmasLocally(
     mainViewModel: MainViewModel,
-    onKecamatanObserved: @Composable (data: List<PuskesmasResponse>) -> Unit,
+    onKecamatanObserved: (data: List<PuskesmasResponse>) -> Unit,
 ) {
 
     LaunchedEffect(Unit) {

@@ -3,10 +3,12 @@ package com.kominfotabalong.simasganteng.data.remote
 import com.haroldadmin.cnradapter.NetworkResponse
 import com.kominfotabalong.simasganteng.data.model.ApiBaseResponse
 import com.kominfotabalong.simasganteng.data.model.ArtikelResponse
+import com.kominfotabalong.simasganteng.data.model.BalitaResponse
 import com.kominfotabalong.simasganteng.data.model.Kecamatan
 import com.kominfotabalong.simasganteng.data.model.LaporanResponse
 import com.kominfotabalong.simasganteng.data.model.LoginResponse
 import com.kominfotabalong.simasganteng.data.model.PaginationObject
+import com.kominfotabalong.simasganteng.data.model.PengukuranResponse
 import com.kominfotabalong.simasganteng.data.model.PuskesmasResponse
 import com.kominfotabalong.simasganteng.data.model.ResponseListObject
 import com.kominfotabalong.simasganteng.data.model.ResponseObject
@@ -73,4 +75,16 @@ interface ApiService {
         @Header("Authorization") token: String,
         @Url page: String?,
     ): NetworkResponse<ResponseObject<PaginationObject<LaporanResponse>>, ApiBaseResponse>
+
+    @GET
+    suspend fun getDaftarBalita(
+        @Header("Authorization") token: String,
+        @Url page: String?,
+    ): NetworkResponse<ResponseObject<PaginationObject<BalitaResponse>>, ApiBaseResponse>
+
+    @GET("pengukuran/list/{balita_id}")
+    suspend fun getDaftarPengukuran(
+        @Header("Authorization") token: String,
+        @Path("balita_id") balitaID: Int,
+    ): NetworkResponse<ResponseListObject<PengukuranResponse>, ApiBaseResponse>
 }
