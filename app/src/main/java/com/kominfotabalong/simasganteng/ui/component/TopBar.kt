@@ -23,7 +23,7 @@ fun TopBar(
     destination: Destination,
     onBackClick: () -> Unit
 ) {
-    val titleColor = if (isSystemInDarkTheme()) Color.Black else Color.White
+    val titleColor = if (isSystemInDarkTheme()) Color.White else Color.Black
     TopAppBar(
         title = {
             Text(

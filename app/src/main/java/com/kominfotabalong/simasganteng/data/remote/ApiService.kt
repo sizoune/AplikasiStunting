@@ -14,6 +14,7 @@ import com.kominfotabalong.simasganteng.data.model.ResponseListObject
 import com.kominfotabalong.simasganteng.data.model.ResponseObject
 import okhttp3.RequestBody
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.Headers
@@ -87,4 +88,27 @@ interface ApiService {
         @Header("Authorization") token: String,
         @Path("balita_id") balitaID: Int,
     ): NetworkResponse<ResponseListObject<PengukuranResponse>, ApiBaseResponse>
+
+    @Headers("Accept: application/json")
+    @POST("pengukuran/store/{balita_id}")
+    suspend fun tambahPengukuran(
+        @Header("Authorization") token: String,
+        @Path("balita_id") balitaID: Int,
+        @Body params: RequestBody,
+    ): NetworkResponse<ApiBaseResponse, ApiBaseResponse>
+
+    @Headers("Accept: application/json")
+    @PUT("pengukuran/update/{pengukuran_id}")
+    suspend fun updatePengukuran(
+        @Header("Authorization") token: String,
+        @Path("pengukuran_id") pengukuranID: Int,
+        @Body params: RequestBody,
+    ): NetworkResponse<ApiBaseResponse, ApiBaseResponse>
+
+    @Headers("Accept: application/json")
+    @DELETE("pengukuran/destroy/{pengukuran_id}")
+    suspend fun deletePengukuran(
+        @Header("Authorization") token: String,
+        @Path("pengukuran_id") pengukuranID: Int,
+    ): NetworkResponse<ApiBaseResponse, ApiBaseResponse>
 }

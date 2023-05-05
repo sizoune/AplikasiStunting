@@ -110,7 +110,7 @@ fun AddLaporanScreen(
             numberOfSteps = titleList.size,
             currentStep = currentStep,
             stepDescriptionList = titleList,
-            selectedColor = MaterialTheme.colorScheme.primary,
+            selectedColor = if (isSystemInDarkTheme()) Color.White else Color.Black,
             unSelectedColor = stepperUnselectedColor,
             modifier = modifier.constrainAs(stepper) {
                 top.linkTo(parent.top)
@@ -199,9 +199,13 @@ fun AddLaporanScreen(
                 start.linkTo(parent.start)
             }
             .padding(16.dp)) {
-            FloatingActionButton(onClick = {
-                if (currentStep != 1) currentStep--
-            }) {
+            FloatingActionButton(
+                onClick = {
+                    if (currentStep != 1) currentStep--
+                },
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = if (isSystemInDarkTheme()) Color.White else Color.Black
+            ) {
                 Icon(
                     imageVector = Icons.Filled.ArrowBackIos,
                     contentDescription = "selanjutnya",
@@ -222,25 +226,29 @@ fun AddLaporanScreen(
                 }
             }
             .padding(16.dp)) {
-            FloatingActionButton(onClick = {
-                collectDataAlamat = currentStep == 1
-                collectDataAnak = currentStep == 2
-                collectDataOrtu = currentStep == 3
-                viewModel.collectData(currentStep)
-                if (currentStep >= titleList.size) {
-                    println("reqData = $laporanRequest")
-                    if (laporanRequest.properties.any { it.get().isBlank() }) {
-                        context.showToast("Masih ada data yang kosong!, silahkan periksa kembali")
-                        println(laporanRequest.properties.filter {
-                            it.get().isBlank()
-                        })
-                    } else {
-                        isSubmitted = true
-                        viewModel.addLaporan(userData.token, laporanRequest)
-                    }
+            FloatingActionButton(
+                onClick = {
+                    collectDataAlamat = currentStep == 1
+                    collectDataAnak = currentStep == 2
+                    collectDataOrtu = currentStep == 3
+                    viewModel.collectData(currentStep)
+                    if (currentStep >= titleList.size) {
+                        println("reqData = $laporanRequest")
+                        if (laporanRequest.properties.any { it.get().isBlank() }) {
+                            context.showToast("Masih ada data yang kosong!, silahkan periksa kembali")
+                            println(laporanRequest.properties.filter {
+                                it.get().isBlank()
+                            })
+                        } else {
+                            isSubmitted = true
+                            viewModel.addLaporan(userData.token, laporanRequest)
+                        }
 
-                }
-            }) {
+                    }
+                },
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = if (isSystemInDarkTheme()) Color.White else Color.Black
+            ) {
                 if (currentStep == titleList.size)
                     Text(text = "Submit", textAlign = TextAlign.Center)
                 if (currentStep < titleList.size)

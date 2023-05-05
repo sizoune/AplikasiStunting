@@ -2,6 +2,7 @@ package com.kominfotabalong.simasganteng.data.repository
 
 import com.haroldadmin.cnradapter.NetworkResponse
 import com.kominfotabalong.simasganteng.data.model.AddLaporanRequest
+import com.kominfotabalong.simasganteng.data.model.PengukuranRequest
 import com.kominfotabalong.simasganteng.data.remote.ApiService
 import com.kominfotabalong.simasganteng.util.Constants.DEVICE_NAME
 import com.kominfotabalong.simasganteng.util.createJsonRequestBody
@@ -300,4 +301,104 @@ class ApiRepository @Inject constructor(
 
     suspend fun getDaftarBalita(userToken: String, url: String) =
         apiService.getDaftarBalita("Bearer $userToken", url)
+
+    suspend fun tambahPengukuran(
+        token: String, balitaID: Int, request: PengukuranRequest
+    ) = flow {
+        when (val data = apiService.tambahPengukuran(
+            "Bearer $token", balitaID, createJsonRequestBody(
+                "tanggal" to request.tanggal_pengisian,
+                "lila" to request.lila,
+                "lingkar_kepala" to request.lingkar_kepala,
+                "berat_anak" to request.berat_anak,
+                "tinggi_anak" to request.tinggi_anak,
+                "status_laporan" to request.status_laporan,
+                "cara_ukur" to request.cara_ukur,
+            )
+        )) {
+            is NetworkResponse.Success -> {
+                emit(
+                    NetworkResponse.Success(
+                        data, null, 200
+                    )
+                )
+            }
+
+            is NetworkResponse.ServerError -> {
+                emit(NetworkResponse.ServerError(data.body, data.code))
+            }
+
+            is NetworkResponse.NetworkError -> {
+                emit(NetworkResponse.NetworkError(data.error))
+            }
+
+            is NetworkResponse.UnknownError -> {
+                emit(NetworkResponse.UnknownError(data.error))
+            }
+        }
+    }.flowOn(Dispatchers.IO)
+
+    suspend fun updatePengukuran(
+        token: String, pengukuranID: Int, request: PengukuranRequest
+    ) = flow {
+        when (val data = apiService.updatePengukuran(
+            "Bearer $token", pengukuranID, createJsonRequestBody(
+                "tanggal" to request.tanggal_pengisian,
+                "lila" to request.lila,
+                "lingkar_kepala" to request.lingkar_kepala,
+                "berat_anak" to request.berat_anak,
+                "tinggi_anak" to request.tinggi_anak,
+                "status_laporan" to request.status_laporan,
+                "cara_ukur" to request.cara_ukur,
+            )
+        )) {
+            is NetworkResponse.Success -> {
+                emit(
+                    NetworkResponse.Success(
+                        data, null, 200
+                    )
+                )
+            }
+
+            is NetworkResponse.ServerError -> {
+                emit(NetworkResponse.ServerError(data.body, data.code))
+            }
+
+            is NetworkResponse.NetworkError -> {
+                emit(NetworkResponse.NetworkError(data.error))
+            }
+
+            is NetworkResponse.UnknownError -> {
+                emit(NetworkResponse.UnknownError(data.error))
+            }
+        }
+    }.flowOn(Dispatchers.IO)
+
+    suspend fun deletePengukuran(
+        token: String, pengukuranID: Int
+    ) = flow {
+        when (val data = apiService.deletePengukuran(
+            "Bearer $token", pengukuranID
+        )) {
+            is NetworkResponse.Success -> {
+                emit(
+                    NetworkResponse.Success(
+                        data, null, 200
+                    )
+                )
+            }
+
+            is NetworkResponse.ServerError -> {
+                emit(NetworkResponse.ServerError(data.body, data.code))
+            }
+
+            is NetworkResponse.NetworkError -> {
+                emit(NetworkResponse.NetworkError(data.error))
+            }
+
+            is NetworkResponse.UnknownError -> {
+                emit(NetworkResponse.UnknownError(data.error))
+            }
+        }
+    }.flowOn(Dispatchers.IO)
 }

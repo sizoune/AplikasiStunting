@@ -36,6 +36,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowForwardIos
 import androidx.compose.material.icons.filled.Logout
+import androidx.compose.material.icons.filled.Power
+import androidx.compose.material.icons.filled.PowerOff
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Divider
@@ -92,6 +94,7 @@ import com.kominfotabalong.simasganteng.ui.destinations.ListLaporanRejectedScree
 import com.kominfotabalong.simasganteng.ui.destinations.ListLaporanVerifiedScreenDestination
 import com.kominfotabalong.simasganteng.ui.destinations.LogoutHandlerDestination
 import com.kominfotabalong.simasganteng.ui.destinations.MapScreenDestination
+import com.kominfotabalong.simasganteng.ui.theme.OverlayLight30
 import com.kominfotabalong.simasganteng.util.showToast
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
@@ -113,7 +116,7 @@ fun DashboardScreen(
 ) {
     val rightNow: Calendar = Calendar.getInstance()
     val textBg = if (isSystemInDarkTheme()) Color.DarkGray else Color.LightGray
-    val titleColor = if (isSystemInDarkTheme()) Color.Black else Color.White
+
 
     var doLogout by remember {
         mutableStateOf(false)
@@ -250,7 +253,7 @@ fun DashboardScreen(
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(horizontalArrangement = Arrangement.Center, modifier = modifier.weight(1f)) {
+                Row(horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically,modifier = modifier.weight(1f)) {
                     Card(
                         elevation = CardDefaults.cardElevation(10.dp),
                         shape = RoundedCornerShape(50.dp),
@@ -266,7 +269,6 @@ fun DashboardScreen(
                             style = MaterialTheme.typography.labelSmall.copy(
                                 fontWeight = FontWeight.Bold
                             ),
-                            color = titleColor,
                             modifier = modifier
                                 .fillMaxWidth()
                                 .padding(start = 6.dp)
@@ -274,7 +276,6 @@ fun DashboardScreen(
                         Text(
                             text = "Selamat datang di aplikasi SI MAS GANTENG",
                             style = MaterialTheme.typography.labelSmall,
-                            color = titleColor,
                             modifier = modifier
                                 .fillMaxWidth()
                                 .padding(start = 6.dp)
@@ -290,7 +291,6 @@ fun DashboardScreen(
                     Icon(
                         imageVector = Icons.Filled.Logout,
                         contentDescription = "keluar",
-                        tint = titleColor
                     )
                 }
             }
@@ -491,7 +491,6 @@ fun DashboardMenu(
         Icon(
             painter = painterResource(iconImage),
             contentDescription = menuTitle,
-            tint = MaterialTheme.colorScheme.primary,
             modifier = modifier
                 .size(32.dp)
                 .weight(0.2f)

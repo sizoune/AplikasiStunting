@@ -40,6 +40,7 @@ import com.kominfotabalong.simasganteng.ui.destinations.SplashScreenDestination
 import com.kominfotabalong.simasganteng.ui.screen.laporan.AddLaporanScreen
 import com.kominfotabalong.simasganteng.ui.screen.login.LoginScreen
 import com.kominfotabalong.simasganteng.ui.screen.login.LoginViewModel
+import com.kominfotabalong.simasganteng.ui.screen.pengukuran.PengukuranViewModel
 import com.kominfotabalong.simasganteng.ui.screen.splash.SplashScreen
 import com.kominfotabalong.simasganteng.ui.startAppDestination
 import com.ramcosta.composedestinations.DestinationsNavHost
@@ -154,6 +155,7 @@ fun SiMasGantengApp(
                 dependency(loggedUser)
                 dependency(dataKecamatan)
                 dependency(LogoutHandlerDestination) { loginViewModel }
+                dependency(hiltViewModel<PengukuranViewModel>())
             }
         ) {
             animatedComposable(SplashScreenDestination) {
