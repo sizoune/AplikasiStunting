@@ -13,6 +13,7 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
@@ -80,6 +81,8 @@ fun OutlinedTextFieldComp(
             leadingIcon = leadingIcon,
             colors = TextFieldDefaults.colors(
                 cursorColor = if (isSystemInDarkTheme()) Color.White else Color.Black,
+                focusedLabelColor = if (isSystemInDarkTheme()) Color.White else Color.Black,
+                focusedIndicatorColor = if (isSystemInDarkTheme()) Color.White else Color.Black,
             ),
             label = {
                 Text(placeholderText)

@@ -3,6 +3,7 @@ package com.kominfotabalong.simasganteng
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -50,7 +51,9 @@ import com.ramcosta.composedestinations.manualcomposablecalls.animatedComposable
 import com.ramcosta.composedestinations.navigation.dependency
 import com.ramcosta.composedestinations.scope.resultRecipient
 
-@OptIn(ExperimentalAnimationApi::class, ExperimentalMaterialNavigationApi::class)
+@OptIn(ExperimentalAnimationApi::class, ExperimentalMaterialNavigationApi::class,
+    ExperimentalMaterial3Api::class
+)
 @Composable
 fun SiMasGantengApp(
     modifier: Modifier = Modifier,

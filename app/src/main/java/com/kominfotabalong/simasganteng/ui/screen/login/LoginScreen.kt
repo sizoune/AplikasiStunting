@@ -6,6 +6,8 @@ import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -40,6 +42,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.focus.onFocusEvent
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
@@ -220,7 +223,7 @@ fun LoginScreen(
                         .padding(top = 16.dp)
                         .fillMaxWidth()
                 ) {
-                    Text(text = "Login")
+                    Text(text = "Login",color = if (isSystemInDarkTheme()) Color.White else Color.Black)
                 }
                 Text(
                     text = "Atau",
@@ -247,6 +250,7 @@ fun LoginScreen(
                     )
                     Text(
                         text = "Login dengan Google",
+                        color = if (isSystemInDarkTheme()) Color.White else Color.Black,
                         modifier = modifier.padding(start = 8.dp)
                     )
                 }

@@ -36,13 +36,12 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowForwardIos
 import androidx.compose.material.icons.filled.Logout
-import androidx.compose.material.icons.filled.Power
-import androidx.compose.material.icons.filled.PowerOff
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -94,7 +93,6 @@ import com.kominfotabalong.simasganteng.ui.destinations.ListLaporanRejectedScree
 import com.kominfotabalong.simasganteng.ui.destinations.ListLaporanVerifiedScreenDestination
 import com.kominfotabalong.simasganteng.ui.destinations.LogoutHandlerDestination
 import com.kominfotabalong.simasganteng.ui.destinations.MapScreenDestination
-import com.kominfotabalong.simasganteng.ui.theme.OverlayLight30
 import com.kominfotabalong.simasganteng.util.showToast
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
@@ -253,7 +251,11 @@ fun DashboardScreen(
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically,modifier = modifier.weight(1f)) {
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = modifier.weight(1f)
+                ) {
                     Card(
                         elevation = CardDefaults.cardElevation(10.dp),
                         shape = RoundedCornerShape(50.dp),
