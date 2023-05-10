@@ -22,6 +22,7 @@ data class BalitaResponse(
     val nik_ortu: String? = null,
     val no_kk: String = "",
     val pkm_id: Int = -1,
+    val code: String = "",
     val rt: String = "",
     val rw: String = "",
     val status_stunting: String? = null,
@@ -31,5 +32,5 @@ data class BalitaResponse(
     val updated_at: String = "",
     val usia: Int = -1,
     val village_code: String = "",
-    val whatsapp: String = ""
+    val whatsapp: String = "",
 ) : Parcelable

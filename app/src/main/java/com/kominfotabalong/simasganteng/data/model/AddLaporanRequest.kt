@@ -24,6 +24,7 @@ data class AddLaporanRequest(
     var pkm_id: String = "",
     var rt: String = "",
     var rw: String = "",
+    var kecamatanCode: String = "",
     var tanggal_lahir: String = "",
     var tempat_lahir: String = "",
     var tinggi: String = "",

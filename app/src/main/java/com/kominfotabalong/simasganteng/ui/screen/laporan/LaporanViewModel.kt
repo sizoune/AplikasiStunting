@@ -24,6 +24,7 @@ import com.google.android.gms.tasks.OnTokenCanceledListener
 import com.haroldadmin.cnradapter.NetworkResponse
 import com.kominfotabalong.simasganteng.data.model.AddLaporanRequest
 import com.kominfotabalong.simasganteng.data.model.ApiBaseResponse
+import com.kominfotabalong.simasganteng.data.model.BalitaResponse
 import com.kominfotabalong.simasganteng.data.remote.BalitaPagingSource
 import com.kominfotabalong.simasganteng.data.remote.LaporanPagingSource
 import com.kominfotabalong.simasganteng.data.repository.ApiRepository
@@ -53,6 +54,13 @@ class LaporanViewModel @Inject constructor(
     val myAddr: StateFlow<String>
         get() = _myAddr
 
+    private val _isFinishSearching = MutableStateFlow(false)
+    val isFinishSearching get() = _isFinishSearching
+
+    fun setSearchingStatustoTrue() = viewModelScope.launch {
+        _isFinishSearching.emit(true)
+    }
+
     private val _addLaporanState: MutableStateFlow<UiState<ApiBaseResponse>> =
         MutableStateFlow(UiState.Loading)
     val addLaporanState: StateFlow<UiState<ApiBaseResponse>>
@@ -62,6 +70,11 @@ class LaporanViewModel @Inject constructor(
         MutableStateFlow(UiState.Loading)
     val updateLaporanState: StateFlow<UiState<ApiBaseResponse>>
         get() = _updateLaporanState
+
+    private val _nikState: MutableStateFlow<UiState<BalitaResponse>> =
+        MutableStateFlow(UiState.Loading)
+    val nikState: StateFlow<UiState<BalitaResponse>>
+        get() = _nikState
 
     private val _locLoading: MutableStateFlow<Boolean> =
         MutableStateFlow(false)
@@ -164,6 +177,60 @@ class LaporanViewModel @Inject constructor(
 
                     is NetworkResponse.UnknownError -> {
                         _updateLaporanState.emit(
+                            UiState.Error(
+                                response.error.localizedMessage ?: "Unknown Error"
+                            )
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    fun cariDataAnak(token: String, nik: String) {
+        viewModelScope.launch {
+            _nikState.emit(UiState.Loading)
+            apiRepository.cekNikBalita(token, nik).catch {
+                _nikState.emit(UiState.Error(it.message.toString()))
+            }.collect { response ->
+                when (response) {
+                    is NetworkResponse.Success -> {
+                        _nikState.value = UiState.Success(response.body.body.data)
+                    }
+
+                    is NetworkResponse.ServerError -> {
+                        when (response.code) {
+                            401 -> {
+                                _nikState.value = UiState.Unauthorized
+                            }
+
+                            404 -> {
+                                println("NIK Not Found ${response.body?.message}")
+                                _nikState.value = UiState.Success(BalitaResponse(nik_anak = nik))
+                            }
+
+                            else -> {
+                                _nikState.emit(
+                                    UiState.Error(
+                                        response.body?.message
+                                            ?: "Terjadi kesalahan saat memproses data"
+                                    )
+                                )
+                            }
+                        }
+                    }
+
+                    is NetworkResponse.NetworkError -> {
+                        _nikState.emit(
+                            UiState.Error(
+                                response.error.localizedMessage
+                                    ?: "Terjadi kesalahan saat memproses data"
+                            )
+                        )
+                    }
+
+                    is NetworkResponse.UnknownError -> {
+                        _nikState.emit(
                             UiState.Error(
                                 response.error.localizedMessage ?: "Unknown Error"
                             )

@@ -96,7 +96,12 @@ fun PengukuranScreen(
     var dataPengukuran by remember {
         mutableStateOf(listOf<PengukuranResponse>())
     }
-    var openBottomSheet by remember { mutableStateOf(false) }
+    var showDetail by remember {
+        mutableStateOf(false)
+    }
+    var clickedPengukuranID by remember {
+        mutableStateOf(-1)
+    }
 
     resultRecipient.onNavResult { result ->
         when (result) {
@@ -149,6 +154,31 @@ fun PengukuranScreen(
             }
         }
     }
+
+    PengukuranDetailDialog(
+        showDetail = showDetail,
+        onDismiss = { showDetail = it },
+        onEditClick = { data ->
+            navigator.navigate(
+                PengukuranInputDestination(
+                    isUpdate = true,
+                    userToken = userToken,
+                    currentRequest = PengukuranRequest(
+                        data.tanggal,
+                        data.lila.toString(),
+                        data.lingkar_kepala.toString(),
+                        data.berat_anak.toString(),
+                        data.tinggi_anak.toString(),
+                        data.status_laporan,
+                        data.cara_ukur
+                    ),
+                    balitaID = data.balita_id,
+                    pengukuranID = data.pengukuran_id
+                )
+            )
+        },
+        dataPengukuran = dataPengukuran.find { it.pengukuran_id == clickedPengukuranID }
+    )
 
     ConstraintLayout(
         modifier = modifier
@@ -343,31 +373,32 @@ fun PengukuranScreen(
                             title = "No. Whatsapp",
                             value = dataBalita.whatsapp
                         )
-                        Row(modifier = modifier.padding(top = 16.dp)) {
-                            Spacer(modifier = modifier.weight(1f))
-                            Button(
-                                onClick = {
-                                    context.startActivity(Intent().apply {
-                                        action = Intent.ACTION_VIEW
-                                        data =
-                                            Uri.parse("https://api.whatsapp.com/send?phone=+62${dataBalita.whatsapp}")
-                                    })
-                                },
-                                colors = ButtonDefaults.buttonColors(Green800),
-                                modifier = modifier.weight(1f)
-                            ) {
-                                Image(
-                                    painter = painterResource(id = R.drawable.whatsapp),
-                                    contentDescription = "chat",
-                                    modifier = modifier.size(24.dp)
-                                )
-                                Text(
-                                    text = "Kirim Pesan",
-                                    modifier = modifier.padding(start = 8.dp),
-                                    color = Color.White
-                                )
+                        if (dataBalita.whatsapp != "")
+                            Row(modifier = modifier.padding(top = 16.dp)) {
+                                Spacer(modifier = modifier.weight(1f))
+                                Button(
+                                    onClick = {
+                                        context.startActivity(Intent().apply {
+                                            action = Intent.ACTION_VIEW
+                                            data =
+                                                Uri.parse("https://api.whatsapp.com/send?phone=+62${dataBalita.whatsapp}")
+                                        })
+                                    },
+                                    colors = ButtonDefaults.buttonColors(Green800),
+                                    modifier = modifier.weight(1f)
+                                ) {
+                                    Image(
+                                        painter = painterResource(id = R.drawable.whatsapp),
+                                        contentDescription = "chat",
+                                        modifier = modifier.size(24.dp)
+                                    )
+                                    Text(
+                                        text = "Kirim Pesan",
+                                        modifier = modifier.padding(start = 8.dp),
+                                        color = Color.White
+                                    )
+                                }
                             }
-                        }
 
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
@@ -428,24 +459,8 @@ fun PengukuranScreen(
                                 tinggi = data.tinggi_anak.toString(),
                                 berat = data.berat_anak.toString(),
                             ) {
-                                navigator.navigate(
-                                    PengukuranInputDestination(
-                                        isUpdate = true,
-                                        userToken = userToken,
-                                        currentRequest = PengukuranRequest(
-                                            data.tanggal,
-                                            data.lila.toString(),
-                                            data.lingkar_kepala.toString(),
-                                            data.berat_anak.toString(),
-                                            data.tinggi_anak.toString(),
-                                            data.status_laporan,
-                                            data.cara_ukur
-                                        ),
-                                        balitaID = dataBalita.balita_id,
-                                        pengukuranID = data.pengukuran_id
-                                    )
-                                )
-                                openBottomSheet = true
+                                clickedPengukuranID = data.pengukuran_id
+                                showDetail = true
                             }
                             if (index + 1 < dataPengukuran.size)
                                 Divider(

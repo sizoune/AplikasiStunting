@@ -1,5 +1,6 @@
 package com.kominfotabalong.simasganteng.ui.component
 
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -9,6 +10,7 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -19,6 +21,7 @@ fun OutlinedSpinner(
     label: String,
     value: String = "",
     isError: Boolean = false,
+    singleLine: Boolean = false,
     errorMsg: String = "",
     onOptionSelected: (String) -> Unit,
 ) {
@@ -49,6 +52,7 @@ fun OutlinedSpinner(
                 onValueChange = { selectedOptionText = it },
                 label = { Text(label) },
                 isError = isError,
+                singleLine = singleLine,
                 trailingIcon = {
                     if (isError)
                         Icon(Icons.Filled.Info, "Error", tint = MaterialTheme.colorScheme.error)
@@ -57,7 +61,11 @@ fun OutlinedSpinner(
                             expanded = expanded
                         )
                 },
-                colors = ExposedDropdownMenuDefaults.textFieldColors(),
+                colors = ExposedDropdownMenuDefaults.textFieldColors(
+                    cursorColor = if (isSystemInDarkTheme()) Color.White else Color.Black,
+                    focusedLabelColor = if (isSystemInDarkTheme()) Color.White else Color.Black,
+                    focusedIndicatorColor = if (isSystemInDarkTheme()) Color.White else Color.Black,
+                ),
                 modifier = modifier
                     .fillMaxWidth(1f)
                     .menuAnchor()

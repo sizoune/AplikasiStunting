@@ -37,6 +37,7 @@ import com.kominfotabalong.simasganteng.ui.destinations.Destination
 import com.kominfotabalong.simasganteng.ui.destinations.DetailArtikelScreenDestination
 import com.kominfotabalong.simasganteng.ui.destinations.LoginScreenDestination
 import com.kominfotabalong.simasganteng.ui.destinations.LogoutHandlerDestination
+import com.kominfotabalong.simasganteng.ui.destinations.PengukuranInputDestination
 import com.kominfotabalong.simasganteng.ui.destinations.SplashScreenDestination
 import com.kominfotabalong.simasganteng.ui.screen.laporan.AddLaporanScreen
 import com.kominfotabalong.simasganteng.ui.screen.login.LoginScreen
@@ -49,9 +50,9 @@ import com.ramcosta.composedestinations.animations.defaults.RootNavGraphDefaultA
 import com.ramcosta.composedestinations.animations.rememberAnimatedNavHostEngine
 import com.ramcosta.composedestinations.manualcomposablecalls.animatedComposable
 import com.ramcosta.composedestinations.navigation.dependency
-import com.ramcosta.composedestinations.scope.resultRecipient
 
-@OptIn(ExperimentalAnimationApi::class, ExperimentalMaterialNavigationApi::class,
+@OptIn(
+    ExperimentalAnimationApi::class, ExperimentalMaterialNavigationApi::class,
     ExperimentalMaterial3Api::class
 )
 @Composable
@@ -136,6 +137,7 @@ fun SiMasGantengApp(
                 && currentDestination != DashboardScreenDestination
                 && currentDestination != LoginScreenDestination
                 && currentDestination != DetailArtikelScreenDestination
+                && currentDestination != PengukuranInputDestination
             )
                 TopBar(
                     destination = currentDestination,
@@ -176,7 +178,6 @@ fun SiMasGantengApp(
                 AddLaporanScreen(
                     navigator = destinationsNavigator,
                     snackbarHostState = snackbarHostState,
-                    resultRecipient = resultRecipient(),
                     dataKecamatan = dataKecamatan,
                     dataPuskesmas = dataPuskesmas,
                     userData = loggedUser,

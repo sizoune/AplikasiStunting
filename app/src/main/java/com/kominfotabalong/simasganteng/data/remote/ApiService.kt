@@ -12,6 +12,7 @@ import com.kominfotabalong.simasganteng.data.model.PengukuranResponse
 import com.kominfotabalong.simasganteng.data.model.PuskesmasResponse
 import com.kominfotabalong.simasganteng.data.model.ResponseListObject
 import com.kominfotabalong.simasganteng.data.model.ResponseObject
+import com.kominfotabalong.simasganteng.data.model.SebaranResponse
 import okhttp3.RequestBody
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -21,6 +22,7 @@ import retrofit2.http.Headers
 import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Path
+import retrofit2.http.QueryMap
 import retrofit2.http.Url
 
 interface ApiService {
@@ -55,6 +57,12 @@ interface ApiService {
     @GET("artikel")
     suspend fun getDaftarArtikel(
     ): NetworkResponse<ResponseListObject<ArtikelResponse>, ApiBaseResponse>
+
+    @GET("balita/cek-nik/{nik}")
+    suspend fun cekNikBalita(
+        @Header("Authorization") token: String,
+        @Path("nik") nikAnak: String,
+    ): NetworkResponse<ResponseObject<BalitaResponse>, ApiBaseResponse>
 
     @Headers("Accept: application/json")
     @POST("laporan")
@@ -104,6 +112,12 @@ interface ApiService {
         @Path("pengukuran_id") pengukuranID: Int,
         @Body params: RequestBody,
     ): NetworkResponse<ApiBaseResponse, ApiBaseResponse>
+
+    @GET("report/peta-sebaran")
+    suspend fun getDataSebaran(
+        @Header("Authorization") token: String,
+        @QueryMap params: Map<String, String>,
+    ): NetworkResponse<ResponseListObject<SebaranResponse>, ApiBaseResponse>
 
     @Headers("Accept: application/json")
     @DELETE("pengukuran/destroy/{pengukuran_id}")

@@ -1,13 +1,12 @@
 package com.kominfotabalong.simasganteng.util
 
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import android.widget.Toast
 import androidx.compose.material3.ColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.saveable.listSaver
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.snapshots.SnapshotStateList
-import androidx.compose.runtime.toMutableStateList
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -26,26 +25,55 @@ fun createJsonRequestBody(vararg params: Pair<String, *>) =
     JSONObject(mapOf(*params)).toString()
         .toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
 
-@Composable
-fun <T : Any> rememberMutableStateListOf(vararg elements: T): SnapshotStateList<T> {
-    return rememberSaveable(
-        saver = listSaver(
-            save = { stateList ->
-                if (stateList.isNotEmpty()) {
-                    val first = stateList.first()
-                    if (!canBeSaved(first)) {
-                        throw IllegalStateException("${first::class} cannot be saved. By default only types which can be stored in the Bundle class can be saved.")
-                    }
-                }
-                stateList.toList()
-            },
-            restore = { it.toMutableStateList() }
-        )
-    ) {
-        elements.toList().toMutableStateList()
+fun Context.openMap(lat: Double, lng: Double) {
+    val gmmIntentUri: Uri =
+        Uri.parse("google.navigation:q=$lat,$lng")
+    val mapIntent = Intent(Intent.ACTION_VIEW, gmmIntentUri)
+    mapIntent.setPackage("com.google.android.apps.maps")
+    if (packageManager?.let { it1 -> mapIntent.resolveActivity(it1) } != null) {
+        startActivity(mapIntent)
+    } else {
+        this.showToast("Aplikasi Google Maps belum terinstall di perangkat anda !")
     }
 }
 
 fun String.toDate(format: String): LocalDate {
     return LocalDate.parse(this, DateTimeFormatter.ofPattern(format))
+}
+
+fun getListOfMonth() = listOf(
+    "Januari",
+    "Februari",
+    "Maret",
+    "April",
+    "Mei",
+    "Juni",
+    "Juli",
+    "Agustus",
+    "September",
+    "Oktober",
+    "November",
+    "Desember"
+)
+
+fun getMonthIndex(selectedMonth: String): String {
+    getListOfMonth().forEachIndexed { index, month ->
+        if (month == selectedMonth) {
+            return if (index + 1 < 10) "0${index + 1}" else (index + 1).toString()
+        }
+    }
+    return ""
+}
+
+fun getStatusColor(status: String): Color {
+    return if (status.lowercase() == "normal"
+        || status.lowercase() == "gizi baik"
+    )
+        Color.Green
+    else if (status.lowercase() == "kurang"
+        || status.lowercase() == "pendek"
+        || status.lowercase() == "gizi lebih"
+        || status.lowercase() == "risiko gizi lebih"
+    ) Color.Yellow
+    else Color.Red
 }

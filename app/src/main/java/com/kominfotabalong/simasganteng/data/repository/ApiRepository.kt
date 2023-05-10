@@ -187,6 +187,34 @@ class ApiRepository @Inject constructor(
         }
     }.flowOn(Dispatchers.IO)
 
+    suspend fun cekNikBalita(
+        token: String, nikAnak: String,
+    ) = flow {
+        when (val data = apiService.cekNikBalita(
+            "Bearer $token", nikAnak
+        )) {
+            is NetworkResponse.Success -> {
+                emit(
+                    NetworkResponse.Success(
+                        data, null, 200
+                    )
+                )
+            }
+
+            is NetworkResponse.ServerError -> {
+                emit(NetworkResponse.ServerError(data.body, data.code))
+            }
+
+            is NetworkResponse.NetworkError -> {
+                emit(NetworkResponse.NetworkError(data.error))
+            }
+
+            is NetworkResponse.UnknownError -> {
+                emit(NetworkResponse.UnknownError(data.error))
+            }
+        }
+    }.flowOn(Dispatchers.IO)
+
     suspend fun tambahLaporan(
         token: String, dataLaporan: AddLaporanRequest
     ) = flow {
@@ -379,6 +407,39 @@ class ApiRepository @Inject constructor(
     ) = flow {
         when (val data = apiService.deletePengukuran(
             "Bearer $token", pengukuranID
+        )) {
+            is NetworkResponse.Success -> {
+                emit(
+                    NetworkResponse.Success(
+                        data, null, 200
+                    )
+                )
+            }
+
+            is NetworkResponse.ServerError -> {
+                emit(NetworkResponse.ServerError(data.body, data.code))
+            }
+
+            is NetworkResponse.NetworkError -> {
+                emit(NetworkResponse.NetworkError(data.error))
+            }
+
+            is NetworkResponse.UnknownError -> {
+                emit(NetworkResponse.UnknownError(data.error))
+            }
+        }
+    }.flowOn(Dispatchers.IO)
+
+    suspend fun getDataSebaran(
+        token: String, tahun: String, bulan: String?, status: String?
+    ) = flow {
+        val params = hashMapOf(
+            "year" to tahun,
+        )
+        if (bulan != null) params["month"] = bulan
+        if (status != null) params["status"] = status
+        when (val data = apiService.getDataSebaran(
+            "Bearer $token", params
         )) {
             is NetworkResponse.Success -> {
                 emit(

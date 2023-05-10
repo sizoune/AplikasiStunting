@@ -53,7 +53,6 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.google.android.gms.maps.model.LatLng
 import com.kominfotabalong.simasganteng.data.model.AddLaporanRequest
-import com.kominfotabalong.simasganteng.data.model.AddressLoc
 import com.kominfotabalong.simasganteng.data.model.Kecamatan
 import com.kominfotabalong.simasganteng.data.model.PuskesmasResponse
 import com.kominfotabalong.simasganteng.data.model.Village
@@ -61,13 +60,10 @@ import com.kominfotabalong.simasganteng.ui.component.Loading
 import com.kominfotabalong.simasganteng.ui.component.OutlinedSpinner
 import com.kominfotabalong.simasganteng.ui.component.OutlinedTextFieldComp
 import com.kominfotabalong.simasganteng.ui.component.WarningDialog
-import com.kominfotabalong.simasganteng.ui.destinations.AddressChooserDestination
 import com.kominfotabalong.simasganteng.ui.screen.laporan.LaporanViewModel
 import com.kominfotabalong.simasganteng.util.Constants
 import com.kominfotabalong.simasganteng.util.showToast
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
-import com.ramcosta.composedestinations.result.NavResult
-import com.ramcosta.composedestinations.result.ResultRecipient
 
 @OptIn(ExperimentalPermissionsApi::class, ExperimentalComposeUiApi::class)
 @Composable
@@ -78,12 +74,13 @@ fun LaporanAlamatContent(
     viewModel: LaporanViewModel,
     dataKecamatan: List<Kecamatan>,
     dataPuskesmas: List<PuskesmasResponse>,
-    resultRecipient: ResultRecipient<AddressChooserDestination, AddressLoc>,
-    navigator: DestinationsNavigator,
     onNextClick: (AddLaporanRequest) -> Unit,
 ) {
+    val isFinishSearching by viewModel.isFinishSearching.collectAsStateWithLifecycle()
     val myCurrentLat by viewModel.myLat.collectAsStateWithLifecycle()
     val myCurrentLng by viewModel.myLng.collectAsStateWithLifecycle()
+
+
     var alamatError by remember { mutableStateOf(false) }
     var alamat by remember {
         mutableStateOf(currentRequest.alamat)
@@ -112,8 +109,12 @@ fun LaporanAlamatContent(
     var selectedKecamatan by rememberSaveable {
         mutableStateOf("")
     }
+    var selectedKecCode by rememberSaveable {
+        mutableStateOf(currentRequest.kecamatanCode)
+    }
 
-    var dataDesa = remember {
+
+    val dataDesa = remember {
         mutableStateListOf<Village>()
     }
 
@@ -186,6 +187,10 @@ fun LaporanAlamatContent(
             isLocAccessGranted = true
     }
 
+    var showChooser by remember {
+        mutableStateOf(false)
+    }
+
     if (checkLocPerm) {
         SideEffect {
             launcherPermission.launch(
@@ -200,8 +205,13 @@ fun LaporanAlamatContent(
 
     if (currentRequest.village_code != "")
         LaunchedEffect(key1 = Unit, block = {
+            alamat = currentRequest.alamat
+            rt = currentRequest.rt
+            rw = currentRequest.rw
+            selectedKecCode = currentRequest.kecamatanCode
+            selectedDesaCode = currentRequest.village_code
             dataKecamatan.find { kecamatan ->
-                kecamatan.villages.contains(kecamatan.villages.find { it.code == currentRequest.village_code })
+                kecamatan.code == selectedKecCode
             }?.let { kecamatan ->
                 dataDesa.addAll(kecamatan.villages)
                 selectedKecamatan = kecamatan.name
@@ -220,40 +230,20 @@ fun LaporanAlamatContent(
         onDismiss = { showWarningDialog = it },
         onOkClick = { locationPermissionsState.launchMultiplePermissionRequest() })
 
-    resultRecipient.onNavResult { result ->
-        when (result) {
-            is NavResult.Canceled -> {
-            }
-
-            is NavResult.Value -> {
-                alamat = result.value.myAddress
-                viewModel.setLatLng(
-                    result.value.myPosition
-                )
-                rt = result.value.rt
-                rw = result.value.rw
-                result.value.selectedKec?.let { dataKec ->
-                    dataDesa.addAll(dataKec.villages)
-                    selectedKecamatan = dataKec.name
-                    result.value.selectedDesaCode?.let { villageCode ->
-                        selectedDesaCode = villageCode
-                        dataKec.villages.find { it.code == villageCode }?.let { desa ->
-                            selectedDesaValue = desa.name
-                        }
-                    }
-                    dataPuskesmas.find { it.nama.lowercase() == selectedKecamatan.lowercase() }
-                        ?.let {
-                            selectedPuskes = it.nama
-                            selectedPuskesID = it.pkm_id.toString()
-                        }
-                }
-            }
-        }
+    AddressChooser(
+        showChooser = showChooser,
+        viewModel = viewModel,
+        userLatLng = LatLng(myCurrentLat, myCurrentLng),
+        onDoneClick = {
+            alamat = it.myAddress
+            viewModel.setLatLng(it.myPosition)
+        }) {
+        showChooser = false
     }
 
     println("lat : $myCurrentLat, lng : $myCurrentLng")
 
-    if (isLocAccessGranted)
+    if (isLocAccessGranted && isFinishSearching)
         LaunchedEffect(Unit) {
             if (myCurrentLat == (-1).toDouble() && myCurrentLng == (-1).toDouble())
                 viewModel.getUserLocation(context)
@@ -264,15 +254,7 @@ fun LaporanAlamatContent(
         if (myCurrentLat == (-1).toDouble() && myCurrentLng == (-1).toDouble()) {
         } else {
             currentAddressStat = Constants.ADDRESS_NONE
-            navigator.navigate(
-                AddressChooserDestination(
-                    userLatLng = LatLng(myCurrentLat, myCurrentLng),
-                    selectedKecamatan = dataKecamatan.find { it.name == selectedKecamatan },
-                    selectedDesaCode = selectedDesaCode,
-                    rt = rt,
-                    rw = rw,
-                )
-            )
+            showChooser = true
         }
     } else if (currentAddressStat == Constants.ADDRESS_NEXT) {
         if (myCurrentLat == (-1).toDouble() && myCurrentLng == (-1).toDouble()) {
@@ -310,6 +292,7 @@ fun LaporanAlamatContent(
         return true
     }
 
+
     Card(
         elevation = CardDefaults.cardElevation(10.dp),
         shape = RoundedCornerShape(15.dp),
@@ -333,6 +316,7 @@ fun LaporanAlamatContent(
                     selectedDesaCode = ""
                     dataKecamatan.find { it.name == selectedVal }
                         ?.let { selectedKecamatan ->
+                            selectedKecCode = selectedKecamatan.code
                             for (data in selectedKecamatan.villages) {
                                 dataDesa.add(data)
                             }
@@ -405,15 +389,9 @@ fun LaporanAlamatContent(
 
                 )
                 IconButton(onClick = {
-                    if (myCurrentLat != (-1).toDouble() && myCurrentLng != (-1).toDouble()) navigator.navigate(
-                        AddressChooserDestination(
-                            userLatLng = LatLng(myCurrentLat, myCurrentLng),
-                            selectedKecamatan = dataKecamatan.find { it.name == selectedKecamatan },
-                            selectedDesaCode = selectedDesaCode,
-                            rt = rt,
-                            rw = rw,
-                        )
-                    ) else {
+                    if (myCurrentLat != (-1).toDouble() && myCurrentLng != (-1).toDouble())
+                        showChooser = true
+                    else {
                         checkLocPerm = true
                         currentAddressStat = Constants.ADDRESS_CHOOSE
                     }
@@ -485,6 +463,7 @@ fun LaporanAlamatContent(
                             if (validateStepOne()) {
                                 currentRequest.village_code = selectedDesaCode
                                 currentRequest.pkm_id = selectedPuskesID
+                                currentRequest.kecamatanCode = selectedKecCode
                                 currentRequest.alamat = alamat
                                 currentRequest.rt = rt
                                 currentRequest.rw = rw
@@ -507,6 +486,7 @@ fun LaporanAlamatContent(
             if (index == 1) {
                 if (validateStepOne()) {
                     currentRequest.village_code = selectedDesaCode
+                    currentRequest.kecamatanCode = selectedKecCode
                     currentRequest.pkm_id = selectedPuskesID
                     currentRequest.alamat = alamat
                     currentRequest.rt = rt

@@ -34,8 +34,8 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.google.android.gms.maps.model.LatLng
 import com.kominfotabalong.simasganteng.data.model.AddLaporanRequest
-import com.kominfotabalong.simasganteng.data.model.AddressLoc
 import com.kominfotabalong.simasganteng.data.model.Kecamatan
 import com.kominfotabalong.simasganteng.data.model.LoginResponse
 import com.kominfotabalong.simasganteng.data.model.PuskesmasResponse
@@ -44,13 +44,12 @@ import com.kominfotabalong.simasganteng.ui.component.Loading
 import com.kominfotabalong.simasganteng.ui.component.ShowSnackbarWithAction
 import com.kominfotabalong.simasganteng.ui.component.StepperComp
 import com.kominfotabalong.simasganteng.ui.component.SuccessDialog
-import com.kominfotabalong.simasganteng.ui.destinations.AddressChooserDestination
 import com.kominfotabalong.simasganteng.ui.destinations.LogoutHandlerDestination
 import com.kominfotabalong.simasganteng.ui.screen.laporan.tambah.LaporanAlamatContent
+import com.kominfotabalong.simasganteng.ui.screen.laporan.tambah.NikSearchDialog
 import com.kominfotabalong.simasganteng.util.showToast
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
-import com.ramcosta.composedestinations.result.ResultRecipient
 
 @Composable
 @Destination
@@ -62,8 +61,6 @@ fun AddLaporanScreen(
     userData: LoginResponse,
     dataKecamatan: List<Kecamatan>,
     dataPuskesmas: List<PuskesmasResponse>,
-
-    resultRecipient: ResultRecipient<AddressChooserDestination, AddressLoc>
 ) {
     val context = LocalContext.current
     var laporanRequest by remember {
@@ -72,6 +69,7 @@ fun AddLaporanScreen(
     var isSubmitted by remember {
         mutableStateOf(false)
     }
+
 
     var currentStep by rememberSaveable { mutableStateOf(1) }
     val titleList = arrayListOf("Data Alamat", "Data Anak", "Data Orang Tua")
@@ -96,6 +94,23 @@ fun AddLaporanScreen(
 
     val scrollState = rememberScrollState()
 
+    NikSearchDialog(
+        viewModel = viewModel,
+        snackbarHostState = snackbarHostState,
+        userData = userData,
+        onCloseClick = {
+            navigator.navigateUp()
+        },
+        onSearchResponse = {
+            if (it.lat != "" && it.lng != "")
+                viewModel.setLatLng(LatLng(it.lat.toDouble(), it.lng.toDouble()))
+            laporanRequest = it
+            viewModel.setSearchingStatustoTrue()
+        },
+        onUnauthorized = {
+            navigator.navigate(LogoutHandlerDestination("Sesi login anda telah berakhir"))
+        })
+
     ConstraintLayout(
         modifier = modifier
             .fillMaxSize()
@@ -104,7 +119,8 @@ fun AddLaporanScreen(
     ) {
 
         val (stepper, contentAlamat, contentAnak, contentOrtu, prevButton, nextButton) = createRefs()
-        val stepperUnselectedColor = if (isSystemInDarkTheme()) Color.DarkGray else Color.LightGray
+        val stepperUnselectedColor =
+            if (isSystemInDarkTheme()) Color.DarkGray else Color.LightGray
 
         StepperComp(
             numberOfSteps = titleList.size,
@@ -134,8 +150,6 @@ fun AddLaporanScreen(
                 getData = collectDataAlamat,
                 viewModel = viewModel,
                 currentRequest = laporanRequest,
-                resultRecipient = resultRecipient,
-                navigator = navigator,
                 dataKecamatan = dataKecamatan,
                 dataPuskesmas = dataPuskesmas,
                 onNextClick = {

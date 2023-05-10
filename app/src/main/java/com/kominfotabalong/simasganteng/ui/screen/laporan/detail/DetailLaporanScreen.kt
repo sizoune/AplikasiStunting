@@ -379,7 +379,7 @@ fun DetailLaporanScreen(
                 CreateTextForm(
                     modifier = modifier,
                     title = "Nomor KK",
-                    value = dataLaporan.nomor_kk
+                    value = dataLaporan.nomor_kk ?: ""
                 )
                 Divider(
                     modifier
@@ -393,31 +393,32 @@ fun DetailLaporanScreen(
                     title = "No. Whatsapp",
                     value = dataLaporan.whatsapp
                 )
-                Row(modifier = modifier.padding(top = 16.dp)) {
-                    Spacer(modifier = modifier.weight(1f))
-                    Button(
-                        onClick = {
-                            context.startActivity(Intent().apply {
-                                action = Intent.ACTION_VIEW
-                                data =
-                                    Uri.parse("https://api.whatsapp.com/send?phone=+62${dataLaporan.whatsapp}")
-                            })
-                        },
-                        colors = ButtonDefaults.buttonColors(Green800),
-                        modifier = modifier.weight(1f)
-                    ) {
-                        Image(
-                            painter = painterResource(id = R.drawable.whatsapp),
-                            contentDescription = "chat",
-                            modifier = modifier.size(24.dp)
-                        )
-                        Text(
-                            text = "Kirim Pesan",
-                            modifier = modifier.padding(start = 8.dp),
-                            color = Color.White
-                        )
+                if (dataLaporan.whatsapp != "")
+                    Row(modifier = modifier.padding(top = 16.dp)) {
+                        Spacer(modifier = modifier.weight(1f))
+                        Button(
+                            onClick = {
+                                context.startActivity(Intent().apply {
+                                    action = Intent.ACTION_VIEW
+                                    data =
+                                        Uri.parse("https://api.whatsapp.com/send?phone=+62${dataLaporan.whatsapp}")
+                                })
+                            },
+                            colors = ButtonDefaults.buttonColors(Green800),
+                            modifier = modifier.weight(1f)
+                        ) {
+                            Image(
+                                painter = painterResource(id = R.drawable.whatsapp),
+                                contentDescription = "chat",
+                                modifier = modifier.size(24.dp)
+                            )
+                            Text(
+                                text = "Kirim Pesan",
+                                modifier = modifier.padding(start = 8.dp),
+                                color = Color.White
+                            )
+                        }
                     }
-                }
             }
         }
         if (!isHandled)
@@ -546,7 +547,7 @@ fun ObserveUpdateLaporan(
 }
 
 @Composable
-fun CreateTextForm(modifier: Modifier, title: String, value: String) {
+fun CreateTextForm(modifier: Modifier, title: String, value: String, valueColor: Color? = null) {
     Row(modifier = modifier.fillMaxWidth()) {
         Text(
             text = title,
@@ -556,6 +557,7 @@ fun CreateTextForm(modifier: Modifier, title: String, value: String) {
         Text(
             text = value,
             style = MaterialTheme.typography.titleMedium,
+            color = valueColor ?: Color.Unspecified,
             modifier = modifier.weight(1f)
         )
     }
