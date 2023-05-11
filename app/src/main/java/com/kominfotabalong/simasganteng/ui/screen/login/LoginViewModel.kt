@@ -122,6 +122,11 @@ class LoginViewModel @Inject constructor(
     val uiState: StateFlow<UiState<ResponseObject<LoginResponse>>>
         get() = _uiState
 
+    private val _userRemotelyState: MutableStateFlow<UiState<ResponseObject<LoginResponse>>> =
+        MutableStateFlow(UiState.Loading)
+    val userRemotelyState: StateFlow<UiState<ResponseObject<LoginResponse>>>
+        get() = _userRemotelyState
+
     private val _isFinishLogin = MutableStateFlow(false)
     val isFinishLogin: StateFlow<Boolean>
         get() = _isFinishLogin.asStateFlow()
@@ -135,6 +140,9 @@ class LoginViewModel @Inject constructor(
     val fcmState: StateFlow<UiState<ApiBaseResponse>>
         get() = _fcmState
 
+    val isDoneCheckUserRemotely = MutableStateFlow(false)
+
+    fun setDoneCheckUserRemotely() = viewModelScope.launch { isDoneCheckUserRemotely.emit(true) }
 
     fun doLogin(username: String, pass: String) {
         viewModelScope.launch {
@@ -199,6 +207,47 @@ class LoginViewModel @Inject constructor(
 
                     is NetworkResponse.UnknownError -> {
                         _uiState.emit(
+                            UiState.Error(
+                                response.error.localizedMessage
+                                    ?: "Unknown Error"
+                            )
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    fun getUserData(userToken: String) {
+        viewModelScope.launch {
+            _userRemotelyState.emit(UiState.Loading)
+            apiRepository.getUserData(userToken).catch {
+                _userRemotelyState.value = UiState.Error(it.message.toString())
+            }.collect { response ->
+                when (response) {
+                    is NetworkResponse.Success -> {
+                        _userRemotelyState.value = UiState.Success(response.body.body)
+                    }
+
+                    is NetworkResponse.ServerError -> {
+                        if (response.code == 401) {
+                            _userRemotelyState.value = UiState.Unauthorized
+                        } else {
+                            _userRemotelyState.emit(
+                                UiState.Error(
+                                    response.body?.message
+                                        ?: "Terjadi kesalahan saat memproses data"
+                                )
+                            )
+                        }
+                    }
+
+                    is NetworkResponse.NetworkError -> {
+                        _userRemotelyState.emit(UiState.Error("Tolong periksa koneksi anda!"))
+                    }
+
+                    is NetworkResponse.UnknownError -> {
+                        _userRemotelyState.emit(
                             UiState.Error(
                                 response.error.localizedMessage
                                     ?: "Unknown Error"

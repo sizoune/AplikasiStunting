@@ -3,7 +3,6 @@ package com.kominfotabalong.simasganteng
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -52,8 +51,7 @@ import com.ramcosta.composedestinations.manualcomposablecalls.animatedComposable
 import com.ramcosta.composedestinations.navigation.dependency
 
 @OptIn(
-    ExperimentalAnimationApi::class, ExperimentalMaterialNavigationApi::class,
-    ExperimentalMaterial3Api::class
+    ExperimentalAnimationApi::class, ExperimentalMaterialNavigationApi::class
 )
 @Composable
 fun SiMasGantengApp(
@@ -91,14 +89,26 @@ fun SiMasGantengApp(
     var dataPuskesmas by remember {
         mutableStateOf(listOf<PuskesmasResponse>())
     }
+    val isDoneCheckUserRemotely by loginViewModel.isDoneCheckUserRemotely.collectAsStateWithLifecycle()
+
+    println("isDoneCheckUserRemotely = $isDoneCheckUserRemotely")
 
     ObserveLoggedUser(onUserObserved = {
         loggedUser = it
+        if (loggedUser.token.isNotEmpty() && !isDoneCheckUserRemotely)
+            LaunchedEffect(key1 = Unit, block = {
+                loginViewModel.getUserData(loggedUser.token)
+            })
     })
 
     val startRoute =
-        if (isSplashLoaded) (if (loggedUser.token.isNotEmpty() && isFinishDoLogin) DashboardScreenDestination else LoginScreenDestination)
-        else NavGraphs.root.startRoute
+        if (isSplashLoaded) (
+                if (loggedUser.token.isNotEmpty() && isFinishDoLogin && isDoneCheckUserRemotely)
+                    DashboardScreenDestination
+                else
+                    LoginScreenDestination)
+        else
+            NavGraphs.root.startRoute
 
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -128,6 +138,31 @@ fun SiMasGantengApp(
         ObserveDataPuskesmasRemotely(viewModel = mainViewModel) {
             dataPuskesmas = it
             mainViewModel.saveDataPuskesToLocal(it)
+        }
+    }
+
+
+    loginViewModel.userRemotelyState.collectAsStateWithLifecycle().value.let { userState ->
+        when (userState) {
+            is UiState.Loading -> {
+            }
+
+            is UiState.Success -> {
+                LaunchedEffect(key1 = Unit, block = { loginViewModel.setDoneCheckUserRemotely() })
+            }
+
+            is UiState.Unauthorized -> {
+                LaunchedEffect(key1 = Unit) {
+                    loginViewModel.logOut()
+                }
+            }
+
+            is UiState.Error -> {
+                LaunchedEffect(key1 = Unit) {
+                    loginViewModel.logOut()
+                }
+                println("FailedToObtain User : ${userState.errorMessage}")
+            }
         }
     }
 
@@ -172,6 +207,7 @@ fun SiMasGantengApp(
             animatedComposable(LoginScreenDestination) {
                 LoginScreen(snackbarHostState = snackbarHostState, onLoginSuccess = {
                     loginViewModel.setLoginStatus(true)
+                    loginViewModel.setDoneCheckUserRemotely()
                 })
             }
             animatedComposable(AddLaporanScreenDestination) {

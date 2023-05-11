@@ -38,6 +38,11 @@ interface ApiService {
         @Body params: RequestBody
     ): NetworkResponse<ResponseObject<LoginResponse>, ApiBaseResponse>
 
+    @GET("user")
+    suspend fun getUserData(
+        @Header("Authorization") token: String,
+    ): NetworkResponse<ResponseObject<LoginResponse>, ApiBaseResponse>
+
     @POST("store-token")
     suspend fun postFCMToken(
         @Header("Authorization") token: String,

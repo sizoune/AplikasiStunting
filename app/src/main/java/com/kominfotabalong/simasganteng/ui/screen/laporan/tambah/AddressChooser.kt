@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -34,6 +33,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -98,7 +98,7 @@ fun AddressChooser(
                     .fillMaxSize()
                     .navigationBarsPadding()
             ) {
-                val (map, alamat, submit, backBtn) = createRefs()
+                val (map, alamat, submit, backBtn, guide) = createRefs()
 
                 IconButton(onClick = { onClose() }, modifier = modifier
                     .constrainAs(backBtn) {
@@ -115,6 +115,25 @@ fun AddressChooser(
                             .drawBehind {
                                 drawCircle(color = backBtnBG, radius = 50f)
                             })
+                }
+
+                Card(
+                    modifier = modifier
+                        .constrainAs(guide) {
+                            top.linkTo(parent.top)
+                            start.linkTo(parent.start)
+                            end.linkTo(backBtn.start)
+                        }
+                        .padding(start = 16.dp, top = 8.dp)
+                        .zIndex(4f),
+                    elevation = CardDefaults.cardElevation(10.dp),
+                    shape = RoundedCornerShape(20.dp)
+                ) {
+                    Text(
+                        text = "Tahan Marker/Pin untuk memindahkan lokasi!",
+                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.ExtraBold),
+                        modifier=modifier.padding(16.dp)
+                    )
                 }
 
                 GoogleMap(

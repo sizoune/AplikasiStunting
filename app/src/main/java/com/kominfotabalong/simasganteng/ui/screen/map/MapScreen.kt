@@ -24,6 +24,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -44,7 +45,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
@@ -123,6 +126,7 @@ fun MapScreen(
     var filteredText by remember {
         mutableStateOf("")
     }
+    var selectedFilterData by remember { mutableStateOf("") }
     val dataSebaran = remember { mutableStateListOf<SebaranResponse>() }
     val dataCluster = remember { mutableStateListOf<MyItem>() }
     val originClusterData = remember { mutableStateListOf<MyItem>() }
@@ -327,16 +331,41 @@ fun MapScreen(
                 .padding(8.dp)
 
         ) {
-            Text(
-                text = filteredText,
-                style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
-                modifier = modifier.padding(start = 16.dp, top = 16.dp)
-            )
+            val textBg = if (isSystemInDarkTheme()) Color.LightGray else Color.DarkGray
+            val clickedItemEffectModifier = modifier
+                .drawBehind {
+                    drawRoundRect(
+                        color = textBg, cornerRadius = CornerRadius(20f, 20f)
+                    )
+                }
+                .padding(8.dp)
+            Row(
+                modifier = modifier
+                    .fillMaxWidth()
+                    .padding(start = 16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = filteredText,
+                    style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
+                    modifier = modifier.weight(1f)
+                )
+                IconButton(onClick = {
+                    selectedFilterData = ""
+                    dataCluster.clear()
+                    changeMapEffect = !changeMapEffect
+                }) {
+                    Icon(imageVector = Icons.Filled.Refresh, contentDescription = "refresh")
+                }
+            }
+
             LazyRow(modifier = modifier.padding(start = 16.dp, end = 16.dp)) {
                 filteredData.forEach { (key, data) ->
                     item {
                         TextButton(
                             onClick = {
+                                selectedFilterData = key
                                 if (dataCluster.isNotEmpty()) dataCluster.clear()
                                 dataCluster.addAll(data.map {
                                     MyItem(
@@ -352,7 +381,12 @@ fun MapScreen(
                                 contentColor = if (isSystemInDarkTheme()) Color.White else Color.Black
                             )
                         ) {
-                            Text(text = "$key : ${data.size} anak", color = getStatusColor(key))
+
+                            Text(
+                                text = "$key : ${data.size} anak",
+                                color = getStatusColor(key),
+                                modifier = if (key == selectedFilterData) clickedItemEffectModifier else modifier
+                            )
                         }
                     }
                 }
@@ -432,6 +466,7 @@ fun MapScreen(
             is UiState.Success -> {
                 uiState.data.data?.let {
                     LaunchedEffect(key1 = Unit, block = {
+                        selectedFilterData = ""
                         isExpanded = false
                         if (filteredData.isNotEmpty()) filteredData.clear()
                         if (originClusterData.isNotEmpty()) originClusterData.clear()

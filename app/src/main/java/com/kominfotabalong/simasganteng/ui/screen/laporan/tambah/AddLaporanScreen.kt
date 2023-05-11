@@ -47,6 +47,8 @@ import com.kominfotabalong.simasganteng.ui.component.SuccessDialog
 import com.kominfotabalong.simasganteng.ui.destinations.LogoutHandlerDestination
 import com.kominfotabalong.simasganteng.ui.screen.laporan.tambah.LaporanAlamatContent
 import com.kominfotabalong.simasganteng.ui.screen.laporan.tambah.NikSearchDialog
+import com.kominfotabalong.simasganteng.ui.theme.OverlayDark30
+import com.kominfotabalong.simasganteng.ui.theme.OverlayLight30
 import com.kominfotabalong.simasganteng.util.showToast
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator

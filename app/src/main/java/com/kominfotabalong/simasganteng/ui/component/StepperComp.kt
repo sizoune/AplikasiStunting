@@ -3,6 +3,7 @@ package com.kominfotabalong.simasganteng.ui.component
 import androidx.compose.animation.animateColor
 import androidx.compose.animation.core.updateTransition
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
@@ -110,7 +111,7 @@ private fun Step(
                     Icon(
                         imageVector = Icons.Default.Done, "done",
                         modifier = modifier.padding(4.dp),
-                        tint = Color.White
+                        tint = if (isSystemInDarkTheme()) Color.Black else Color.White
                     )
                 else
                     Text(

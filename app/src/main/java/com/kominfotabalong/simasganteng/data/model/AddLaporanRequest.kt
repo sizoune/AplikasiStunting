@@ -8,7 +8,7 @@ interface HasStringProperties {
 
 data class AddLaporanRequest(
     var alamat: String = "",
-    var anak_ke: String = "",
+    var anak_ke: String = "1",
     var berat: String = "",
     var jenis_kelamin: String = "",
     var lat: String = "-1",
