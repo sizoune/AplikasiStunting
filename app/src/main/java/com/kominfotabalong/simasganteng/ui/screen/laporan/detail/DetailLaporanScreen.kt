@@ -63,7 +63,7 @@ import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 @Composable
 fun DetailLaporanScreen(
     modifier: Modifier = Modifier,
-    viewModel: LaporanViewModel = hiltViewModel(),
+    viewModel: LaporanViewModel,
     dataKecamatanString: List<Kecamatan>,
     dataLaporan: LaporanResponse,
     userToken: String,

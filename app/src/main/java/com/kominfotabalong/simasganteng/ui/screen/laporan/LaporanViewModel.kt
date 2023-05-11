@@ -49,13 +49,16 @@ class LaporanViewModel @Inject constructor(
     val myLng: StateFlow<Double>
         get() = _myLng
 
-    private val _myAddr: MutableStateFlow<String> =
-        MutableStateFlow("")
-    val myAddr: StateFlow<String>
-        get() = _myAddr
+    val myAddr = MutableStateFlow("")
 
     private val _isFinishSearching = MutableStateFlow(false)
     val isFinishSearching get() = _isFinishSearching
+
+    val doCariBalita = MutableStateFlow(false)
+
+    fun setDoCariBalita(isSearch: Boolean) = viewModelScope.launch {
+        doCariBalita.emit(isSearch)
+    }
 
     fun setSearchingStatustoTrue() = viewModelScope.launch {
         _isFinishSearching.emit(true)
@@ -303,7 +306,7 @@ class LaporanViewModel @Inject constructor(
         var addresses: List<Address>? = null
         val geocodeListener = Geocoder.GeocodeListener { addresses ->
             println("addresses = ${addresses.size}")
-            _myAddr.value = addresses[0]?.let { getAddressText(it) } ?: ""
+            myAddr.value = addresses[0]?.let { getAddressText(it) } ?: ""
         }
         try {
             if (Build.VERSION.SDK_INT >= 33) {
@@ -312,7 +315,7 @@ class LaporanViewModel @Inject constructor(
             } else {
                 addresses = geocoder.getFromLocation(latLng.latitude, latLng.longitude, 1)
                 addresses?.let {
-                    _myAddr.value = getAddressText(addresses[0]) ?: ""
+                    myAddr.value = getAddressText(addresses[0]) ?: ""
                 }
                 println("addresses = $addresses")
             }
@@ -337,7 +340,7 @@ class LaporanViewModel @Inject constructor(
         LaporanPagingSource(apiRepository, userToken, status)
     }.flow.cachedIn(viewModelScope)
 
-    fun getDaftarBalita(userToken: String) = Pager(PagingConfig(pageSize = 30)) {
-        BalitaPagingSource(apiRepository, userToken)
+    fun getDaftarBalita(userToken: String, search: String?) = Pager(PagingConfig(pageSize = 30)) {
+        BalitaPagingSource(apiRepository, userToken, search)
     }.flow.cachedIn(viewModelScope)
 }

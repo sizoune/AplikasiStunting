@@ -13,6 +13,7 @@ import com.kominfotabalong.simasganteng.data.model.PuskesmasResponse
 import com.kominfotabalong.simasganteng.data.model.ResponseListObject
 import com.kominfotabalong.simasganteng.data.model.ResponseObject
 import com.kominfotabalong.simasganteng.data.model.SebaranResponse
+import com.kominfotabalong.simasganteng.data.model.StatistikResponse
 import okhttp3.RequestBody
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -123,6 +124,12 @@ interface ApiService {
         @Header("Authorization") token: String,
         @QueryMap params: Map<String, String>,
     ): NetworkResponse<ResponseListObject<SebaranResponse>, ApiBaseResponse>
+
+    @GET("report/statistik-gizi")
+    suspend fun getStatistikGizi(
+        @Header("Authorization") token: String,
+        @QueryMap params: Map<String, String>,
+    ): NetworkResponse<ResponseListObject<StatistikResponse>, ApiBaseResponse>
 
     @Headers("Accept: application/json")
     @DELETE("pengukuran/destroy/{pengukuran_id}")

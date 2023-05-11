@@ -20,6 +20,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -41,7 +43,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -49,6 +50,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -56,8 +58,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -81,6 +81,7 @@ import com.kominfotabalong.simasganteng.MainViewModel
 import com.kominfotabalong.simasganteng.R
 import com.kominfotabalong.simasganteng.data.model.ArtikelResponse
 import com.kominfotabalong.simasganteng.data.model.LoginResponse
+import com.kominfotabalong.simasganteng.data.model.StatistikResponse
 import com.kominfotabalong.simasganteng.ui.common.UiState
 import com.kominfotabalong.simasganteng.ui.component.Loading
 import com.kominfotabalong.simasganteng.ui.component.NoData
@@ -96,17 +97,19 @@ import com.kominfotabalong.simasganteng.ui.destinations.MapScreenDestination
 import com.kominfotabalong.simasganteng.util.showToast
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
+import java.time.LocalDateTime
 import java.util.Calendar
 
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @OptIn(
-    ExperimentalFoundationApi::class, ExperimentalPermissionsApi::class
+    ExperimentalFoundationApi::class, ExperimentalPermissionsApi::class,
+    ExperimentalLayoutApi::class
 )
 @Composable
 @Destination
 fun DashboardScreen(
-    modifier: Modifier = Modifier.navigationBarsPadding(),
+    modifier: Modifier = Modifier,
     viewModel: MainViewModel = hiltViewModel(),
     snackbarHostState: SnackbarHostState,
     userData: LoginResponse,
@@ -127,6 +130,9 @@ fun DashboardScreen(
     }
     var dataArtikel by remember {
         mutableStateOf(listOf<ArtikelResponse>())
+    }
+    val dataStatistik = remember {
+        mutableStateListOf(StatistikResponse())
     }
     val context = LocalContext.current
 
@@ -209,6 +215,8 @@ fun DashboardScreen(
 
     LaunchedEffect(Unit) {
         viewModel.getDaftarArtikel()
+        if (userData.user.role.lowercase() != "public")
+            viewModel.getDataStatistik(userData.token, "2023")
     }
 
     ObserveDataArtikel(viewModel = viewModel, onResultSuccess = {
@@ -227,19 +235,47 @@ fun DashboardScreen(
         isLoading = true
     })
 
+    if (userData.user.role.lowercase() != "public")
+        ObserveDataStatistikGizi(
+            viewModel = viewModel,
+            onResultSuccess = {
+                isLoading = false
+                if (dataStatistik.isNotEmpty()) dataStatistik.clear()
+                dataStatistik.addAll(it)
+            },
+            onLoading = { isLoading = true },
+            onError = { errorMsg ->
+                isLoading = false
+                ShowSnackbarWithAction(
+                    snackbarHostState = snackbarHostState,
+                    errorMsg = errorMsg,
+                    onRetryClick = {
+                        viewModel.getDataStatistik(
+                            userData.token,
+                            LocalDateTime.now().year.toString()
+                        )
+                    },
+                )
+            },
+            onUnauthorized = {
+                navigator.navigate(LogoutHandlerDestination("Sesi login anda telah berakhir!"))
+            }
+        )
+
     ConstraintLayout(
         modifier = modifier
             .fillMaxSize()
+            .navigationBarsPadding()
             .verticalScroll(rememberScrollState())
     ) {
-        val (background, content, adminTitle, adminContent, artikelTitle, artikelContent, credit) = createRefs()
+        val (background, content, statistikTitle, statistikContent, adminTitle, adminContent, artikelTitle, artikelContent, credit) = createRefs()
 
         Column(modifier = modifier
             .constrainAs(background) {
                 top.linkTo(parent.top)
                 width = Dimension.fillToConstraints
             }
-            .height(140.dp)
+            .height(160.dp)
             .background(
                 color = MaterialTheme.colorScheme.primary,
                 shape = RoundedCornerShape(bottomStart = 20.dp, bottomEnd = 20.dp)
@@ -296,6 +332,16 @@ fun DashboardScreen(
                     )
                 }
             }
+            Text(
+                text = "SIstem inforMASi Tanggap stunTING KELUarga bahagiA, dikembangkan oleh Dinas Komunikasi dan Informatika Kabupaten Tabalong",
+                style = MaterialTheme.typography.labelSmall.copy(
+                    fontWeight = FontWeight.Bold
+                ),
+                modifier = modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+                    .basicMarquee(iterations = Int.MAX_VALUE)
+            )
         }
 
         Card(modifier = modifier
@@ -316,11 +362,53 @@ fun DashboardScreen(
         }
 
         if (userData.user.role.lowercase() != "public") {
+            if (isLoading) Loading(modifier = modifier
+                .constrainAs(statistikContent) {
+                    top.linkTo(content.bottom)
+                }
+                .padding(16.dp))
+            else {
+                if (dataStatistik.isNotEmpty()) {
+                    Text(text = "Statistik Gizi Tahun ${LocalDateTime.now().year}",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.ExtraBold),
+                        modifier = modifier
+                            .constrainAs(statistikTitle) {
+                                top.linkTo(content.bottom)
+                            }
+                            .padding(start = 16.dp, top = 24.dp, bottom = 16.dp))
+                    FlowRow(
+                        modifier = modifier
+                            .constrainAs(statistikContent) {
+                                top.linkTo(statistikTitle.bottom)
+                                start.linkTo(parent.start)
+                                end.linkTo(parent.end)
+                                width = Dimension.fillToConstraints
+                            }
+                            .padding(start = 16.dp, end = 16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                        maxItemsInEachRow = 2
+                    ) {
+                        dataStatistik.forEach {
+                            ItemStatistik(dataStatistik = it)
+                        }
+                    }
+                }
+
+
+            }
+
             Text(text = "Admin",
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.ExtraBold),
                 modifier = modifier
                     .constrainAs(adminTitle) {
-                        top.linkTo(content.bottom)
+                        if (!isLoading && dataStatistik.isNotEmpty())
+                            top.linkTo(statistikContent.bottom)
+                        else
+                            if (isLoading)
+                                top.linkTo(statistikContent.bottom)
+                            else
+                                top.linkTo(content.bottom)
                     }
                     .padding(start = 16.dp, top = 24.dp, bottom = 16.dp))
 
@@ -402,6 +490,7 @@ fun DashboardScreen(
                     .constrainAs(artikelContent) {
                         top.linkTo(artikelTitle.bottom)
                         width = Dimension.fillToConstraints
+
                     }
                     .padding(start = 16.dp, end = 16.dp),
                     elevation = CardDefaults.cardElevation(10.dp),
@@ -422,23 +511,11 @@ fun DashboardScreen(
                 }
         }
 
-
-        Text(text = "SIstem inforMASi Tanggap stunTING KELUarga bahagiA, dikembangkan oleh Dinas Komunikasi dan Informatika Kabupaten Tabalong",
-            style = MaterialTheme.typography.labelSmall.copy(
-                fontWeight = FontWeight.Bold
-            ),
-            modifier = modifier
-                .constrainAs(credit) {
-                    bottom.linkTo(parent.bottom)
-                }
-                .drawBehind {
-                    drawRoundRect(
-                        color = textBg, cornerRadius = CornerRadius(20f, 20f)
-                    )
-                }
-                .fillMaxWidth()
-                .padding(16.dp)
-                .basicMarquee(iterations = Int.MAX_VALUE))
+        Spacer(modifier = modifier
+            .size(20.dp)
+            .constrainAs(credit) {
+                top.linkTo(artikelContent.bottom)
+            })
     }
 
 }
@@ -452,6 +529,38 @@ fun ObserveDataArtikel(
     onUnauthorized: @Composable () -> Unit
 ) {
     viewModel.artikelState.collectAsStateWithLifecycle().value.let { uiState ->
+        when (uiState) {
+
+            is UiState.Loading -> {
+                onLoading()
+            }
+
+            is UiState.Success -> {
+                uiState.data.data?.let {
+                    onResultSuccess(it)
+                }
+            }
+
+            is UiState.Unauthorized -> {
+                onUnauthorized()
+            }
+
+            is UiState.Error -> {
+                onError(uiState.errorMessage)
+            }
+        }
+    }
+}
+
+@Composable
+fun ObserveDataStatistikGizi(
+    viewModel: MainViewModel,
+    onResultSuccess: (List<StatistikResponse>) -> Unit,
+    onLoading: () -> Unit,
+    onError: @Composable (String) -> Unit,
+    onUnauthorized: @Composable () -> Unit
+) {
+    viewModel.statistikState.collectAsStateWithLifecycle().value.let { uiState ->
         when (uiState) {
 
             is UiState.Loading -> {
@@ -515,6 +624,43 @@ fun DashboardMenu(
             Icon(
                 imageVector = Icons.Filled.ArrowForwardIos,
                 contentDescription = menuTitle,
+            )
+        }
+    }
+}
+
+@Composable
+fun ItemStatistik(
+    modifier: Modifier = Modifier,
+    dataStatistik: StatistikResponse,
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(0.48f),
+        elevation = CardDefaults.cardElevation(10.dp),
+        shape = RoundedCornerShape(20.dp)
+    )
+    {
+        Row(
+            modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Column(modifier = modifier.weight(1f)) {
+                Text(
+                    text = dataStatistik.status,
+                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.ExtraBold)
+                )
+                Text(
+                    text = dataStatistik.jumlah.toString(),
+                    style = MaterialTheme.typography.labelSmall
+                )
+            }
+            Icon(
+                painter = painterResource(R.drawable.stats),
+                contentDescription = "",
+                modifier = modifier.size(24.dp)
             )
         }
     }

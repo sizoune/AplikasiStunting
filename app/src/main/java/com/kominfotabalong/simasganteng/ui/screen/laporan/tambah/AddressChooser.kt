@@ -1,18 +1,23 @@
 package com.kominfotabalong.simasganteng.ui.screen.laporan.tambah
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -21,7 +26,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -33,29 +37,32 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.zIndex
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
-import com.google.maps.android.compose.DragState
 import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.MapEffect
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapType
 import com.google.maps.android.compose.MapUiSettings
-import com.google.maps.android.compose.Marker
+import com.google.maps.android.compose.MapsComposeExperimentalApi
 import com.google.maps.android.compose.rememberCameraPositionState
-import com.google.maps.android.compose.rememberMarkerState
 import com.kominfotabalong.simasganteng.R
 import com.kominfotabalong.simasganteng.data.model.AddressLoc
 import com.kominfotabalong.simasganteng.ui.component.Loading
 import com.kominfotabalong.simasganteng.ui.screen.laporan.LaporanViewModel
+import com.kominfotabalong.simasganteng.ui.theme.OverlayDark30
+import kotlinx.coroutines.delay
 
+@OptIn(MapsComposeExperimentalApi::class)
 @Composable
 fun AddressChooser(
     modifier: Modifier = Modifier,
@@ -71,34 +78,40 @@ fun AddressChooser(
             onDismissRequest = { onClose() }) {
             val context = LocalContext.current
 
-            val dragState = rememberMarkerState(
-                position = userLatLng
-            )
-            var uiSettings by remember { mutableStateOf(MapUiSettings()) }
-            var properties by remember {
+            var currentLatLng by remember {
+                mutableStateOf(userLatLng)
+            }
+            val uiSettings by remember { mutableStateOf(MapUiSettings()) }
+            val properties by remember {
                 mutableStateOf(MapProperties(mapType = MapType.TERRAIN))
             }
+            var isDragging by remember { mutableStateOf(false) }
+
+            var zoomPos by remember {
+                mutableStateOf(17f)
+            }
             val cameraPositionState = rememberCameraPositionState {
-                position = CameraPosition.fromLatLngZoom(dragState.position, 17f)
+                position = CameraPosition.fromLatLngZoom(currentLatLng, zoomPos)
             }
 
-            var currentAddress by remember {
-                mutableStateOf("")
-            }
-
-            viewModel.myAddr.collectAsState().value.let {
-                currentAddress = it
-            }
-
+            val currentAddress by viewModel.myAddr.collectAsStateWithLifecycle()
             val backBtnBG = colorResource(id = R.color.overlay_dark_30)
 
+            LaunchedEffect(key1 = currentLatLng, block = {
+                viewModel.getAddressFromLocation(context, currentLatLng)
+            })
+
+            LaunchedEffect(key1 = currentLatLng, block = {
+                delay(450)
+                isDragging = false
+            })
 
             ConstraintLayout(
                 modifier = modifier
                     .fillMaxSize()
                     .navigationBarsPadding()
             ) {
-                val (map, alamat, submit, backBtn, guide) = createRefs()
+                val (map, alamat, submit, backBtn, marker, shadow, markerSpace) = createRefs()
 
                 IconButton(onClick = { onClose() }, modifier = modifier
                     .constrainAs(backBtn) {
@@ -116,25 +129,39 @@ fun AddressChooser(
                                 drawCircle(color = backBtnBG, radius = 50f)
                             })
                 }
-
-                Card(
+                Icon(
+                    imageVector = Icons.Filled.LocationOn,
+                    contentDescription = "Posisi Saya",
+                    tint = Color.Red,
                     modifier = modifier
-                        .constrainAs(guide) {
+                        .constrainAs(marker) {
                             top.linkTo(parent.top)
+                            end.linkTo(parent.end)
                             start.linkTo(parent.start)
-                            end.linkTo(backBtn.start)
+                            bottom.linkTo(parent.bottom)
                         }
-                        .padding(start = 16.dp, top = 8.dp)
-                        .zIndex(4f),
-                    elevation = CardDefaults.cardElevation(10.dp),
-                    shape = RoundedCornerShape(20.dp)
-                ) {
-                    Text(
-                        text = "Tahan Marker/Pin untuk memindahkan lokasi!",
-                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.ExtraBold),
-                        modifier=modifier.padding(16.dp)
-                    )
-                }
+                        .zIndex(5f)
+                        .size(48.dp)
+                        .offset { IntOffset(0, if (isDragging) -40 else 0) }
+                )
+                Spacer(modifier = modifier
+                    .size(15.dp)
+                    .constrainAs(markerSpace) {
+                        bottom.linkTo(marker.bottom)
+                        start.linkTo(marker.start)
+                        end.linkTo(marker.end)
+                    })
+                Box(
+                    modifier = modifier
+                        .size(width = 28.dp, height = 18.dp)
+                        .constrainAs(shadow) {
+                            top.linkTo(markerSpace.top)
+                            start.linkTo(marker.start)
+                            end.linkTo(marker.end)
+                        }
+                        .zIndex(4f)
+                        .background(OverlayDark30, shape = RoundedCornerShape(50.dp))
+                )
 
                 GoogleMap(
                     modifier = modifier
@@ -151,11 +178,15 @@ fun AddressChooser(
                     uiSettings = uiSettings,
                     cameraPositionState = cameraPositionState
                 ) {
-                    Marker(
-                        state = dragState,
-                        title = "Posisi Saya",
-                        draggable = true,
-                    )
+                    MapEffect(key1 = Unit) { mMap ->
+                        mMap.setOnCameraMoveListener {
+                            zoomPos = mMap.cameraPosition.zoom
+                            isDragging = true
+                        }
+                        mMap.setOnCameraIdleListener {
+                            currentLatLng = mMap.cameraPosition.target
+                        }
+                    }
                 }
 
                 Card(
@@ -174,25 +205,20 @@ fun AddressChooser(
                         verticalArrangement = Arrangement.Center,
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
-                        dragState.dragState.let {
-                            if (it == DragState.END || it == DragState.START) {
-                                cameraPositionState.position =
-                                    CameraPosition.fromLatLngZoom(dragState.position, 17f)
-                                MapInfoContent(
-                                    currentAddress = currentAddress,
-                                    currentLatLng = dragState.position
-                                )
-                            } else if (it == DragState.DRAG) {
-                                Loading(modifier = modifier.wrapContentSize())
-                            }
-                        }
+                        if (isDragging)
+                            Loading(modifier = modifier.wrapContentSize())
+                        else
+                            MapInfoContent(
+                                currentAddress = currentAddress,
+                                currentLatLng = currentLatLng
+                            )
                     }
                 }
 
                 IconButton(onClick = {
                     onDoneClick(
                         AddressLoc(
-                            myPosition = dragState.position,
+                            myPosition = currentLatLng,
                             myAddress = currentAddress,
                         )
                     )
@@ -212,9 +238,6 @@ fun AddressChooser(
                     )
                 }
 
-                LaunchedEffect(dragState.dragState == DragState.END || dragState.dragState == DragState.START) {
-                    viewModel.getAddressFromLocation(context, dragState.position)
-                }
             }
         }
 

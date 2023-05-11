@@ -29,7 +29,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -63,7 +62,6 @@ import com.kominfotabalong.simasganteng.ui.component.WarningDialog
 import com.kominfotabalong.simasganteng.ui.screen.laporan.LaporanViewModel
 import com.kominfotabalong.simasganteng.util.Constants
 import com.kominfotabalong.simasganteng.util.showToast
-import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 
 @OptIn(ExperimentalPermissionsApi::class, ExperimentalComposeUiApi::class)
 @Composable
@@ -192,7 +190,7 @@ fun LaporanAlamatContent(
     }
 
     if (checkLocPerm) {
-        SideEffect {
+        LaunchedEffect(key1 = Unit) {
             launcherPermission.launch(
                 arrayOf(
                     Manifest.permission.ACCESS_FINE_LOCATION,
@@ -251,14 +249,12 @@ fun LaporanAlamatContent(
 
 
     if (currentAddressStat == Constants.ADDRESS_CHOOSE) {
-        if (myCurrentLat == (-1).toDouble() && myCurrentLng == (-1).toDouble()) {
-        } else {
+        if (myCurrentLat != (-1).toDouble() && myCurrentLng != (-1).toDouble()) {
             currentAddressStat = Constants.ADDRESS_NONE
             showChooser = true
         }
     } else if (currentAddressStat == Constants.ADDRESS_NEXT) {
-        if (myCurrentLat == (-1).toDouble() && myCurrentLng == (-1).toDouble()) {
-        } else {
+        if (myCurrentLat != (-1).toDouble() && myCurrentLng != (-1).toDouble()) {
             currentAddressStat = Constants.ADDRESS_NONE
             viewModel.collectData(1)
         }

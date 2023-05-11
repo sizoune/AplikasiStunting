@@ -2,6 +2,7 @@ package com.kominfotabalong.simasganteng
 
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -39,6 +40,7 @@ import com.kominfotabalong.simasganteng.ui.destinations.LogoutHandlerDestination
 import com.kominfotabalong.simasganteng.ui.destinations.PengukuranInputDestination
 import com.kominfotabalong.simasganteng.ui.destinations.SplashScreenDestination
 import com.kominfotabalong.simasganteng.ui.screen.laporan.AddLaporanScreen
+import com.kominfotabalong.simasganteng.ui.screen.laporan.LaporanViewModel
 import com.kominfotabalong.simasganteng.ui.screen.login.LoginScreen
 import com.kominfotabalong.simasganteng.ui.screen.login.LoginViewModel
 import com.kominfotabalong.simasganteng.ui.screen.pengukuran.PengukuranViewModel
@@ -111,7 +113,7 @@ fun SiMasGantengApp(
             NavGraphs.root.startRoute
 
     val snackbarHostState = remember { SnackbarHostState() }
-
+    val laporanViewModel = hiltViewModel<LaporanViewModel>()
 
     ObserveKecamatanLocally(mainViewModel = mainViewModel) {
         dataKecamatan = it
@@ -173,10 +175,14 @@ fun SiMasGantengApp(
                 && currentDestination != LoginScreenDestination
                 && currentDestination != DetailArtikelScreenDestination
                 && currentDestination != PengukuranInputDestination
+                && currentDestination != LogoutHandlerDestination
             )
                 TopBar(
                     destination = currentDestination,
-                    onBackClick = { navController.popBackStack() }
+                    onBackClick = { navController.popBackStack() },
+                    onSearchClick = {
+                        laporanViewModel.setDoCariBalita(true)
+                    }
                 )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -188,7 +194,9 @@ fun SiMasGantengApp(
             navController = navController,
             startRoute = startRoute,
             navGraph = NavGraphs.root,
-            modifier = Modifier.padding(innerPadding),
+            modifier = Modifier
+                .padding(innerPadding)
+                .navigationBarsPadding(),
             dependenciesContainerBuilder = {
                 dependency(snackbarHostState)
                 dependency(Gson())
@@ -196,6 +204,8 @@ fun SiMasGantengApp(
                 dependency(dataKecamatan)
                 dependency(LogoutHandlerDestination) { loginViewModel }
                 dependency(hiltViewModel<PengukuranViewModel>())
+                dependency(laporanViewModel)
+
             }
         ) {
             animatedComposable(SplashScreenDestination) {

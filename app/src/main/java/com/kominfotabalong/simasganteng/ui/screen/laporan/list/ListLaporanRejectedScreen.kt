@@ -34,7 +34,7 @@ import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 @Destination
 fun ListLaporanRejectedScreen(
     modifier: Modifier = Modifier,
-    viewModel: LaporanViewModel = hiltViewModel(),
+    viewModel: LaporanViewModel,
     navigator: DestinationsNavigator,
     dataKecamatan: List<Kecamatan>,
     userData: LoginResponse,

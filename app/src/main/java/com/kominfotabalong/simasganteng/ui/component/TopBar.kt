@@ -3,6 +3,7 @@ package com.kominfotabalong.simasganteng.ui.component
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBackIos
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
@@ -21,7 +22,8 @@ import com.kominfotabalong.simasganteng.ui.destinations.PengukuranScreenDestinat
 @Composable
 fun TopBar(
     destination: Destination,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    onSearchClick: () -> Unit,
 ) {
     val titleColor = if (isSystemInDarkTheme()) Color.White else Color.Black
     TopAppBar(
@@ -43,6 +45,18 @@ fun TopBar(
                     tint = titleColor
                 )
             }
+        },
+        actions = {
+            if (destination == ListLaporanVerifiedScreenDestination)
+                IconButton(
+                    onClick = onSearchClick,
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Search,
+                        contentDescription = "Cari Balita",
+                        tint = titleColor
+                    )
+                }
         },
         colors = TopAppBarDefaults.topAppBarColors(MaterialTheme.colorScheme.primary)
     )
@@ -76,6 +90,7 @@ fun Destination.topBarTitle(): String {
         MapScreenDestination -> {
             "Peta Sebaran Stunting"
         }
+
         PengukuranScreenDestination -> {
             "Detail Balita"
         }

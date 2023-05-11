@@ -32,7 +32,7 @@ import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 @Destination
 fun ListLaporanMasukScreen(
     modifier: Modifier = Modifier.navigationBarsPadding(),
-    viewModel: LaporanViewModel = hiltViewModel(),
+    viewModel: LaporanViewModel,
     navigator: DestinationsNavigator,
     dataKecamatan: List<Kecamatan>,
     userData: LoginResponse,

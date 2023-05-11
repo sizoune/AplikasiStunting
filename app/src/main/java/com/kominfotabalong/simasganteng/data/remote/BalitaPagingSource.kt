@@ -10,17 +10,18 @@ import com.kominfotabalong.simasganteng.data.repository.ApiRepository
 class BalitaPagingSource(
     private val repo: ApiRepository,
     private val userToken: String,
+    private val searchText: String? = null,
 ) : PagingSource<String, BalitaResponse>() {
 
     override fun getRefreshKey(state: PagingState<String, BalitaResponse>): String =
-        "${BuildConfig.API_URL}balita/list"
+        "${BuildConfig.API_URL}balita/list${if (searchText != null) "?search=$searchText" else ""}"
 
     override suspend fun load(params: LoadParams<String>): LoadResult<String, BalitaResponse> {
         return when (val response =
             repo.getDaftarBalita(
                 userToken,
                 params.key
-                    ?: "${BuildConfig.API_URL}balita/list"
+                    ?: "${BuildConfig.API_URL}balita/list${if (searchText != null) "?search=$searchText" else ""}"
             )) {
             is NetworkResponse.Success -> {
                 val prevKey =

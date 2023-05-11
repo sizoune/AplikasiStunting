@@ -490,4 +490,36 @@ class ApiRepository @Inject constructor(
             }
         }
     }.flowOn(Dispatchers.IO)
+
+    suspend fun getStatistikGizi(
+        token: String, tahun: String, bulan: String?
+    ) = flow {
+        val params = hashMapOf(
+            "year" to tahun,
+        )
+        if (bulan != null) params["month"] = bulan
+        when (val data = apiService.getStatistikGizi(
+            "Bearer $token", params
+        )) {
+            is NetworkResponse.Success -> {
+                emit(
+                    NetworkResponse.Success(
+                        data, null, 200
+                    )
+                )
+            }
+
+            is NetworkResponse.ServerError -> {
+                emit(NetworkResponse.ServerError(data.body, data.code))
+            }
+
+            is NetworkResponse.NetworkError -> {
+                emit(NetworkResponse.NetworkError(data.error))
+            }
+
+            is NetworkResponse.UnknownError -> {
+                emit(NetworkResponse.UnknownError(data.error))
+            }
+        }
+    }.flowOn(Dispatchers.IO)
 }
