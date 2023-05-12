@@ -1,14 +1,39 @@
 package com.kominfotabalong.simasganteng.ui.component
 
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBackIos
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.*
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import com.kominfotabalong.simasganteng.ui.destinations.AddLaporanScreenDestination
 import com.kominfotabalong.simasganteng.ui.destinations.Destination
 import com.kominfotabalong.simasganteng.ui.destinations.DetailLaporanScreenDestination
@@ -18,26 +43,76 @@ import com.kominfotabalong.simasganteng.ui.destinations.ListLaporanVerifiedScree
 import com.kominfotabalong.simasganteng.ui.destinations.MapScreenDestination
 import com.kominfotabalong.simasganteng.ui.destinations.PengukuranScreenDestination
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
 fun TopBar(
     destination: Destination,
     onBackClick: () -> Unit,
-    onSearchClick: () -> Unit,
+    onSearchClick: (String) -> Unit,
 ) {
     val titleColor = if (isSystemInDarkTheme()) Color.White else Color.Black
+    var doSearch by remember {
+        mutableStateOf(false)
+    }
+    var searchText by remember {
+        mutableStateOf("")
+    }
+    val focusRequester = remember { FocusRequester() }
+    val keyboardController = LocalSoftwareKeyboardController.current
+
     TopAppBar(
         title = {
-            Text(
-                text = destination.topBarTitle(),
-                style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.ExtraBold),
-                textAlign = TextAlign.Center,
-                color = titleColor,
-            )
+            if (!doSearch)
+                Text(
+                    text = destination.topBarTitle(),
+                    style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.ExtraBold),
+                    textAlign = TextAlign.Center,
+                    color = titleColor,
+                )
+            else {
+                TextField(
+                    placeholder = {
+                        Text(
+                            text = "Masukkan NIK/Nama Anak",
+                            style = MaterialTheme.typography.labelMedium
+                        )
+                    },
+                    value = searchText, onValueChange = { searchText = it },
+                    textStyle = MaterialTheme.typography.labelMedium,
+                    keyboardOptions = KeyboardOptions.Default.copy(
+                        keyboardType = KeyboardType.Text,
+                        imeAction = ImeAction.Done
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onDone = {
+                            onSearchClick(searchText)
+                            keyboardController?.hide()
+                        }
+                    ),
+                    colors = TextFieldDefaults.colors(
+                        cursorColor = if (isSystemInDarkTheme()) Color.White else Color.Black,
+                        focusedLabelColor = if (isSystemInDarkTheme()) Color.White else Color.Black,
+                        focusedIndicatorColor = if (isSystemInDarkTheme()) Color.White else Color.Black,
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp)
+                        .focusRequester(focusRequester)
+                )
+                LaunchedEffect(key1 = Unit, block = { focusRequester.requestFocus() })
+            }
+
         },
         navigationIcon = {
             IconButton(
-                onClick = onBackClick,
+                onClick = {
+                    if (!doSearch)
+                        onBackClick()
+                    else {
+                        doSearch = false
+                        keyboardController?.hide()
+                    }
+                },
             ) {
                 Icon(
                     imageVector = Icons.Filled.ArrowBackIos,
@@ -49,7 +124,7 @@ fun TopBar(
         actions = {
             if (destination == ListLaporanVerifiedScreenDestination)
                 IconButton(
-                    onClick = onSearchClick,
+                    onClick = { doSearch = !doSearch },
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Search,

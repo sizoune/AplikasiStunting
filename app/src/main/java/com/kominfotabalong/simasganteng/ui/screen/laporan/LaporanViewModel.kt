@@ -54,10 +54,10 @@ class LaporanViewModel @Inject constructor(
     private val _isFinishSearching = MutableStateFlow(false)
     val isFinishSearching get() = _isFinishSearching
 
-    val doCariBalita = MutableStateFlow(false)
+    val doCariBalita = MutableStateFlow("")
 
-    fun setDoCariBalita(isSearch: Boolean) = viewModelScope.launch {
-        doCariBalita.emit(isSearch)
+    fun setDoCariBalita(searchQuery: String) = viewModelScope.launch {
+        doCariBalita.emit(searchQuery)
     }
 
     fun setSearchingStatustoTrue() = viewModelScope.launch {

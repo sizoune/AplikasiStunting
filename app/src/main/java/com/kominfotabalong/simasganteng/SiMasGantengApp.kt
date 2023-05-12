@@ -180,8 +180,8 @@ fun SiMasGantengApp(
                 TopBar(
                     destination = currentDestination,
                     onBackClick = { navController.popBackStack() },
-                    onSearchClick = {
-                        laporanViewModel.setDoCariBalita(true)
+                    onSearchClick = { searchText ->
+                        laporanViewModel.setDoCariBalita(searchText)
                     }
                 )
         },
