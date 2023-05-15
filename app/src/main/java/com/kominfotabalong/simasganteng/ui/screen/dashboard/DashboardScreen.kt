@@ -34,18 +34,26 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowForwardIos
-import androidx.compose.material.icons.filled.Logout
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Divider
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
@@ -53,18 +61,24 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.ui.window.Dialog
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import androidx.core.content.ContextCompat
@@ -82,9 +96,11 @@ import com.kominfotabalong.simasganteng.R
 import com.kominfotabalong.simasganteng.data.model.ArtikelResponse
 import com.kominfotabalong.simasganteng.data.model.LoginResponse
 import com.kominfotabalong.simasganteng.data.model.StatistikResponse
+import com.kominfotabalong.simasganteng.data.model.User
 import com.kominfotabalong.simasganteng.ui.common.UiState
 import com.kominfotabalong.simasganteng.ui.component.Loading
 import com.kominfotabalong.simasganteng.ui.component.NoData
+import com.kominfotabalong.simasganteng.ui.component.OutlinedTextFieldComp
 import com.kominfotabalong.simasganteng.ui.component.ShowSnackbarWithAction
 import com.kominfotabalong.simasganteng.ui.component.WarningDialog
 import com.kominfotabalong.simasganteng.ui.destinations.AddLaporanScreenDestination
@@ -97,6 +113,7 @@ import com.kominfotabalong.simasganteng.ui.destinations.MapScreenDestination
 import com.kominfotabalong.simasganteng.util.showToast
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
+import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import java.util.Calendar
 
@@ -116,13 +133,17 @@ fun DashboardScreen(
     navigator: DestinationsNavigator
 ) {
     val rightNow: Calendar = Calendar.getInstance()
-    val textBg = if (isSystemInDarkTheme()) Color.DarkGray else Color.LightGray
-
 
     var doLogout by remember {
         mutableStateOf(false)
     }
     var showWarningDialog by remember {
+        mutableStateOf(false)
+    }
+    var showSetting by remember {
+        mutableStateOf(false)
+    }
+    var showEditProfile by remember {
         mutableStateOf(false)
     }
     var warningMsg by remember {
@@ -213,6 +234,28 @@ fun DashboardScreen(
             else postNotifPermissionsState.launchPermissionRequest()
         })
 
+    ShowSettingDialog(
+        showDialog = showSetting,
+        onLogoutClick = {
+            showWarningDialog = true
+            doLogout = true
+            warningMsg = "Apakah anda yakin ingin keluar dari aplikasi ?"
+        },
+        onEditProfileClick = {
+            showEditProfile = true
+        }, onDismiss = { showSetting = false })
+
+    EditProfileDialog(
+        viewModel = viewModel,
+        userToken = userData.token,
+        showDialog = showEditProfile,
+        currentUser = userData.user,
+        onUnauthorized = {
+            navigator.navigate(LogoutHandlerDestination("Sesi login anda telah berakhir!"))
+        },
+        onDismiss = { showEditProfile = false }
+    )
+
     LaunchedEffect(Unit) {
         viewModel.getDaftarArtikel()
         if (userData.user.role.lowercase() != "public")
@@ -295,10 +338,14 @@ fun DashboardScreen(
                     Card(
                         elevation = CardDefaults.cardElevation(10.dp),
                         shape = RoundedCornerShape(50.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.primary
+                        )
                     ) {
                         Image(
                             painter = painterResource(id = R.drawable.logo),
                             contentDescription = "Logo",
+                            modifier = modifier.size(48.dp)
                         )
                     }
                     Column(modifier = modifier.padding(start = 8.dp)) {
@@ -321,14 +368,11 @@ fun DashboardScreen(
                     }
                 }
                 IconButton(onClick = {
-                    showWarningDialog = true
-                    doLogout = true
-                    warningMsg = "Apakah anda yakin ingin keluar dari aplikasi ?"
-
+                    showSetting = true
                 }, modifier = modifier.weight(0.1f)) {
                     Icon(
-                        imageVector = Icons.Filled.Logout,
-                        contentDescription = "keluar",
+                        imageVector = Icons.Filled.Settings,
+                        contentDescription = "pengaturan",
                     )
                 }
             }
@@ -627,6 +671,234 @@ fun DashboardMenu(
             )
         }
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ShowSettingDialog(
+    modifier: Modifier = Modifier,
+    showDialog: Boolean,
+    onLogoutClick: () -> Unit,
+    onEditProfileClick: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val scope = rememberCoroutineScope()
+
+    if (showDialog)
+        ModalBottomSheet(onDismissRequest = {
+            scope.launch {
+                bottomSheetState.hide()
+            }.invokeOnCompletion { onDismiss() }
+        }, sheetState = bottomSheetState) {
+            Column(modifier = modifier.fillMaxWidth()) {
+                TextButton(onClick = {
+                    onEditProfileClick()
+                    scope.launch {
+                        bottomSheetState.hide()
+                    }.invokeOnCompletion { onDismiss() }
+                }, modifier = modifier.fillMaxWidth()) {
+                    Text(
+                        text = "Ubah Profil",
+                        color = if (isSystemInDarkTheme()) Color.White else Color.Black
+                    )
+                }
+                Divider(
+                    modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp, bottom = 8.dp),
+                    thickness = 1.dp,
+                    color = Color.LightGray,
+                )
+                TextButton(onClick = {
+                    onLogoutClick()
+                    scope.launch {
+                        bottomSheetState.hide()
+                    }.invokeOnCompletion { onDismiss() }
+                }, modifier = modifier.fillMaxWidth()) {
+                    Text(text = "Keluar Aplikasi", color = Color.Red)
+                }
+            }
+        }
+}
+
+@Composable
+fun EditProfileDialog(
+    modifier: Modifier = Modifier,
+    viewModel: MainViewModel,
+    userToken: String,
+    showDialog: Boolean,
+    currentUser: User,
+    onUnauthorized: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    var nameError by remember { mutableStateOf(false) }
+    var name by remember {
+        mutableStateOf(currentUser.name)
+    }
+
+    var usernameError by remember { mutableStateOf(false) }
+    var username by remember {
+        mutableStateOf(currentUser.username)
+    }
+
+    var phoneError by remember { mutableStateOf(false) }
+    var phone by remember {
+        mutableStateOf(currentUser.whatsapp)
+    }
+    var isSubmitted by remember {
+        mutableStateOf(false)
+    }
+    val focusManager = LocalFocusManager.current
+    val context = LocalContext.current
+
+    fun validateInput(): Boolean {
+        if (name == "") {
+            nameError = true
+            return false
+        } else if (username == "") {
+            usernameError = true
+            return false
+        } else if (phone == "") {
+            phoneError = true
+            return false
+        }
+        return true
+    }
+
+    if (showDialog)
+        Dialog(onDismissRequest = onDismiss) {
+            Card(
+                elevation = CardDefaults.cardElevation(10.dp),
+                shape = RoundedCornerShape(15.dp),
+                modifier = modifier
+            ) {
+                IconButton(
+                    onClick = {
+                        onDismiss()
+                    },
+                    modifier = modifier.align(Alignment.End)
+                ) {
+                    Icon(imageVector = Icons.Filled.Close, contentDescription = "tutup")
+                }
+                Column(modifier = modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp)) {
+                    OutlinedTextFieldComp(
+                        placeholderText = "Nama",
+                        query = name,
+                        isError = nameError,
+                        errorMsg = "nama tidak boleh kosong!",
+                        onQueryChange = { newText ->
+                            name = newText
+                        },
+                        keyboardOptions = KeyboardOptions.Default.copy(
+                            keyboardType = KeyboardType.Text,
+                            imeAction = ImeAction.Next
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onNext = {
+                                focusManager.moveFocus(FocusDirection.Down)
+                            }
+                        ),
+                        modifier = modifier
+                            .fillMaxWidth()
+
+                    )
+
+                    OutlinedTextFieldComp(
+                        placeholderText = "Username",
+                        query = username,
+                        isError = usernameError,
+                        errorMsg = "username tidak boleh kosong!",
+                        onQueryChange = { newText ->
+                            username = newText
+                        },
+                        keyboardOptions = KeyboardOptions.Default.copy(
+                            keyboardType = KeyboardType.Text,
+                            imeAction = ImeAction.Next
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onNext = {
+                                focusManager.moveFocus(FocusDirection.Down)
+                            }
+                        ),
+                        modifier = modifier
+                            .fillMaxWidth()
+
+                    )
+
+                    OutlinedTextFieldComp(
+                        placeholderText = "No HP / WA",
+                        query = phone ?: "",
+                        isError = phoneError,
+                        errorMsg = "No HP / WA tidak boleh kosong!",
+                        onQueryChange = { newText ->
+                            phone = newText
+                        },
+                        keyboardOptions = KeyboardOptions.Default.copy(
+                            keyboardType = KeyboardType.Number,
+                            imeAction = ImeAction.Done
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onDone = {
+                                if (validateInput()) {
+                                    viewModel.updateProfile(userToken, name, username, phone ?: "")
+                                    isSubmitted = true
+                                }
+                            }
+                        ),
+                        modifier = modifier
+                            .fillMaxWidth()
+
+                    )
+
+                    Button(
+                        onClick = {
+                            if (validateInput()) {
+                                viewModel.updateProfile(userToken, name, username, phone ?: "")
+                                isSubmitted = true
+                            }
+                        }, modifier = modifier
+                            .fillMaxWidth()
+                            .padding(top = 20.dp)
+                    ) {
+                        Text(
+                            text = "Update Profile",
+                            color = if (isSystemInDarkTheme()) Color.White else Color.Black
+                        )
+                    }
+                }
+            }
+        }
+
+    if (isSubmitted)
+        viewModel.uiState.collectAsStateWithLifecycle().value.let { uiState ->
+            when (uiState) {
+                is UiState.Loading -> {
+                    Dialog(onDismissRequest = { }) {
+                        Loading()
+                    }
+                }
+
+                is UiState.Unauthorized -> {
+                    onUnauthorized()
+                    onDismiss()
+                }
+
+                is UiState.Error -> {
+                    LaunchedEffect(key1 = Unit) {
+                        context.showToast(uiState.errorMessage)
+                    }
+                }
+
+                is UiState.Success -> {
+                    LaunchedEffect(key1 = Unit) {
+                        viewModel.saveUserData(uiState.data.data)
+                        context.showToast("Profile berhasil diupdate!")
+                        onDismiss()
+                    }
+                }
+            }
+        }
 }
 
 @Composable

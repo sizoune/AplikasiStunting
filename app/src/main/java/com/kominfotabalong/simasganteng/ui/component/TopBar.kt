@@ -70,36 +70,39 @@ fun TopBar(
                     color = titleColor,
                 )
             else {
-                TextField(
-                    placeholder = {
-                        Text(
-                            text = "Masukkan NIK/Nama Anak",
-                            style = MaterialTheme.typography.labelMedium
-                        )
-                    },
-                    value = searchText, onValueChange = { searchText = it },
-                    textStyle = MaterialTheme.typography.labelMedium,
-                    keyboardOptions = KeyboardOptions.Default.copy(
-                        keyboardType = KeyboardType.Text,
-                        imeAction = ImeAction.Done
-                    ),
-                    keyboardActions = KeyboardActions(
-                        onDone = {
-                            onSearchClick(searchText)
-                            keyboardController?.hide()
-                        }
-                    ),
-                    colors = TextFieldDefaults.colors(
-                        cursorColor = if (isSystemInDarkTheme()) Color.White else Color.Black,
-                        focusedLabelColor = if (isSystemInDarkTheme()) Color.White else Color.Black,
-                        focusedIndicatorColor = if (isSystemInDarkTheme()) Color.White else Color.Black,
-                    ),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp)
-                        .focusRequester(focusRequester)
-                )
-                LaunchedEffect(key1 = Unit, block = { focusRequester.requestFocus() })
+                if (destination == ListLaporanVerifiedScreenDestination) {
+                    TextField(
+                        placeholder = {
+                            Text(
+                                text = "Masukkan NIK/Nama Anak",
+                                style = MaterialTheme.typography.labelMedium
+                            )
+                        },
+                        value = searchText, onValueChange = { searchText = it },
+                        textStyle = MaterialTheme.typography.labelMedium,
+                        keyboardOptions = KeyboardOptions.Default.copy(
+                            keyboardType = KeyboardType.Text,
+                            imeAction = ImeAction.Done
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onDone = {
+                                onSearchClick(searchText)
+                                keyboardController?.hide()
+                            }
+                        ),
+                        colors = TextFieldDefaults.colors(
+                            cursorColor = if (isSystemInDarkTheme()) Color.White else Color.Black,
+                            focusedLabelColor = if (isSystemInDarkTheme()) Color.White else Color.Black,
+                            focusedIndicatorColor = if (isSystemInDarkTheme()) Color.White else Color.Black,
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp)
+                            .focusRequester(focusRequester)
+                    )
+                    LaunchedEffect(key1 = Unit, block = { focusRequester.requestFocus() })
+                } else
+                    doSearch = false
             }
 
         },

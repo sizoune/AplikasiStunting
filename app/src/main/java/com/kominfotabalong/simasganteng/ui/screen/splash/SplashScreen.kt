@@ -11,8 +11,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardColors
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -66,16 +68,22 @@ fun SplashScreen(
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
-        modifier = Modifier.fillMaxSize().background(color = MaterialTheme.colorScheme.primary)
+        modifier = Modifier
+            .fillMaxSize()
+            .background(color = MaterialTheme.colorScheme.primary)
     ) {
         Card(
             elevation = CardDefaults.cardElevation(10.dp),
             shape = RoundedCornerShape(50.dp),
-            modifier = modifier.scale(scale.value)
+            modifier = modifier.scale(scale.value),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.primary
+            )
         ) {
             Image(
                 painter = painterResource(id = R.drawable.logo),
                 contentDescription = "Logo",
+                modifier=modifier.size(80.dp)
             )
         }
         AnimatedVisibility(

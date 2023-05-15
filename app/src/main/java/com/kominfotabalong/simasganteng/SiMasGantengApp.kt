@@ -35,6 +35,7 @@ import com.kominfotabalong.simasganteng.ui.destinations.AddLaporanScreenDestinat
 import com.kominfotabalong.simasganteng.ui.destinations.DashboardScreenDestination
 import com.kominfotabalong.simasganteng.ui.destinations.Destination
 import com.kominfotabalong.simasganteng.ui.destinations.DetailArtikelScreenDestination
+import com.kominfotabalong.simasganteng.ui.destinations.ListLaporanVerifiedScreenDestination
 import com.kominfotabalong.simasganteng.ui.destinations.LoginScreenDestination
 import com.kominfotabalong.simasganteng.ui.destinations.LogoutHandlerDestination
 import com.kominfotabalong.simasganteng.ui.destinations.PengukuranInputDestination
@@ -179,7 +180,11 @@ fun SiMasGantengApp(
             )
                 TopBar(
                     destination = currentDestination,
-                    onBackClick = { navController.popBackStack() },
+                    onBackClick = {
+                        navController.popBackStack()
+                        if (currentDestination == ListLaporanVerifiedScreenDestination)
+                            laporanViewModel.setDoCariBalita("")
+                    },
                     onSearchClick = { searchText ->
                         laporanViewModel.setDoCariBalita(searchText)
                     }

@@ -108,6 +108,39 @@ class ApiRepository @Inject constructor(
         }
     }.flowOn(Dispatchers.IO)
 
+    suspend fun updateProfile(
+        token: String, name: String, username: String, phone: String,
+    ) = flow {
+        when (val data = apiService.updateProfile(
+            "Bearer $token",
+            createJsonRequestBody(
+                "name" to name,
+                "username" to username,
+                "phone" to phone,
+            )
+        )) {
+            is NetworkResponse.Success -> {
+                emit(
+                    NetworkResponse.Success(
+                        data, null, 200
+                    )
+                )
+            }
+
+            is NetworkResponse.ServerError -> {
+                emit(NetworkResponse.ServerError(data.body, data.code))
+            }
+
+            is NetworkResponse.NetworkError -> {
+                emit(NetworkResponse.NetworkError(data.error))
+            }
+
+            is NetworkResponse.UnknownError -> {
+                emit(NetworkResponse.UnknownError(data.error))
+            }
+        }
+    }.flowOn(Dispatchers.IO)
+
     suspend fun postFCMToken(
         token: String, fcmToken: String?
     ) = flow {

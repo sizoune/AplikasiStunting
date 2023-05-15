@@ -7,8 +7,10 @@ import com.google.gson.reflect.TypeToken
 import com.haroldadmin.cnradapter.NetworkResponse
 import com.kominfotabalong.simasganteng.data.model.ArtikelResponse
 import com.kominfotabalong.simasganteng.data.model.Kecamatan
+import com.kominfotabalong.simasganteng.data.model.LoginResponse
 import com.kominfotabalong.simasganteng.data.model.PuskesmasResponse
 import com.kominfotabalong.simasganteng.data.model.ResponseListObject
+import com.kominfotabalong.simasganteng.data.model.ResponseObject
 import com.kominfotabalong.simasganteng.data.model.StatistikResponse
 import com.kominfotabalong.simasganteng.data.repository.ApiRepository
 import com.kominfotabalong.simasganteng.data.repository.UserDataStoreRepository
@@ -45,6 +47,11 @@ class MainViewModel @Inject constructor(
         MutableStateFlow(UiState.Loading)
     val pkmState: StateFlow<UiState<ResponseListObject<PuskesmasResponse>>>
         get() = _pkmState
+
+    private val _uiState: MutableStateFlow<UiState<ResponseObject<LoginResponse>>> =
+        MutableStateFlow(UiState.Loading)
+    val uiState: StateFlow<UiState<ResponseObject<LoginResponse>>>
+        get() = _uiState
 
     fun getDataStatistik(userToken: String, tahun: String, bulan: String? = null) {
         viewModelScope.launch {
@@ -229,5 +236,52 @@ class MainViewModel @Inject constructor(
 
     fun saveDataPuskesToLocal(data: List<PuskesmasResponse>) = viewModelScope.launch {
         userDataStoreRepository.saveDataPuskes(data)
+    }
+
+    fun updateProfile(token: String, name: String, username: String, phone: String) {
+        viewModelScope.launch {
+            _uiState.emit(UiState.Loading)
+            apiRepository.updateProfile(token, name, username, phone).catch {
+                _uiState.value = UiState.Error(it.message.toString())
+            }.collect { response ->
+                when (response) {
+                    is NetworkResponse.Success -> {
+                        _uiState.value = UiState.Success(response.body.body)
+                    }
+
+                    is NetworkResponse.ServerError -> {
+                        if (response.code == 401) {
+                            _uiState.value = UiState.Unauthorized
+                        } else {
+                            _uiState.emit(
+                                UiState.Error(
+                                    response.body?.message
+                                        ?: "Terjadi kesalahan saat memproses data"
+                                )
+                            )
+                        }
+                    }
+
+                    is NetworkResponse.NetworkError -> {
+                        _uiState.emit(UiState.Error("Tolong periksa koneksi anda!"))
+                    }
+
+                    is NetworkResponse.UnknownError -> {
+                        _uiState.emit(
+                            UiState.Error(
+                                response.error.localizedMessage
+                                    ?: "Unknown Error"
+                            )
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    fun saveUserData(data: LoginResponse?) {
+        viewModelScope.launch {
+            userDataStoreRepository.saveUserData(data)
+        }
     }
 }

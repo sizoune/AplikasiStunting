@@ -39,6 +39,13 @@ interface ApiService {
         @Body params: RequestBody
     ): NetworkResponse<ResponseObject<LoginResponse>, ApiBaseResponse>
 
+    @Headers("Accept: application/json")
+    @POST("user/update-profile")
+    suspend fun updateProfile(
+        @Header("Authorization") token: String,
+        @Body params: RequestBody,
+    ): NetworkResponse<ResponseObject<LoginResponse>, ApiBaseResponse>
+
     @GET("user")
     suspend fun getUserData(
         @Header("Authorization") token: String,
@@ -137,4 +144,6 @@ interface ApiService {
         @Header("Authorization") token: String,
         @Path("pengukuran_id") pengukuranID: Int,
     ): NetworkResponse<ApiBaseResponse, ApiBaseResponse>
+
+
 }
