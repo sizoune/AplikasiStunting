@@ -272,7 +272,7 @@ fun LoginScreen(
             Image(
                 painter = painterResource(id = R.drawable.logo),
                 contentDescription = "Logo",
-                modifier = modifier
+                modifier = modifier.size(48.dp)
             )
         }
     }

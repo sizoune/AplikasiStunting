@@ -82,10 +82,10 @@ fun TopBar(
                         textStyle = MaterialTheme.typography.labelMedium,
                         keyboardOptions = KeyboardOptions.Default.copy(
                             keyboardType = KeyboardType.Text,
-                            imeAction = ImeAction.Done
+                            imeAction = ImeAction.Search
                         ),
                         keyboardActions = KeyboardActions(
-                            onDone = {
+                            onSearch = {
                                 onSearchClick(searchText)
                                 keyboardController?.hide()
                             }

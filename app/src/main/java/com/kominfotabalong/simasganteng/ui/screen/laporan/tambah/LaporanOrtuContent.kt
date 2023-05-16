@@ -43,6 +43,9 @@ fun LaporanOrtuContent(
     var noKK by remember {
         mutableStateOf(currentRequest.nomor_kk)
     }
+    var noKKErrorMsg by remember {
+        mutableStateOf("")
+    }
 
     var tanggalPengisianError by remember { mutableStateOf(false) }
     var tanggalPengisian by remember {
@@ -61,7 +64,7 @@ fun LaporanOrtuContent(
 
     var nikOrtuError by remember { mutableStateOf(false) }
     var nikErrorMsg by remember {
-        mutableStateOf(currentRequest.nik_anak)
+        mutableStateOf("")
     }
     var nikOrtu by remember {
         mutableStateOf(currentRequest.nik_ortu)
@@ -83,10 +86,7 @@ fun LaporanOrtuContent(
     }
 
     fun validateStepThree(): Boolean {
-        if (noKK == "") {
-            noKKError = true
-            return false
-        } else if (namaOrtu == "") {
+        if (namaOrtu == "") {
             namaOrtuError = true
             return false
         } else if (nikOrtu == "") {
@@ -95,6 +95,10 @@ fun LaporanOrtuContent(
         } else if (nikOrtu.length < 16) {
             nikOrtuError = true
             nikErrorMsg = "panjang minimal NIK adalah 16 digit!"
+            return false
+        } else if (noKK.length < 16) {
+            noKKError = true
+            noKKErrorMsg = "panjang minimal No KK adalah 16 digit!"
             return false
         } else if (noWA == "") {
             noWAError = true
@@ -137,11 +141,19 @@ fun LaporanOrtuContent(
                 placeholderText = "Nomor Kartu Keluarga",
                 query = noKK,
                 isError = noKKError,
-                errorMsg = "Nomor KK tidak boleh kosong!",
+                errorMsg = noKKErrorMsg,
                 onQueryChange = { newText ->
-                    noKK = newText
+                    if (noKK.length < 16)
+                        noKK = newText
                     currentRequest.nomor_kk = noKK
                     noKKError = false
+                },
+                supportingText = {
+                    Text(
+                        modifier = Modifier.fillMaxWidth(),
+                        text = "${noKK.length}/16",
+                        textAlign = TextAlign.End,
+                    )
                 },
                 keyboardOptions = KeyboardOptions.Default.copy(
                     keyboardType = KeyboardType.Number,
