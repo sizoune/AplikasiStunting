@@ -1,7 +1,6 @@
 package com.kominfotabalong.simasganteng.data.local
 
 import com.google.gson.Gson
-import com.kominfotabalong.simasganteng.data.model.Kecamatan
 import com.kominfotabalong.simasganteng.data.model.PuskesmasResponse
 import kotlinx.coroutines.flow.Flow
 

@@ -26,25 +26,26 @@ import androidx.compose.ui.window.Dialog
 import androidx.constraintlayout.compose.ConstraintLayout
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.kominfotabalong.simasganteng.R
 import com.kominfotabalong.simasganteng.ui.theme.BlueGrey800
 
 @Composable
-fun SuccessDialog(
+fun StuntingDialog(
     showDialog: Boolean,
     dialogDesc: String,
     onDismiss: (Boolean) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.success))
+    val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.warning))
 
     if (showDialog)
-        Dialog(onDismissRequest = { onDismiss(false) }) {
+        Dialog(onDismissRequest = { }) {
             Card(elevation = CardDefaults.cardElevation(10.dp), shape = RoundedCornerShape(20.dp)) {
                 ConstraintLayout(
                     modifier = modifier
-                        .widthIn(min = 200.dp, max = 220.dp)
+                        .widthIn(min = 200.dp)
                         .heightIn(min = 250.dp)
                         .background(BlueGrey800)
                 ) {
@@ -68,18 +69,19 @@ fun SuccessDialog(
 
                     LottieAnimation(
                         composition,
+                        iterations = LottieConstants.IterateForever,
                         modifier = modifier
                             .size(100.dp)
                             .constrainAs(lottie) {
                                 top.linkTo(parent.top)
                                 start.linkTo(parent.start)
                                 end.linkTo(parent.end)
-                                bottom.linkTo(parent.bottom)
                             }
+                            .padding(top = 16.dp)
                     )
 
                     Text(
-                        text = "Sukses",
+                        text = "Perhatian",
                         overflow = TextOverflow.Ellipsis,
                         style = MaterialTheme.typography.labelMedium.copy(
                             fontWeight = FontWeight.Bold

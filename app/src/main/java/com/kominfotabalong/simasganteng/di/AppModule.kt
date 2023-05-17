@@ -16,8 +16,8 @@ import com.haroldadmin.cnradapter.NetworkResponseAdapterFactory
 import com.jaredrummler.android.device.DeviceName
 import com.kominfotabalong.simasganteng.BuildConfig
 import com.kominfotabalong.simasganteng.R
-import com.kominfotabalong.simasganteng.data.local.TabalongDataStore
 import com.kominfotabalong.simasganteng.data.local.PuskesmasDataStore
+import com.kominfotabalong.simasganteng.data.local.TabalongDataStore
 import com.kominfotabalong.simasganteng.data.local.UserDataStore
 import com.kominfotabalong.simasganteng.data.remote.ApiService
 import com.kominfotabalong.simasganteng.data.remote.GoogleAuthInterface

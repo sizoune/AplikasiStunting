@@ -6,7 +6,6 @@ import android.location.Address
 import android.location.Geocoder
 import android.location.Location
 import android.os.Build
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.Pager
@@ -25,6 +24,7 @@ import com.haroldadmin.cnradapter.NetworkResponse
 import com.kominfotabalong.simasganteng.data.model.AddLaporanRequest
 import com.kominfotabalong.simasganteng.data.model.ApiBaseResponse
 import com.kominfotabalong.simasganteng.data.model.BalitaResponse
+import com.kominfotabalong.simasganteng.data.model.PengukuranResponse
 import com.kominfotabalong.simasganteng.data.remote.BalitaPagingSource
 import com.kominfotabalong.simasganteng.data.remote.LaporanPagingSource
 import com.kominfotabalong.simasganteng.data.repository.ApiRepository
@@ -64,9 +64,9 @@ class LaporanViewModel @Inject constructor(
         _isFinishSearching.emit(true)
     }
 
-    private val _addLaporanState: MutableStateFlow<UiState<ApiBaseResponse>> =
+    private val _addLaporanState: MutableStateFlow<UiState<PengukuranResponse>> =
         MutableStateFlow(UiState.Loading)
-    val addLaporanState: StateFlow<UiState<ApiBaseResponse>>
+    val addLaporanState: StateFlow<UiState<PengukuranResponse>>
         get() = _addLaporanState
 
     private val _updateLaporanState: MutableStateFlow<UiState<ApiBaseResponse>> =
@@ -85,11 +85,13 @@ class LaporanViewModel @Inject constructor(
         get() = _locLoading
 
 
-    var dataCollect = mutableStateOf(0)
+    var dataCollect = MutableStateFlow(0)
 
     fun collectData(dataIndex: Int) {
         println("currentStep = $dataIndex")
-        dataCollect.value = dataIndex
+        viewModelScope.launch {
+            dataCollect.emit(dataIndex)
+        }
     }
 
     fun setLatLng(latLng: LatLng) {
@@ -107,12 +109,12 @@ class LaporanViewModel @Inject constructor(
             }.collect { response ->
                 when (response) {
                     is NetworkResponse.Success -> {
-                        _addLaporanState.value = UiState.Success(response.body.body)
+                        _addLaporanState.emit(UiState.Success(response.body.data))
                     }
 
                     is NetworkResponse.ServerError -> {
                         if (response.code == 401) {
-                            _updateLaporanState.value = UiState.Unauthorized
+                            _addLaporanState.emit(UiState.Unauthorized)
                         } else {
                             _addLaporanState.emit(
                                 UiState.Error(

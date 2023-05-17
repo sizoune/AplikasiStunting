@@ -308,7 +308,7 @@ class ApiRepository @Inject constructor(
             is NetworkResponse.Success -> {
                 emit(
                     NetworkResponse.Success(
-                        data, null, 200
+                        data.body, null, 200
                     )
                 )
             }
@@ -408,7 +408,7 @@ class ApiRepository @Inject constructor(
             is NetworkResponse.Success -> {
                 emit(
                     NetworkResponse.Success(
-                        data, null, 200
+                        data.body, null, 200
                     )
                 )
             }
@@ -444,7 +444,7 @@ class ApiRepository @Inject constructor(
             is NetworkResponse.Success -> {
                 emit(
                     NetworkResponse.Success(
-                        data, null, 200
+                        data.body, null, 200
                     )
                 )
             }

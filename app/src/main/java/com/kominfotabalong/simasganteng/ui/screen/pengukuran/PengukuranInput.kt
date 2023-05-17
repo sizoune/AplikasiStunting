@@ -52,6 +52,7 @@ import com.kominfotabalong.simasganteng.ui.component.Loading
 import com.kominfotabalong.simasganteng.ui.component.OutlinedSpinner
 import com.kominfotabalong.simasganteng.ui.component.OutlinedTextFieldComp
 import com.kominfotabalong.simasganteng.ui.component.ShowSnackbarWithAction
+import com.kominfotabalong.simasganteng.ui.component.StuntingDialog
 import com.kominfotabalong.simasganteng.ui.component.SuccessDialog
 import com.kominfotabalong.simasganteng.ui.component.WarningDialog
 import com.kominfotabalong.simasganteng.ui.destinations.LogoutHandlerDestination
@@ -397,7 +398,7 @@ fun PengukuranInput(
             isSubmitted = true
         })
 
-    if (isSubmitted)
+    if (isSubmitted) {
         viewModel.ukurOperationState.collectAsStateWithLifecycle().value.let { uiState ->
             when (uiState) {
                 is UiState.Loading -> {
@@ -407,13 +408,24 @@ fun PengukuranInput(
                 }
 
                 is UiState.Success -> {
-                    SuccessDialog(
-                        showDialog = true,
-                        dialogDesc = uiState.data.message ?: "Data berhasil disubmit!",
-                        onDismiss = {
-                            resultNavigator.navigateBack(result = true)
-                        },
-                    )
+                    if (uiState.data.tb_per_u.lowercase() == "sangat pendek" || uiState.data.tb_per_u.lowercase() == "pendek")
+                        StuntingDialog(
+                            showDialog = true,
+                            dialogDesc = "Terima kasih atas laporan anda!, namun perlu diperhatikan sistem kami mendeteksi bahwa anak anda tersuspeksi Stunting !, " +
+                                    "silahkan hubungi puskesmas terdekat untuk penanganan lebih lanjut!",
+                            onDismiss = {
+                                resultNavigator.navigateBack(result = true)
+                            }
+                        )
+                    else
+                        SuccessDialog(
+                            showDialog = true,
+                            dialogDesc = "Terima kasih atas laporan anda!, sistem kami mendeteksi bahwa anak anda TIDAK tersuspek Stunting!",
+                            onDismiss = {
+                                resultNavigator.navigateBack(result = true)
+                            },
+                        )
+
                 }
 
                 is UiState.Error -> {
@@ -442,4 +454,41 @@ fun PengukuranInput(
                 }
             }
         }
+
+        viewModel.delOperationState.collectAsStateWithLifecycle().value.let { uiState ->
+            when (uiState) {
+                is UiState.Loading -> {
+                    Dialog(onDismissRequest = {}) {
+                        Loading()
+                    }
+                }
+
+                is UiState.Success -> {
+                    SuccessDialog(
+                        showDialog = true,
+                        dialogDesc = uiState.data.message ?: "Data berhasil dihapus!",
+                        onDismiss = {
+                            resultNavigator.navigateBack(result = true)
+                        },
+                    )
+                }
+
+                is UiState.Error -> {
+                    ShowSnackbarWithAction(
+                        snackbarHostState = snackbarHostState,
+                        errorMsg = uiState.errorMessage,
+                        onRetryClick = {
+                            viewModel.deletePengukuran(userToken, pengukuranID)
+                        },
+                    )
+                }
+
+                is UiState.Unauthorized -> {
+                    navigator.navigate(LogoutHandlerDestination("Sesi login anda telah berakhir"))
+                }
+            }
+
+        }
+    }
+
 }

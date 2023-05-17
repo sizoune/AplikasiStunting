@@ -33,6 +33,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.kominfotabalong.simasganteng.data.model.AddLaporanRequest
 import com.kominfotabalong.simasganteng.ui.component.OutlinedSpinner
 import com.kominfotabalong.simasganteng.ui.component.OutlinedTextFieldComp
@@ -438,7 +439,7 @@ fun LaporanAnakContent(
     }
 
     if (getData)
-        viewModel.dataCollect.value.let { index ->
+        viewModel.dataCollect.collectAsStateWithLifecycle().value.let { index ->
             if (index == 2) {
                 if (validateStepTwo()) {
                     currentRequest.nama_anak = namaAnak

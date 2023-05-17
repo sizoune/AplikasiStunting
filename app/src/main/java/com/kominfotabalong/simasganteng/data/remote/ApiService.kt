@@ -82,7 +82,7 @@ interface ApiService {
     suspend fun tambahLaporan(
         @Header("Authorization") token: String,
         @Body params: RequestBody,
-    ): NetworkResponse<ApiBaseResponse, ApiBaseResponse>
+    ): NetworkResponse<ResponseObject<PengukuranResponse>, ApiBaseResponse>
 
     @Headers("Accept: application/json")
     @PUT("laporan/update-status/{id}")
@@ -116,7 +116,7 @@ interface ApiService {
         @Header("Authorization") token: String,
         @Path("balita_id") balitaID: Int,
         @Body params: RequestBody,
-    ): NetworkResponse<ApiBaseResponse, ApiBaseResponse>
+    ): NetworkResponse<ResponseObject<PengukuranResponse>, ApiBaseResponse>
 
     @Headers("Accept: application/json")
     @PUT("pengukuran/update/{pengukuran_id}")
@@ -124,7 +124,7 @@ interface ApiService {
         @Header("Authorization") token: String,
         @Path("pengukuran_id") pengukuranID: Int,
         @Body params: RequestBody,
-    ): NetworkResponse<ApiBaseResponse, ApiBaseResponse>
+    ): NetworkResponse<ResponseObject<PengukuranResponse>, ApiBaseResponse>
 
     @GET("report/peta-sebaran")
     suspend fun getDataSebaran(

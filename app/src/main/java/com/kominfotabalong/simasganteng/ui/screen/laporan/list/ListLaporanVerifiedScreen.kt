@@ -13,7 +13,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
-import androidx.paging.compose.items
+import androidx.paging.compose.itemContentType
+import androidx.paging.compose.itemKey
 import com.kominfotabalong.simasganteng.data.model.Kecamatan
 import com.kominfotabalong.simasganteng.data.model.LoginResponse
 import com.kominfotabalong.simasganteng.ui.component.ItemLaporan
@@ -44,9 +45,13 @@ fun ListLaporanVerifiedScreen(
         ).collectAsLazyPagingItems()
 
     LazyColumn(contentPadding = PaddingValues(8.dp), modifier = Modifier.navigationBarsPadding()) {
-        items(items = daftarLaporan, key = { it.balita_id }) { data ->
-            data?.let { dataReport ->
-                println("dataKecamatan size = ${dataKecamatan.size}")
+        items(
+            count = daftarLaporan.itemCount,
+            key = daftarLaporan.itemKey(key = { it.balita_id }),
+            contentType = daftarLaporan.itemContentType()
+        ) { index ->
+            val item = daftarLaporan[index]
+            item?.let { dataReport ->
                 val desa = dataKecamatan.asSequence().flatMap { dataKec ->
                     dataKec.villages
                 }.find { desa ->

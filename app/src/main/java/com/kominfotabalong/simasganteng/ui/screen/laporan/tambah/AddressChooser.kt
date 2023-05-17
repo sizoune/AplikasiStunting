@@ -261,7 +261,7 @@ fun MapInfoContent(
             horizontalArrangement = Arrangement.SpaceEvenly,
             modifier = modifier.padding(top = 16.dp)
         ) {
-            Column() {
+            Column {
                 Text(
                     text = "Latitude",
                     style = MaterialTheme.typography.labelSmall,
@@ -271,7 +271,7 @@ fun MapInfoContent(
                     style = MaterialTheme.typography.labelMedium,
                 )
             }
-            Column() {
+            Column {
                 Text(
                     text = "Longitude",
                     style = MaterialTheme.typography.labelSmall,

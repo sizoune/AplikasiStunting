@@ -239,8 +239,6 @@ fun LaporanAlamatContent(
         showChooser = false
     }
 
-    println("lat : $myCurrentLat, lng : $myCurrentLng")
-
     if (isLocAccessGranted && isFinishSearching)
         LaunchedEffect(Unit) {
             if (myCurrentLat == (-1).toDouble() && myCurrentLng == (-1).toDouble())
@@ -259,7 +257,6 @@ fun LaporanAlamatContent(
             viewModel.collectData(1)
         }
     }
-
 
     fun validateStepOne(): Boolean {
         if (selectedKecamatan == "" || selectedKecamatan.lowercase() == "pilih kecamatan") {
@@ -478,7 +475,7 @@ fun LaporanAlamatContent(
 
 
     if (getData)
-        viewModel.dataCollect.value.let { index ->
+        viewModel.dataCollect.collectAsStateWithLifecycle().value.let { index ->
             if (index == 1) {
                 if (validateStepOne()) {
                     currentRequest.village_code = selectedDesaCode

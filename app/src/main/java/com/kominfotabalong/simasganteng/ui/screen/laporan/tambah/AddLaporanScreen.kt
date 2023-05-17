@@ -38,17 +38,17 @@ import com.google.android.gms.maps.model.LatLng
 import com.kominfotabalong.simasganteng.data.model.AddLaporanRequest
 import com.kominfotabalong.simasganteng.data.model.Kecamatan
 import com.kominfotabalong.simasganteng.data.model.LoginResponse
+import com.kominfotabalong.simasganteng.data.model.PengukuranResponse
 import com.kominfotabalong.simasganteng.data.model.PuskesmasResponse
 import com.kominfotabalong.simasganteng.ui.common.UiState
 import com.kominfotabalong.simasganteng.ui.component.Loading
 import com.kominfotabalong.simasganteng.ui.component.ShowSnackbarWithAction
 import com.kominfotabalong.simasganteng.ui.component.StepperComp
+import com.kominfotabalong.simasganteng.ui.component.StuntingDialog
 import com.kominfotabalong.simasganteng.ui.component.SuccessDialog
 import com.kominfotabalong.simasganteng.ui.destinations.LogoutHandlerDestination
 import com.kominfotabalong.simasganteng.ui.screen.laporan.tambah.LaporanAlamatContent
 import com.kominfotabalong.simasganteng.ui.screen.laporan.tambah.NikSearchDialog
-import com.kominfotabalong.simasganteng.ui.theme.OverlayDark30
-import com.kominfotabalong.simasganteng.ui.theme.OverlayLight30
 import com.kominfotabalong.simasganteng.util.showToast
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
@@ -278,15 +278,25 @@ fun AddLaporanScreen(
     }
 
     if (isSubmitted)
-        ObserveTambahLaporan(viewModel = viewModel, onResultSuccess = { successMsg ->
-            SuccessDialog(
-                showDialog = showSuccessDialog,
-                dialogDesc = successMsg,
-                onDismiss = {
-                    showSuccessDialog = it
-                    navigator.navigateUp()
-                },
-            )
+        ObserveTambahLaporan(viewModel = viewModel, onResultSuccess = { returnData ->
+            if (returnData.tb_per_u.lowercase() == "sangat pendek" || returnData.tb_per_u.lowercase() == "pendek")
+                StuntingDialog(
+                    showDialog = showSuccessDialog,
+                    dialogDesc = "Terima kasih atas laporan anda!, namun perlu diperhatikan sistem kami mendeteksi bahwa anak anda tersuspeksi Stunting !, " +
+                            "silahkan hubungi puskesmas terdekat untuk penanganan lebih lanjut!",
+                    onDismiss = {
+                        showSuccessDialog = it
+                        navigator.navigateUp()
+                    }
+                )
+            else
+                SuccessDialog(
+                    showDialog = showSuccessDialog,
+                    dialogDesc = "Terima kasih atas laporan anda!, sistem kami mendeteksi bahwa anak anda TIDAK tersuspek Stunting!",
+                    onDismiss = {
+                        showSuccessDialog = it
+                        navigator.navigateUp()
+                    })
         }, onError = { errorMsg ->
             ShowSnackbarWithAction(
                 snackbarHostState = snackbarHostState,
@@ -304,7 +314,7 @@ fun AddLaporanScreen(
 @Composable
 fun ObserveTambahLaporan(
     viewModel: LaporanViewModel,
-    onResultSuccess: @Composable (String) -> Unit,
+    onResultSuccess: @Composable (PengukuranResponse) -> Unit,
     onUnauthorized: @Composable () -> Unit,
     onError: @Composable (String) -> Unit,
 ) {
@@ -318,7 +328,7 @@ fun ObserveTambahLaporan(
             }
 
             is UiState.Success -> {
-                onResultSuccess(uiState.data.message ?: "Laporan berhasil disubmit!")
+                onResultSuccess(uiState.data)
             }
 
             is UiState.Unauthorized -> {

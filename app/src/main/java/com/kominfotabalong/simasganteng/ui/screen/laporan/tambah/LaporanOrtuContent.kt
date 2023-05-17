@@ -24,6 +24,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.kominfotabalong.simasganteng.data.model.AddLaporanRequest
 import com.kominfotabalong.simasganteng.ui.component.OutlinedTextFieldComp
 import com.vanpra.composematerialdialogs.MaterialDialog
@@ -41,7 +42,7 @@ fun LaporanOrtuContent(
 ) {
     var noKKError by remember { mutableStateOf(false) }
     var noKK by remember {
-        mutableStateOf(currentRequest.nomor_kk)
+        mutableStateOf("")
     }
     var noKKErrorMsg by remember {
         mutableStateOf("")
@@ -49,17 +50,17 @@ fun LaporanOrtuContent(
 
     var tanggalPengisianError by remember { mutableStateOf(false) }
     var tanggalPengisian by remember {
-        mutableStateOf(currentRequest.tanggal)
+        mutableStateOf("")
     }
 
     var namaOrtuError by remember { mutableStateOf(false) }
     var namaOrtu by remember {
-        mutableStateOf(currentRequest.nama_ortu)
+        mutableStateOf("")
     }
 
     var noWAError by remember { mutableStateOf(false) }
     var noWA by remember {
-        mutableStateOf(currentRequest.whatsapp)
+        mutableStateOf("")
     }
 
     var nikOrtuError by remember { mutableStateOf(false) }
@@ -67,7 +68,15 @@ fun LaporanOrtuContent(
         mutableStateOf("")
     }
     var nikOrtu by remember {
-        mutableStateOf(currentRequest.nik_ortu)
+        mutableStateOf("")
+    }
+
+    LaunchedEffect(Unit) {
+        noKK = currentRequest.nomor_kk
+        tanggalPengisian = currentRequest.tanggal
+        namaOrtu = currentRequest.nama_ortu
+        noWA = currentRequest.whatsapp
+        nikOrtu = currentRequest.nik_ortu
     }
 
     val dateDialogState = rememberMaterialDialogState()
@@ -143,8 +152,7 @@ fun LaporanOrtuContent(
                 isError = noKKError,
                 errorMsg = noKKErrorMsg,
                 onQueryChange = { newText ->
-                    if (noKK.length < 16)
-                        noKK = newText
+                    if (newText.length <= 16) noKK = newText
                     currentRequest.nomor_kk = noKK
                     noKKError = false
                 },
@@ -191,8 +199,7 @@ fun LaporanOrtuContent(
                 isError = nikOrtuError,
                 errorMsg = nikErrorMsg,
                 onQueryChange = { newText ->
-                    if (nikOrtu.length < 16)
-                        nikOrtu = newText
+                    if (newText.length <= 16) nikOrtu = newText
                     currentRequest.nik_ortu = nikOrtu
                     nikOrtuError = false
                 },
@@ -241,7 +248,7 @@ fun LaporanOrtuContent(
     }
 
     if (getData)
-        viewModel.dataCollect.value.let {
+        viewModel.dataCollect.collectAsStateWithLifecycle().value.let {
             if (it == 3) {
                 if (validateStepThree()) {
                     onNextClick(currentRequest)

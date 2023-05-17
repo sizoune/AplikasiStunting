@@ -26,11 +26,15 @@ class PengukuranViewModel @Inject constructor(
     val ukurState: StateFlow<UiState<ResponseListObject<PengukuranResponse>>>
         get() = _ukurState
 
-    private val _ukurOperationState: MutableStateFlow<UiState<ApiBaseResponse>> =
+    private val _ukurOperationState: MutableStateFlow<UiState<PengukuranResponse>> =
         MutableStateFlow(UiState.Loading)
-    val ukurOperationState: StateFlow<UiState<ApiBaseResponse>>
+    val ukurOperationState: StateFlow<UiState<PengukuranResponse>>
         get() = _ukurOperationState
 
+    private val _delOperationState: MutableStateFlow<UiState<ApiBaseResponse>> =
+        MutableStateFlow(UiState.Loading)
+    val delOperationState: StateFlow<UiState<ApiBaseResponse>>
+        get() = _delOperationState
 
     fun getDaftarPengukuran(token: String, balitaID: Int) {
         viewModelScope.launch {
@@ -85,7 +89,7 @@ class PengukuranViewModel @Inject constructor(
             }.collect { response ->
                 when (response) {
                     is NetworkResponse.Success -> {
-                        _ukurOperationState.value = UiState.Success(response.body.body)
+                        _ukurOperationState.value = UiState.Success(response.body.data)
                     }
 
                     is NetworkResponse.ServerError -> {
@@ -130,7 +134,7 @@ class PengukuranViewModel @Inject constructor(
             }.collect { response ->
                 when (response) {
                     is NetworkResponse.Success -> {
-                        _ukurOperationState.value = UiState.Success(response.body.body)
+                        _ukurOperationState.value = UiState.Success(response.body.data)
                     }
 
                     is NetworkResponse.ServerError -> {
@@ -169,20 +173,20 @@ class PengukuranViewModel @Inject constructor(
 
     fun deletePengukuran(token: String, pengukuranID: Int) {
         viewModelScope.launch {
-            _ukurOperationState.emit(UiState.Loading)
+            _delOperationState.emit(UiState.Loading)
             apiRepository.deletePengukuran(token, pengukuranID).catch {
-                _ukurOperationState.emit(UiState.Error(it.message.toString()))
+                _delOperationState.emit(UiState.Error(it.message.toString()))
             }.collect { response ->
                 when (response) {
                     is NetworkResponse.Success -> {
-                        _ukurOperationState.value = UiState.Success(response.body.body)
+                        _delOperationState.value = UiState.Success(response.body.body)
                     }
 
                     is NetworkResponse.ServerError -> {
                         if (response.code == 401) {
-                            _ukurOperationState.value = UiState.Unauthorized
+                            _delOperationState.value = UiState.Unauthorized
                         } else {
-                            _ukurOperationState.emit(
+                            _delOperationState.emit(
                                 UiState.Error(
                                     response.body?.message
                                         ?: "Terjadi kesalahan saat memproses data"
@@ -192,7 +196,7 @@ class PengukuranViewModel @Inject constructor(
                     }
 
                     is NetworkResponse.NetworkError -> {
-                        _ukurOperationState.emit(
+                        _delOperationState.emit(
                             UiState.Error(
                                 response.error.localizedMessage
                                     ?: "Terjadi kesalahan saat memproses data"
@@ -201,7 +205,7 @@ class PengukuranViewModel @Inject constructor(
                     }
 
                     is NetworkResponse.UnknownError -> {
-                        _ukurOperationState.emit(
+                        _delOperationState.emit(
                             UiState.Error(
                                 response.error.localizedMessage ?: "Unknown Error"
                             )
