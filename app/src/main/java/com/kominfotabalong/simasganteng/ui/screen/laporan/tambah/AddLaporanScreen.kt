@@ -256,8 +256,13 @@ fun AddLaporanScreen(
                                 it.get().isBlank()
                             })
                         } else {
-                            isSubmitted = true
-                            viewModel.addLaporan(userData.token, laporanRequest)
+                            if (laporanRequest.lat != "-1" && laporanRequest.lng != "-1") {
+                                isSubmitted = true
+                                viewModel.addLaporan(userData.token, laporanRequest)
+                            } else {
+                                currentStep = 1
+                                context.showToast("data koordinat masih kosong!, silahkan klik icon di bagian kanan alamat!")
+                            }
                         }
 
                     }
