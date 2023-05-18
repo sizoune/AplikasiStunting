@@ -2,12 +2,10 @@ package com.kominfotabalong.simasganteng.ui.screen.statistik
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.gson.Gson
 import com.haroldadmin.cnradapter.NetworkResponse
 import com.kominfotabalong.simasganteng.data.model.ResponseListObject
 import com.kominfotabalong.simasganteng.data.model.StatistikResponse
 import com.kominfotabalong.simasganteng.data.repository.ApiRepository
-import com.kominfotabalong.simasganteng.data.repository.UserDataStoreRepository
 import com.kominfotabalong.simasganteng.ui.common.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow

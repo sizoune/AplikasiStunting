@@ -4,7 +4,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.window.Dialog
-import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.firebase.auth.FirebaseUser
 import com.kominfotabalong.simasganteng.data.model.GoogleAuthResponse
 import com.kominfotabalong.simasganteng.ui.screen.login.LoginViewModel

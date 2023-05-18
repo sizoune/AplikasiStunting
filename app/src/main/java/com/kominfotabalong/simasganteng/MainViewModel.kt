@@ -7,11 +7,8 @@ import com.google.gson.reflect.TypeToken
 import com.haroldadmin.cnradapter.NetworkResponse
 import com.kominfotabalong.simasganteng.data.model.ArtikelResponse
 import com.kominfotabalong.simasganteng.data.model.Kecamatan
-import com.kominfotabalong.simasganteng.data.model.LoginResponse
 import com.kominfotabalong.simasganteng.data.model.PuskesmasResponse
 import com.kominfotabalong.simasganteng.data.model.ResponseListObject
-import com.kominfotabalong.simasganteng.data.model.ResponseObject
-import com.kominfotabalong.simasganteng.data.model.StatistikResponse
 import com.kominfotabalong.simasganteng.data.model.User
 import com.kominfotabalong.simasganteng.data.repository.ApiRepository
 import com.kominfotabalong.simasganteng.data.repository.UserDataStoreRepository
@@ -21,7 +18,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import javax.inject.Inject
 
 @HiltViewModel

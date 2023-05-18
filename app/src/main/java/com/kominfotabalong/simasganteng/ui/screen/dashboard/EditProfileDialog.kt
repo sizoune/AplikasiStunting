@@ -40,7 +40,6 @@ import com.kominfotabalong.simasganteng.ui.component.Loading
 import com.kominfotabalong.simasganteng.ui.component.OutlinedTextFieldComp
 import com.kominfotabalong.simasganteng.ui.screen.login.LoginViewModel
 import com.kominfotabalong.simasganteng.util.showToast
-import timber.log.Timber
 
 @Composable
 fun EditProfileDialog(

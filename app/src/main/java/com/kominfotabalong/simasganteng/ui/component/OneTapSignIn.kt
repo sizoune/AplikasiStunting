@@ -4,7 +4,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.window.Dialog
-import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.android.gms.auth.api.identity.BeginSignInResult
 import com.kominfotabalong.simasganteng.data.model.GoogleAuthResponse.Failure
 import com.kominfotabalong.simasganteng.data.model.GoogleAuthResponse.Loading
