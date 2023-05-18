@@ -7,6 +7,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -21,6 +23,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBackIos
+import androidx.compose.material.icons.filled.ArrowForwardIos
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
@@ -49,12 +53,14 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.zIndex
 import androidx.constraintlayout.compose.ConstraintLayout
@@ -71,6 +77,9 @@ import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapType
 import com.google.maps.android.compose.MapsComposeExperimentalApi
 import com.google.maps.android.compose.clustering.Clustering
+import com.google.maps.android.data.kml.KmlLayer
+import com.google.maps.android.data.kml.KmlPolygon
+import com.kominfotabalong.simasganteng.R
 import com.kominfotabalong.simasganteng.data.model.LoginResponse
 import com.kominfotabalong.simasganteng.data.model.SebaranResponse
 import com.kominfotabalong.simasganteng.ui.common.UiState
@@ -86,7 +95,7 @@ import com.kominfotabalong.simasganteng.util.openMap
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 
-@OptIn(MapsComposeExperimentalApi::class)
+@OptIn(MapsComposeExperimentalApi::class, ExperimentalLayoutApi::class)
 @Composable
 @Destination
 fun MapScreen(
@@ -148,22 +157,6 @@ fun MapScreen(
     }
     val context = LocalContext.current
 
-    FilterDialog(showFilter = showFilterDialog, onFilterChoose = { selectedFilter ->
-        if (filteredData.isNotEmpty()) filteredData.clear()
-        filteredData.putAll(if (selectedFilter.lowercase() == "berat badan per usia") {
-            filteredText = "Sebaran Berat Badan per Usia"
-            dataSebaran.groupBy { it.bb_per_u }
-        } else if (selectedFilter.lowercase() == "tinggi / panjang badan per usia") {
-            filteredText = "Tinggi / Panjang Badan per Usia"
-            dataSebaran.groupBy { it.tb_per_u }
-        } else {
-            filteredText = "Berat Badan per Tinggi / Panjang Badan"
-            dataSebaran.groupBy { it.bb_per_tb }
-        })
-
-        println("filtered data = ${filteredData.keys}")
-    }, onDismiss = { showFilterDialog = false })
-
     DetailItemCluster(showDialog = showDetailClickedItemCluster,
         data = clickedSebaran,
         onDirectionClick = { latLng ->
@@ -184,7 +177,7 @@ fun MapScreen(
             .fillMaxSize()
             .navigationBarsPadding()
     ) {
-        val (search, map, filter, filteredContent, detailContent) = createRefs()
+        val (search, map, filteredContent) = createRefs()
         Card(elevation = CardDefaults.cardElevation(10.dp),
             shape = RoundedCornerShape(20.dp),
             modifier = modifier
@@ -233,7 +226,7 @@ fun MapScreen(
                                 errorMsg = "Tolong isi tahun pengukuran dahulu",
                                 onQueryChange = { newText ->
                                     yearError = false
-                                    if (year.length < 4) year = newText
+                                    if (newText.length <= 4) year = newText
                                 },
                                 keyboardOptions = KeyboardOptions.Default.copy(
                                     keyboardType = KeyboardType.Number, imeAction = ImeAction.Next
@@ -269,6 +262,8 @@ fun MapScreen(
                             onClick = {
                                 if (validateInput()) {
                                     if (filteredData.isNotEmpty()) filteredData.clear()
+                                    if (originClusterData.isNotEmpty()) originClusterData.clear()
+                                    if (dataCluster.isNotEmpty()) dataCluster.clear()
                                     viewModel.getDataSebaran(
                                         userData.token,
                                         year,
@@ -291,35 +286,7 @@ fun MapScreen(
         }
 
         if (originClusterData.isNotEmpty()) Card(elevation = CardDefaults.cardElevation(10.dp),
-            shape = RoundedCornerShape(20.dp),
-            modifier = modifier
-                .constrainAs(filter) {
-                    top.linkTo(search.bottom)
-                    end.linkTo(parent.end)
-                }
-                .zIndex(5f)
-                .padding(end = 8.dp)
-
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center,
-                modifier = modifier
-                    .padding(end = 16.dp)
-                    .clickable {
-                        showFilterDialog = true
-                    }) {
-                IconButton(onClick = { showFilterDialog = true }) {
-                    Icon(
-                        imageVector = Icons.Filled.FilterList, contentDescription = "Filter Data"
-                    )
-                }
-                Text(text = "Filter Sebaran", style = MaterialTheme.typography.labelLarge)
-            }
-
-        }
-
-        if (filteredData.isNotEmpty()) Card(elevation = CardDefaults.cardElevation(10.dp),
-            shape = RoundedCornerShape(20.dp),
+            shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
             modifier = modifier
                 .constrainAs(filteredContent) {
                     bottom.linkTo(parent.bottom)
@@ -328,43 +295,73 @@ fun MapScreen(
                     width = Dimension.fillToConstraints
                 }
                 .zIndex(5f)
-                .padding(8.dp)
-
         ) {
-            val textBg = if (isSystemInDarkTheme()) Color.LightGray else Color.DarkGray
-            val clickedItemEffectModifier = modifier
-                .drawBehind {
-                    drawRoundRect(
-                        color = textBg, cornerRadius = CornerRadius(20f, 20f)
-                    )
-                }
-                .padding(8.dp)
-            Row(
-                modifier = modifier
-                    .fillMaxWidth()
-                    .padding(start = 16.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Text(
-                    text = filteredText,
-                    style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
-                    modifier = modifier.weight(1f)
-                )
-                IconButton(onClick = {
-                    selectedFilterData = ""
-                    dataCluster.clear()
-                    changeMapEffect = !changeMapEffect
-                }) {
-                    Icon(imageVector = Icons.Filled.Refresh, contentDescription = "refresh")
-                }
+            val textBg = if (isSystemInDarkTheme()) Color.DarkGray else Color.LightGray
+            var currentOptPos by remember {
+                mutableStateOf(0)
+            }
+            val options = listOf(
+                "Berat Badan per Usia",
+                "Tinggi / Panjang Badan per Usia",
+                "Berat Badan per Tinggi / Panjang Badan"
+            )
+
+            LaunchedEffect(currentOptPos) {
+                if (filteredData.isNotEmpty()) filteredData.clear()
+                filteredData.putAll(if (options[currentOptPos].lowercase() == "berat badan per usia") {
+                    filteredText = "Sebaran Berat Badan per Usia"
+                    dataSebaran.groupBy { it.bb_per_u }
+                } else if (options[currentOptPos].lowercase() == "tinggi / panjang badan per usia") {
+                    filteredText = "Tinggi / Panjang Badan per Usia"
+                    dataSebaran.groupBy { it.tb_per_u }
+                } else {
+                    filteredText = "Berat Badan per Tinggi / Panjang Badan"
+                    dataSebaran.groupBy { it.bb_per_tb }
+                })
             }
 
-            LazyRow(modifier = modifier.padding(start = 16.dp, end = 16.dp)) {
+            Row(
+                modifier = modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                if (currentOptPos != 0)
+                    IconButton(onClick = { currentOptPos-- }) {
+                        Icon(
+                            imageVector = Icons.Filled.ArrowBackIos,
+                            contentDescription = "sebelumnya"
+                        )
+                    }
+                Text(
+                    text = options[currentOptPos],
+                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.ExtraBold)
+                )
+                if (currentOptPos + 1 < options.size)
+                    IconButton(onClick = { currentOptPos++ }) {
+                        Icon(
+                            imageVector = Icons.Filled.ArrowForwardIos,
+                            contentDescription = "selanjutnya"
+                        )
+                    }
+            }
+
+            FlowRow(
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                modifier = modifier.padding(start = 8.dp, end = 8.dp, bottom = 8.dp)
+            ) {
                 filteredData.forEach { (key, data) ->
-                    item {
-                        TextButton(
-                            onClick = {
+                    Text(
+                        text = "$key : ${data.size} anak",
+                        fontSize = 11.sp,
+                        modifier = modifier
+                            .drawBehind {
+                                drawRoundRect(
+                                    color = textBg, cornerRadius = CornerRadius(20f, 20f)
+                                )
+                            }
+                            .padding(8.dp)
+                            .clickable {
                                 selectedFilterData = key
                                 if (dataCluster.isNotEmpty()) dataCluster.clear()
                                 dataCluster.addAll(data.map {
@@ -377,18 +374,8 @@ fun MapScreen(
                                     )
                                 })
                                 changeMapEffect = !changeMapEffect
-                            }, colors = ButtonDefaults.textButtonColors(
-                                contentColor = if (isSystemInDarkTheme()) Color.White else Color.Black
-                            )
-                        ) {
-
-                            Text(
-                                text = "$key : ${data.size} anak",
-                                color = getStatusColor(key),
-                                modifier = if (key == selectedFilterData) clickedItemEffectModifier else modifier
-                            )
-                        }
-                    }
+                            }
+                    )
                 }
             }
         }
@@ -404,6 +391,34 @@ fun MapScreen(
             },
             properties = properties,
         ) {
+            val config = LocalConfiguration.current
+            MapEffect(key1 = Unit) { map ->
+                val kmlLayer = KmlLayer(map, R.raw.kecamatan, context)
+                kmlLayer.addLayerToMap()
+
+                var container = kmlLayer.containers.iterator().next()
+                //Retrieve a nested container within the first container
+                container = container.containers.iterator().next()
+                //Retrieve the first placemark in the nested container
+                val placemark = container.placemarks.iterator().next()
+                //Retrieve a polygon object in a placemark
+                val polygon = placemark.geometry as KmlPolygon
+                //Create LatLngBounds of the outer coordinates of the polygon
+                val builder = LatLngBounds.Builder()
+                for (latLng in polygon.outerBoundaryCoordinates) {
+                    builder.include(latLng)
+                }
+
+                map.moveCamera(
+                    CameraUpdateFactory.newLatLngBounds(
+                        builder.build(),
+                        config.screenWidthDp,
+                        config.screenHeightDp,
+                        0
+                    )
+                )
+            }
+
             if (originClusterData.isNotEmpty())
                 Clustering(
                     items = if (dataCluster.isNotEmpty()) dataCluster.toList() else originClusterData.toList(),
@@ -468,9 +483,6 @@ fun MapScreen(
                     LaunchedEffect(key1 = Unit, block = {
                         selectedFilterData = ""
                         isExpanded = false
-                        if (filteredData.isNotEmpty()) filteredData.clear()
-                        if (originClusterData.isNotEmpty()) originClusterData.clear()
-                        if (dataCluster.isNotEmpty()) dataCluster.clear()
                         originClusterData.addAll(it.map {
                             MyItem(
                                 LatLng(it.balita.lat, it.balita.lng),
