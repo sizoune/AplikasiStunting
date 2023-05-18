@@ -78,7 +78,7 @@ import kotlinx.coroutines.tasks.await
 @Destination
 fun LoginScreen(
     modifier: Modifier = Modifier,
-    viewModel: LoginViewModel = hiltViewModel(),
+    viewModel: LoginViewModel,
     snackbarHostState: SnackbarHostState,
     onLoginSuccess: () -> Unit,
 ) {
@@ -222,7 +222,10 @@ fun LoginScreen(
                         .padding(top = 16.dp)
                         .fillMaxWidth()
                 ) {
-                    Text(text = "Login",color = if (isSystemInDarkTheme()) Color.White else Color.Black)
+                    Text(
+                        text = "Login",
+                        color = if (isSystemInDarkTheme()) Color.White else Color.Black
+                    )
                 }
                 Text(
                     text = "Atau",
@@ -282,7 +285,7 @@ fun LoginScreen(
         launcher.launch(intent)
     }
 
-    OneTapSignIn(launch = {
+    OneTapSignIn(viewModel = viewModel, launch = {
         launch(it)
     })
 
@@ -304,6 +307,7 @@ fun LoginScreen(
 
 
     SignInWithGoogle(
+        viewModel = viewModel,
         navigateToHomeScreen = { currentUser ->
             coroutine.launch {
                 val firebaseToken = currentUser.getIdToken(true).await()
@@ -344,16 +348,18 @@ fun LoginScreen(
         viewModel.uiState.collectAsStateWithLifecycle().value.let { uiState ->
             when (uiState) {
                 is UiState.Loading -> {
-                    println("show loading")
                     Dialog(onDismissRequest = {}) {
                         Loading()
                     }
                 }
 
                 is UiState.Success -> {
-                    viewModel.getFCMToken()
-                    userToken = uiState.data.data.token
-                    viewModel.saveUserData(uiState.data.data)
+                    LaunchedEffect(Unit) {
+                        loginState = ""
+                        viewModel.getFCMToken()
+                        userToken = uiState.data.data.token
+                        viewModel.saveUserData(uiState.data.data)
+                    }
                 }
 
                 is UiState.Error -> {

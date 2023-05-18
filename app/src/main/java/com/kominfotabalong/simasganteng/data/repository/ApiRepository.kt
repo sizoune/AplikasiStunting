@@ -9,6 +9,7 @@ import com.kominfotabalong.simasganteng.util.createJsonRequestBody
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
+import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Named
 
@@ -109,7 +110,7 @@ class ApiRepository @Inject constructor(
     }.flowOn(Dispatchers.IO)
 
     suspend fun updateProfile(
-        token: String, name: String, username: String, phone: String,
+        token: String, name: String, username: String, phone: String, email:String,
     ) = flow {
         when (val data = apiService.updateProfile(
             "Bearer $token",
@@ -117,12 +118,13 @@ class ApiRepository @Inject constructor(
                 "name" to name,
                 "username" to username,
                 "phone" to phone,
+                "email" to email,
             )
         )) {
             is NetworkResponse.Success -> {
                 emit(
                     NetworkResponse.Success(
-                        data, null, 200
+                        data.body.data, null, 200
                     )
                 )
             }
@@ -525,10 +527,11 @@ class ApiRepository @Inject constructor(
     }.flowOn(Dispatchers.IO)
 
     suspend fun getStatistikGizi(
-        token: String, tahun: String, bulan: String?
+        token: String, tahun: String, bulan: String?, tipe: String,
     ) = flow {
         val params = hashMapOf(
             "year" to tahun,
+            "tipe" to tipe
         )
         if (bulan != null) params["month"] = bulan
         when (val data = apiService.getStatistikGizi(

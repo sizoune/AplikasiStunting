@@ -14,7 +14,7 @@ import com.kominfotabalong.simasganteng.util.showToast
 
 @Composable
 fun OneTapSignIn(
-    viewModel: LoginViewModel = hiltViewModel(),
+    viewModel: LoginViewModel,
     launch: (result: BeginSignInResult) -> Unit
 ) {
     val context = LocalContext.current

@@ -88,6 +88,7 @@ import com.kominfotabalong.simasganteng.ui.component.OutlinedSpinner
 import com.kominfotabalong.simasganteng.ui.component.OutlinedTextFieldComp
 import com.kominfotabalong.simasganteng.ui.component.ShowSnackbarWithAction
 import com.kominfotabalong.simasganteng.ui.destinations.LogoutHandlerDestination
+import com.kominfotabalong.simasganteng.util.getListOfGiziStatus
 import com.kominfotabalong.simasganteng.util.getListOfMonth
 import com.kominfotabalong.simasganteng.util.getMonthIndex
 import com.kominfotabalong.simasganteng.util.getStatusColor
@@ -300,11 +301,7 @@ fun MapScreen(
             var currentOptPos by remember {
                 mutableStateOf(0)
             }
-            val options = listOf(
-                "Berat Badan per Usia",
-                "Tinggi / Panjang Badan per Usia",
-                "Berat Badan per Tinggi / Panjang Badan"
-            )
+            val options = getListOfGiziStatus()
 
             LaunchedEffect(currentOptPos) {
                 if (filteredData.isNotEmpty()) filteredData.clear()

@@ -86,23 +86,26 @@ import com.kominfotabalong.simasganteng.ui.destinations.ListLaporanRejectedScree
 import com.kominfotabalong.simasganteng.ui.destinations.ListLaporanVerifiedScreenDestination
 import com.kominfotabalong.simasganteng.ui.destinations.LogoutHandlerDestination
 import com.kominfotabalong.simasganteng.ui.destinations.MapScreenDestination
+import com.kominfotabalong.simasganteng.ui.destinations.StatistikScreenDestination
+import com.kominfotabalong.simasganteng.ui.screen.login.LoginViewModel
 import com.kominfotabalong.simasganteng.util.showToast
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
+import timber.log.Timber
 import java.time.LocalDateTime
 import java.util.Calendar
 
 
-@RequiresApi(Build.VERSION_CODES.TIRAMISU)
+
 @OptIn(
     ExperimentalFoundationApi::class, ExperimentalPermissionsApi::class,
-    ExperimentalLayoutApi::class
 )
 @Composable
 @Destination
 fun DashboardScreen(
     modifier: Modifier = Modifier,
     viewModel: MainViewModel = hiltViewModel(),
+    loginViewModel: LoginViewModel,
     snackbarHostState: SnackbarHostState,
     userData: LoginResponse,
     navigator: DestinationsNavigator
@@ -127,9 +130,7 @@ fun DashboardScreen(
     var dataArtikel by remember {
         mutableStateOf(listOf<ArtikelResponse>())
     }
-    val dataStatistik = remember {
-        mutableStateListOf(StatistikResponse())
-    }
+
     val context = LocalContext.current
 
     var isPostNotifAccessGranted by remember {
@@ -222,6 +223,7 @@ fun DashboardScreen(
 
     EditProfileDialog(
         viewModel = viewModel,
+        loginViewModel = loginViewModel,
         userToken = userData.token,
         showDialog = showEditProfile,
         currentUser = userData.user,
@@ -233,8 +235,6 @@ fun DashboardScreen(
 
     LaunchedEffect(Unit) {
         viewModel.getDaftarArtikel()
-        if (userData.user.role.lowercase() != "public")
-            viewModel.getDataStatistik(userData.token, "2023")
     }
 
     ObserveDataArtikel(viewModel = viewModel, onResultSuccess = {
@@ -253,41 +253,13 @@ fun DashboardScreen(
         isLoading = true
     })
 
-    if (userData.user.role.lowercase() != "public")
-        ObserveDataStatistikGizi(
-            viewModel = viewModel,
-            onResultSuccess = {
-                isLoading = false
-                if (dataStatistik.isNotEmpty()) dataStatistik.clear()
-                dataStatistik.addAll(it)
-            },
-            onLoading = { isLoading = true },
-            onError = { errorMsg ->
-                isLoading = false
-                ShowSnackbarWithAction(
-                    snackbarHostState = snackbarHostState,
-                    errorMsg = errorMsg,
-                    onRetryClick = {
-                        viewModel.getDataStatistik(
-                            userData.token,
-                            LocalDateTime.now().year.toString()
-                        )
-                    },
-                )
-            },
-            onUnauthorized = {
-                navigator.navigate(LogoutHandlerDestination("Sesi login anda telah berakhir!"))
-            }
-        )
-
     ConstraintLayout(
         modifier = modifier
             .fillMaxSize()
             .navigationBarsPadding()
             .verticalScroll(rememberScrollState())
     ) {
-        val (background, content, statistikTitle, statistikContent, adminTitle, adminContent, artikelTitle, artikelContent, credit) = createRefs()
-
+        val (background, content, adminTitle, adminContent, artikelTitle, artikelContent, credit) = createRefs()
         Column(modifier = modifier
             .constrainAs(background) {
                 top.linkTo(parent.top)
@@ -381,53 +353,11 @@ fun DashboardScreen(
         }
 
         if (userData.user.role.lowercase() != "public") {
-            if (isLoading) Loading(modifier = modifier
-                .constrainAs(statistikContent) {
-                    top.linkTo(content.bottom)
-                }
-                .padding(16.dp))
-            else {
-                if (dataStatistik.isNotEmpty()) {
-                    Text(text = "Statistik Gizi Tahun ${LocalDateTime.now().year}",
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.ExtraBold),
-                        modifier = modifier
-                            .constrainAs(statistikTitle) {
-                                top.linkTo(content.bottom)
-                            }
-                            .padding(start = 16.dp, top = 24.dp, bottom = 16.dp))
-                    FlowRow(
-                        modifier = modifier
-                            .constrainAs(statistikContent) {
-                                top.linkTo(statistikTitle.bottom)
-                                start.linkTo(parent.start)
-                                end.linkTo(parent.end)
-                                width = Dimension.fillToConstraints
-                            }
-                            .padding(start = 16.dp, end = 16.dp),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
-                        maxItemsInEachRow = 2
-                    ) {
-                        dataStatistik.forEach {
-                            ItemStatistik(dataStatistik = it)
-                        }
-                    }
-                }
-
-
-            }
-
             Text(text = "Admin",
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.ExtraBold),
                 modifier = modifier
                     .constrainAs(adminTitle) {
-                        if (!isLoading && dataStatistik.isNotEmpty())
-                            top.linkTo(statistikContent.bottom)
-                        else
-                            if (isLoading)
-                                top.linkTo(statistikContent.bottom)
-                            else
-                                top.linkTo(content.bottom)
+                        top.linkTo(content.bottom)
                     }
                     .padding(start = 16.dp, top = 24.dp, bottom = 16.dp))
 
@@ -483,7 +413,18 @@ fun DashboardScreen(
                         menuOnClick = {
                             navigator.navigate(MapScreenDestination)
                         })
-
+                    Spacer(
+                        modifier = modifier
+                            .height(1.dp)
+                            .background(color = Color.LightGray)
+                            .fillMaxWidth()
+                    )
+                    DashboardMenu(iconImage = R.drawable.statistic,
+                        menuTitle = "Laporan Gizi",
+                        menuDesc = "Lihat Data Laporan Statistik Gizi",
+                        menuOnClick = {
+                            navigator.navigate(StatistikScreenDestination)
+                        })
                 }
             }
         }
@@ -548,38 +489,6 @@ fun ObserveDataArtikel(
     onUnauthorized: @Composable () -> Unit
 ) {
     viewModel.artikelState.collectAsStateWithLifecycle().value.let { uiState ->
-        when (uiState) {
-
-            is UiState.Loading -> {
-                onLoading()
-            }
-
-            is UiState.Success -> {
-                uiState.data.data?.let {
-                    onResultSuccess(it)
-                }
-            }
-
-            is UiState.Unauthorized -> {
-                onUnauthorized()
-            }
-
-            is UiState.Error -> {
-                onError(uiState.errorMessage)
-            }
-        }
-    }
-}
-
-@Composable
-fun ObserveDataStatistikGizi(
-    viewModel: MainViewModel,
-    onResultSuccess: (List<StatistikResponse>) -> Unit,
-    onLoading: () -> Unit,
-    onError: @Composable (String) -> Unit,
-    onUnauthorized: @Composable () -> Unit
-) {
-    viewModel.statistikState.collectAsStateWithLifecycle().value.let { uiState ->
         when (uiState) {
 
             is UiState.Loading -> {

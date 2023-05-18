@@ -14,5 +14,6 @@ data class User(
     val updated_at: String = "",
     val user_id: Int = -1,
     val username: String = "",
-    val whatsapp: String? = ""
+    val whatsapp: String? = "",
+    val phone: String? = ""
 )

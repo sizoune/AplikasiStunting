@@ -33,16 +33,20 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.kominfotabalong.simasganteng.MainViewModel
+import com.kominfotabalong.simasganteng.data.model.LoginResponse
 import com.kominfotabalong.simasganteng.data.model.User
 import com.kominfotabalong.simasganteng.ui.common.UiState
 import com.kominfotabalong.simasganteng.ui.component.Loading
 import com.kominfotabalong.simasganteng.ui.component.OutlinedTextFieldComp
+import com.kominfotabalong.simasganteng.ui.screen.login.LoginViewModel
 import com.kominfotabalong.simasganteng.util.showToast
+import timber.log.Timber
 
 @Composable
 fun EditProfileDialog(
     modifier: Modifier = Modifier,
     viewModel: MainViewModel,
+    loginViewModel: LoginViewModel,
     userToken: String,
     showDialog: Boolean,
     currentUser: User,
@@ -61,7 +65,7 @@ fun EditProfileDialog(
 
     var phoneError by remember { mutableStateOf(false) }
     var phone by remember {
-        mutableStateOf(currentUser.whatsapp)
+        mutableStateOf(currentUser.phone)
     }
     var isSubmitted by remember {
         mutableStateOf(false)
@@ -158,7 +162,13 @@ fun EditProfileDialog(
                         keyboardActions = KeyboardActions(
                             onDone = {
                                 if (validateInput()) {
-                                    viewModel.updateProfile(userToken, name, username, phone ?: "")
+                                    viewModel.updateProfile(
+                                        userToken,
+                                        name,
+                                        username,
+                                        phone ?: "",
+                                        currentUser.email
+                                    )
                                     isSubmitted = true
                                 }
                             }
@@ -171,7 +181,13 @@ fun EditProfileDialog(
                     Button(
                         onClick = {
                             if (validateInput()) {
-                                viewModel.updateProfile(userToken, name, username, phone ?: "")
+                                viewModel.updateProfile(
+                                    userToken,
+                                    name,
+                                    username,
+                                    phone ?: "",
+                                    currentUser.email
+                                )
                                 isSubmitted = true
                             }
                         }, modifier = modifier
@@ -209,7 +225,7 @@ fun EditProfileDialog(
 
                 is UiState.Success -> {
                     LaunchedEffect(key1 = Unit) {
-                        viewModel.saveUserData(uiState.data.data)
+                        loginViewModel.saveUserData(LoginResponse(userToken, uiState.data))
                         context.showToast("Profile berhasil diupdate!")
                         onDismiss()
                     }

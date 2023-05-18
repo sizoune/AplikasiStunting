@@ -12,7 +12,7 @@ import com.kominfotabalong.simasganteng.util.showToast
 
 @Composable
 fun SignInWithGoogle(
-    viewModel: LoginViewModel = hiltViewModel(),
+    viewModel: LoginViewModel,
     navigateToHomeScreen: (currentUser: FirebaseUser) -> Unit
 ) {
     val context = LocalContext.current

@@ -14,6 +14,7 @@ import com.kominfotabalong.simasganteng.data.model.ResponseListObject
 import com.kominfotabalong.simasganteng.data.model.ResponseObject
 import com.kominfotabalong.simasganteng.data.model.SebaranResponse
 import com.kominfotabalong.simasganteng.data.model.StatistikResponse
+import com.kominfotabalong.simasganteng.data.model.User
 import okhttp3.RequestBody
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -44,7 +45,7 @@ interface ApiService {
     suspend fun updateProfile(
         @Header("Authorization") token: String,
         @Body params: RequestBody,
-    ): NetworkResponse<ResponseObject<LoginResponse>, ApiBaseResponse>
+    ): NetworkResponse<ResponseObject<User>, ApiBaseResponse>
 
     @GET("user")
     suspend fun getUserData(
@@ -126,12 +127,14 @@ interface ApiService {
         @Body params: RequestBody,
     ): NetworkResponse<ResponseObject<PengukuranResponse>, ApiBaseResponse>
 
+    @Headers("Accept: application/json")
     @GET("report/peta-sebaran")
     suspend fun getDataSebaran(
         @Header("Authorization") token: String,
         @QueryMap params: Map<String, String>,
     ): NetworkResponse<ResponseListObject<SebaranResponse>, ApiBaseResponse>
 
+    @Headers("Accept: application/json")
     @GET("report/statistik-gizi")
     suspend fun getStatistikGizi(
         @Header("Authorization") token: String,

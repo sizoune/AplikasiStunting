@@ -9,7 +9,7 @@ import com.kominfotabalong.simasganteng.ui.screen.login.LoginViewModel
 
 @Composable
 fun ObserveLoggedUser(
-    mainViewModel: LoginViewModel = hiltViewModel(),
+    mainViewModel: LoginViewModel,
     onUserObserved: @Composable (data: LoginResponse) -> Unit,
 ) {
 

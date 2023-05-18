@@ -34,7 +34,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 @HiltViewModel
@@ -53,7 +55,8 @@ class LoginViewModel @Inject constructor(
     var fcmResponse by mutableStateOf<FCMTokenResponse>(GoogleAuthResponse.Loading)
         private set
 
-    fun getLoggedUserData(): Flow<String> = userDataStoreRepository.getLoggedUser()
+    private suspend fun getLoggedUserData(): StateFlow<String> =
+        userDataStoreRepository.getLoggedUser().stateIn(viewModelScope)
 
     private val _userState: MutableStateFlow<LoginResponse> =
         MutableStateFlow(LoginResponse())

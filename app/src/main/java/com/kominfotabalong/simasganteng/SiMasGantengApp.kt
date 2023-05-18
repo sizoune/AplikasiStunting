@@ -40,6 +40,7 @@ import com.kominfotabalong.simasganteng.ui.destinations.LoginScreenDestination
 import com.kominfotabalong.simasganteng.ui.destinations.LogoutHandlerDestination
 import com.kominfotabalong.simasganteng.ui.destinations.PengukuranInputDestination
 import com.kominfotabalong.simasganteng.ui.destinations.SplashScreenDestination
+import com.kominfotabalong.simasganteng.ui.screen.dashboard.DashboardScreen
 import com.kominfotabalong.simasganteng.ui.screen.laporan.AddLaporanScreen
 import com.kominfotabalong.simasganteng.ui.screen.laporan.LaporanViewModel
 import com.kominfotabalong.simasganteng.ui.screen.login.LoginScreen
@@ -52,6 +53,7 @@ import com.ramcosta.composedestinations.animations.defaults.RootNavGraphDefaultA
 import com.ramcosta.composedestinations.animations.rememberAnimatedNavHostEngine
 import com.ramcosta.composedestinations.manualcomposablecalls.animatedComposable
 import com.ramcosta.composedestinations.navigation.dependency
+import timber.log.Timber
 
 @OptIn(
     ExperimentalAnimationApi::class, ExperimentalMaterialNavigationApi::class
@@ -93,11 +95,11 @@ fun SiMasGantengApp(
         mutableStateOf(listOf<PuskesmasResponse>())
     }
     val isDoneCheckUserRemotely by loginViewModel.isDoneCheckUserRemotely.collectAsStateWithLifecycle()
+    Timber.tag("isDoneCheckUserRemotely").d(isDoneCheckUserRemotely.toString())
 
-    println("isDoneCheckUserRemotely = $isDoneCheckUserRemotely")
-
-    ObserveLoggedUser(onUserObserved = {
+    ObserveLoggedUser(mainViewModel = loginViewModel, onUserObserved = {
         loggedUser = it
+        Timber.tag("loggedUser").d(loggedUser.toString())
         if (loggedUser.token.isNotEmpty() && !isDoneCheckUserRemotely)
             LaunchedEffect(key1 = Unit, block = {
                 loginViewModel.getUserData(loggedUser.token)
@@ -208,6 +210,7 @@ fun SiMasGantengApp(
                 dependency(loggedUser)
                 dependency(dataKecamatan)
                 dependency(LogoutHandlerDestination) { loginViewModel }
+                dependency(DashboardScreenDestination) { loginViewModel }
                 dependency(hiltViewModel<PengukuranViewModel>())
                 dependency(laporanViewModel)
 
@@ -220,10 +223,21 @@ fun SiMasGantengApp(
                 }
             }
             animatedComposable(LoginScreenDestination) {
-                LoginScreen(snackbarHostState = snackbarHostState, onLoginSuccess = {
-                    loginViewModel.setLoginStatus(true)
-                    loginViewModel.setDoneCheckUserRemotely()
-                })
+                LoginScreen(
+                    snackbarHostState = snackbarHostState,
+                    viewModel = loginViewModel,
+                    onLoginSuccess = {
+                        loginViewModel.setLoginStatus(true)
+                        loginViewModel.setDoneCheckUserRemotely()
+                    })
+            }
+            animatedComposable(DashboardScreenDestination){
+                DashboardScreen(
+                    loginViewModel = loginViewModel,
+                    snackbarHostState = snackbarHostState,
+                    userData = loggedUser,
+                    navigator = destinationsNavigator
+                )
             }
             animatedComposable(AddLaporanScreenDestination) {
                 AddLaporanScreen(
