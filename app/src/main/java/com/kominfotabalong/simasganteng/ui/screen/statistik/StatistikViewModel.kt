@@ -49,7 +49,9 @@ class StatistikViewModel @Inject constructor(
                     }
 
                     is NetworkResponse.NetworkError -> {
-                        _statistikState.value = UiState.Error("Tolong periksa koneksi anda!")
+                        _statistikState.value = UiState.Error(
+                            response.error.localizedMessage ?: "Tolong periksa koneksi anda!"
+                        )
                     }
 
                     is NetworkResponse.UnknownError -> {

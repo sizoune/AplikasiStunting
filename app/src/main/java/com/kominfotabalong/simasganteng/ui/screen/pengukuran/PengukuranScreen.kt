@@ -482,7 +482,8 @@ fun PengukuranScreen(
                     PengukuranInputDestination(
                         userToken = userToken,
                         currentRequest = PengukuranRequest(),
-                        balitaID = dataBalita.balita_id
+                        balitaID = dataBalita.balita_id,
+                        pkmID = dataBalita.pkm_id
                     )
                 )
             },

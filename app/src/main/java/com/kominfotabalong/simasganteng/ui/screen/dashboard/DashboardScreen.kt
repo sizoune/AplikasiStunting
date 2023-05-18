@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.paddingFromBaseline
 import androidx.compose.foundation.layout.size
@@ -54,6 +55,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
@@ -80,6 +82,7 @@ import com.kominfotabalong.simasganteng.ui.destinations.ListLaporanRejectedScree
 import com.kominfotabalong.simasganteng.ui.destinations.ListLaporanVerifiedScreenDestination
 import com.kominfotabalong.simasganteng.ui.destinations.LogoutHandlerDestination
 import com.kominfotabalong.simasganteng.ui.destinations.MapScreenDestination
+import com.kominfotabalong.simasganteng.ui.destinations.PetugasScreenDestination
 import com.kominfotabalong.simasganteng.ui.destinations.StatistikScreenDestination
 import com.kominfotabalong.simasganteng.ui.screen.login.LoginViewModel
 import com.kominfotabalong.simasganteng.util.showToast
@@ -329,10 +332,12 @@ fun DashboardScreen(
         Card(modifier = modifier
             .constrainAs(content) {
                 top.linkTo(background.bottom)
-                bottom.linkTo(background.bottom)
                 width = Dimension.fillToConstraints
             }
             .padding(start = 16.dp, end = 16.dp)
+            .offset {
+                IntOffset(0, -80)
+            }
             .clickable {
                 navigator.navigate(AddLaporanScreenDestination)
             }, elevation = CardDefaults.cardElevation(10.dp), shape = RoundedCornerShape(20.dp)
@@ -341,6 +346,19 @@ fun DashboardScreen(
                 menuTitle = "Pelaporan",
                 menuDesc = "Tambah laporan anak yang tersuspeksi Stunting",
                 menuOnClick = { navigator.navigate(AddLaporanScreenDestination) })
+
+            Spacer(
+                modifier = modifier
+                    .height(1.dp)
+                    .background(color = Color.LightGray)
+                    .fillMaxWidth()
+            )
+            DashboardMenu(iconImage = R.drawable.staff,
+                menuTitle = "Hubungi Petugas",
+                menuDesc = "Lihat Daftar Petugas Puskesmas",
+                menuOnClick = {
+                    navigator.navigate(PetugasScreenDestination())
+                })
         }
 
         if (userData.user.role.lowercase() != "public") {
@@ -350,7 +368,7 @@ fun DashboardScreen(
                     .constrainAs(adminTitle) {
                         top.linkTo(content.bottom)
                     }
-                    .padding(start = 16.dp, top = 24.dp, bottom = 16.dp))
+                    .padding(start = 16.dp, top = 16.dp, bottom = 16.dp))
 
             // Admin Area
             Card(modifier = modifier

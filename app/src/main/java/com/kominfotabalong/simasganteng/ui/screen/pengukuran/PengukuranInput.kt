@@ -56,6 +56,7 @@ import com.kominfotabalong.simasganteng.ui.component.StuntingDialog
 import com.kominfotabalong.simasganteng.ui.component.SuccessDialog
 import com.kominfotabalong.simasganteng.ui.component.WarningDialog
 import com.kominfotabalong.simasganteng.ui.destinations.LogoutHandlerDestination
+import com.kominfotabalong.simasganteng.ui.destinations.PetugasScreenDestination
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import com.ramcosta.composedestinations.result.ResultBackNavigator
@@ -72,6 +73,7 @@ fun PengukuranInput(
     viewModel: PengukuranViewModel,
     isUpdate: Boolean = false,
     pengukuranID: Int = -1,
+    pkmID: Int = -1,
     snackbarHostState: SnackbarHostState,
     userToken: String,
     currentRequest: PengukuranRequest,
@@ -415,6 +417,13 @@ fun PengukuranInput(
                                     "silahkan hubungi puskesmas terdekat untuk penanganan lebih lanjut!",
                             onDismiss = {
                                 resultNavigator.navigateBack(result = true)
+                            },
+                            onPhoneClick = {
+                                navigator.navigate(
+                                    PetugasScreenDestination(
+                                        pkmID
+                                    )
+                                )
                             }
                         )
                     else

@@ -109,7 +109,7 @@ class ApiRepository @Inject constructor(
     }.flowOn(Dispatchers.IO)
 
     suspend fun updateProfile(
-        token: String, name: String, username: String, phone: String, email:String,
+        token: String, name: String, username: String, phone: String, email: String,
     ) = flow {
         when (val data = apiService.updateProfile(
             "Bearer $token",
@@ -557,4 +557,34 @@ class ApiRepository @Inject constructor(
             }
         }
     }.flowOn(Dispatchers.IO)
+
+    suspend fun getDaftarPetugasPKM(
+        token: String, pkmID: Int,
+    ) = flow {
+        when (val data = apiService.getDaftarPetugasPKM(
+            "Bearer $token", pkmID
+        )) {
+            is NetworkResponse.Success -> {
+                emit(
+                    NetworkResponse.Success(
+                        data.body, null, 200
+                    )
+                )
+            }
+
+            is NetworkResponse.ServerError -> {
+                emit(NetworkResponse.ServerError(data.body, data.code))
+            }
+
+            is NetworkResponse.NetworkError -> {
+                emit(NetworkResponse.NetworkError(data.error))
+            }
+
+            is NetworkResponse.UnknownError -> {
+                emit(NetworkResponse.UnknownError(data.error))
+            }
+        }
+    }.flowOn(Dispatchers.IO)
+
+
 }

@@ -42,6 +42,7 @@ import com.kominfotabalong.simasganteng.ui.destinations.ListLaporanRejectedScree
 import com.kominfotabalong.simasganteng.ui.destinations.ListLaporanVerifiedScreenDestination
 import com.kominfotabalong.simasganteng.ui.destinations.MapScreenDestination
 import com.kominfotabalong.simasganteng.ui.destinations.PengukuranScreenDestination
+import com.kominfotabalong.simasganteng.ui.destinations.PetugasScreenDestination
 import com.kominfotabalong.simasganteng.ui.destinations.StatistikScreenDestination
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
@@ -176,6 +177,10 @@ fun Destination.topBarTitle(): String {
 
         StatistikScreenDestination -> {
             "Statistik Gizi"
+        }
+
+        PetugasScreenDestination -> {
+            "Daftar Petugas Puskesmas"
         }
 
         else -> javaClass.simpleName.removeSuffix("Destination")

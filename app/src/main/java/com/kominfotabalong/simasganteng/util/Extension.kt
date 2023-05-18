@@ -63,9 +63,11 @@ fun getListOfGiziStatus() = listOf(
 )
 
 fun getSelectedStatistik(tipe: String) =
-    if (tipe == "Berat Badan per Usia") "bb_per_u"
-    else if (tipe == "Tinggi / Panjang Badan per Usia") "tb_per_u"
-    else "bb_per_tb"
+    when (tipe) {
+        "Berat Badan per Usia" -> "bb_per_u"
+        "Tinggi / Panjang Badan per Usia" -> "tb_per_u"
+        else -> "bb_per_tb"
+    }
 
 fun getMonthIndex(selectedMonth: String): String {
     getListOfMonth().forEachIndexed { index, month ->

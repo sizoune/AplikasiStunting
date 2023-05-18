@@ -47,6 +47,7 @@ import com.kominfotabalong.simasganteng.ui.component.StepperComp
 import com.kominfotabalong.simasganteng.ui.component.StuntingDialog
 import com.kominfotabalong.simasganteng.ui.component.SuccessDialog
 import com.kominfotabalong.simasganteng.ui.destinations.LogoutHandlerDestination
+import com.kominfotabalong.simasganteng.ui.destinations.PetugasScreenDestination
 import com.kominfotabalong.simasganteng.ui.screen.laporan.tambah.LaporanAlamatContent
 import com.kominfotabalong.simasganteng.ui.screen.laporan.tambah.NikSearchDialog
 import com.kominfotabalong.simasganteng.util.showToast
@@ -292,6 +293,9 @@ fun AddLaporanScreen(
                     onDismiss = {
                         showSuccessDialog = it
                         navigator.navigateUp()
+                    },
+                    onPhoneClick = {
+                        navigator.navigate(PetugasScreenDestination(selectedPKMID = laporanRequest.pkm_id.toInt()))
                     }
                 )
             else

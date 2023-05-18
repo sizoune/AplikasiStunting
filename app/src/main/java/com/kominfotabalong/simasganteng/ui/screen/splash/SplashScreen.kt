@@ -30,16 +30,22 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.kominfotabalong.simasganteng.R
+import com.kominfotabalong.simasganteng.ui.common.UiState
+import com.kominfotabalong.simasganteng.ui.component.ObserveLoggedUser
+import com.kominfotabalong.simasganteng.ui.screen.login.LoginViewModel
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootNavGraph
 import kotlinx.coroutines.delay
+import timber.log.Timber
 
 @Composable
 @RootNavGraph(start = true)
 @Destination
 fun SplashScreen(
     modifier: Modifier = Modifier,
+    loginViewModel: LoginViewModel,
     gotoDashboard: () -> Unit,
 ) {
     val scale = remember {
@@ -47,6 +53,9 @@ fun SplashScreen(
     }
     var showText by remember {
         mutableStateOf(false)
+    }
+    var userToken by remember {
+        mutableStateOf("")
     }
 
     // AnimationEffect
@@ -60,8 +69,40 @@ fun SplashScreen(
                 })
         )
         showText = true
-        delay(2000)
-        gotoDashboard()
+    }
+
+    ObserveLoggedUser(mainViewModel = loginViewModel, onUserObserved = {
+        userToken = it.token
+        LaunchedEffect(Unit) {
+            delay(1000)
+            loginViewModel.getUserData(userToken)
+        }
+    })
+
+    loginViewModel.userRemotelyState.collectAsStateWithLifecycle().value.let { userState ->
+        when (userState) {
+            is UiState.Loading -> {
+            }
+
+            is UiState.Success -> {
+                LaunchedEffect(key1 = Unit, block = { gotoDashboard() })
+            }
+
+            is UiState.Unauthorized -> {
+                LaunchedEffect(key1 = Unit) {
+                    loginViewModel.logOut()
+                    gotoDashboard()
+                }
+            }
+
+            is UiState.Error -> {
+                LaunchedEffect(key1 = Unit) {
+                    loginViewModel.logOut()
+                    gotoDashboard()
+                }
+                println("FailedToObtain User : ${userState.errorMessage}")
+            }
+        }
     }
 
     // Image
@@ -83,7 +124,7 @@ fun SplashScreen(
             Image(
                 painter = painterResource(id = R.drawable.logo),
                 contentDescription = "Logo",
-                modifier=modifier.size(80.dp)
+                modifier = modifier.size(80.dp)
             )
         }
         AnimatedVisibility(

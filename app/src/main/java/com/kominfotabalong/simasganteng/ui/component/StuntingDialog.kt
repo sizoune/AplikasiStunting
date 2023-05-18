@@ -1,6 +1,7 @@
 package com.kominfotabalong.simasganteng.ui.component
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -8,6 +9,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -16,6 +18,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -36,6 +39,7 @@ fun StuntingDialog(
     showDialog: Boolean,
     dialogDesc: String,
     onDismiss: (Boolean) -> Unit,
+    onPhoneClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.warning))
@@ -49,7 +53,7 @@ fun StuntingDialog(
                         .heightIn(min = 250.dp)
                         .background(BlueGrey800)
                 ) {
-                    val (closeBtn, title, descText, lottie) = createRefs()
+                    val (closeBtn, title, descText, lottie, btnStaff) = createRefs()
 
                     IconButton(
                         onClick = {
@@ -110,6 +114,26 @@ fun StuntingDialog(
                             }
                             .padding(16.dp)
                     )
+
+                    Button(
+                        onClick = {
+                            onPhoneClick()
+                        }, modifier = modifier
+                            .constrainAs(btnStaff) {
+                                top.linkTo(descText.bottom)
+                                start.linkTo(parent.start)
+                                end.linkTo(parent.end)
+                                bottom.linkTo(parent.bottom)
+                            }
+                            .padding(top = 10.dp, bottom = 10.dp)
+                    ) {
+                        Text(
+                            text = "Hubungi Petugas",
+                            color = if (isSystemInDarkTheme()) Color.White else Color.Black
+                        )
+                    }
+
+
                 }
             }
 

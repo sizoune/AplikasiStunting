@@ -46,6 +46,10 @@ class MainViewModel @Inject constructor(
     val uiState: StateFlow<UiState<User>>
         get() = _uiState
 
+    private val _pkmStaffState: MutableStateFlow<UiState<ResponseListObject<User>>> =
+        MutableStateFlow(UiState.Loading)
+    val pkmStaffState: StateFlow<UiState<ResponseListObject<User>>>
+        get() = _pkmStaffState
 
     fun getDaftarArtikel() {
         viewModelScope.launch {
@@ -223,6 +227,47 @@ class MainViewModel @Inject constructor(
 
                     is NetworkResponse.UnknownError -> {
                         _uiState.emit(
+                            UiState.Error(
+                                response.error.localizedMessage
+                                    ?: "Unknown Error"
+                            )
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    fun getDaftarPetugasPKM(token: String, pkmID: Int) {
+        viewModelScope.launch {
+            _pkmStaffState.emit(UiState.Loading)
+            apiRepository.getDaftarPetugasPKM(token, pkmID).catch {
+                _pkmStaffState.value = UiState.Error(it.message.toString())
+            }.collect { response ->
+                when (response) {
+                    is NetworkResponse.Success -> {
+                        _pkmStaffState.value = UiState.Success(response.body)
+                    }
+
+                    is NetworkResponse.ServerError -> {
+                        if (response.code == 401) {
+                            _pkmStaffState.value = UiState.Unauthorized
+                        } else {
+                            _pkmStaffState.emit(
+                                UiState.Error(
+                                    response.body?.message
+                                        ?: "Terjadi kesalahan saat memproses data"
+                                )
+                            )
+                        }
+                    }
+
+                    is NetworkResponse.NetworkError -> {
+                        _pkmStaffState.emit(UiState.Error("Tolong periksa koneksi anda!"))
+                    }
+
+                    is NetworkResponse.UnknownError -> {
+                        _pkmStaffState.emit(
                             UiState.Error(
                                 response.error.localizedMessage
                                     ?: "Unknown Error"

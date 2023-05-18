@@ -7,6 +7,7 @@ import kotlinx.parcelize.Parcelize
 data class PengukuranResponse(
     val added_by: Int,
     val balita_id: Int,
+    val pkm_id: Int?,
     val bb_per_tb: String,
     val bb_per_u: String,
     val berat_anak: Double,

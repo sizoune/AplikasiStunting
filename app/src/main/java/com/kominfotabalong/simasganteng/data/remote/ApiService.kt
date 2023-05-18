@@ -24,6 +24,7 @@ import retrofit2.http.Headers
 import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Path
+import retrofit2.http.Query
 import retrofit2.http.QueryMap
 import retrofit2.http.Url
 
@@ -148,5 +149,10 @@ interface ApiService {
         @Path("pengukuran_id") pengukuranID: Int,
     ): NetworkResponse<ApiBaseResponse, ApiBaseResponse>
 
-
+    @Headers("Accept: application/json")
+    @GET("pkm/petugas/{pkm_id}")
+    suspend fun getDaftarPetugasPKM(
+        @Header("Authorization") token: String,
+        @Path("pkm_id") pkm_id: Int,
+    ): NetworkResponse<ResponseListObject<User>, ApiBaseResponse>
 }
