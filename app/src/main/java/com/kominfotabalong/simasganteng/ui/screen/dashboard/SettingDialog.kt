@@ -24,8 +24,10 @@ import kotlinx.coroutines.launch
 fun SettingDialog(
     modifier: Modifier = Modifier,
     showDialog: Boolean,
+    userRole: String,
     onLogoutClick: () -> Unit,
     onEditProfileClick: () -> Unit,
+    onChangePassword: () -> Unit,
     onDismiss: () -> Unit,
 ) {
     val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -56,6 +58,26 @@ fun SettingDialog(
                     thickness = 1.dp,
                     color = Color.LightGray,
                 )
+                if (userRole.lowercase() != "public") {
+                    TextButton(onClick = {
+                        onChangePassword()
+                        scope.launch {
+                            bottomSheetState.hide()
+                        }.invokeOnCompletion { onDismiss() }
+                    }, modifier = modifier.fillMaxWidth()) {
+                        Text(
+                            text = "Ganti Password",
+                            color = if (isSystemInDarkTheme()) Color.White else Color.Black
+                        )
+                    }
+                    Divider(
+                        modifier
+                            .fillMaxWidth()
+                            .padding(top = 8.dp, bottom = 8.dp),
+                        thickness = 1.dp,
+                        color = Color.LightGray,
+                    )
+                }
                 TextButton(onClick = {
                     onLogoutClick()
                     scope.launch {

@@ -48,6 +48,13 @@ interface ApiService {
         @Body params: RequestBody,
     ): NetworkResponse<ResponseObject<User>, ApiBaseResponse>
 
+    @Headers("Accept: application/json")
+    @POST("user/change-password")
+    suspend fun changePassword(
+        @Header("Authorization") token: String,
+        @Body params: RequestBody,
+    ): NetworkResponse<ResponseObject<User>, ApiBaseResponse>
+
     @GET("user")
     suspend fun getUserData(
         @Header("Authorization") token: String,

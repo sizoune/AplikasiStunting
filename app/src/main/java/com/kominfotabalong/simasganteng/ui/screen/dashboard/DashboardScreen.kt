@@ -118,6 +118,9 @@ fun DashboardScreen(
     var showEditProfile by remember {
         mutableStateOf(false)
     }
+    var showChangePass by remember {
+        mutableStateOf(false)
+    }
     var warningMsg by remember {
         mutableStateOf("")
     }
@@ -206,6 +209,7 @@ fun DashboardScreen(
 
     SettingDialog(
         showDialog = showSetting,
+        userRole = userData.user.role,
         onLogoutClick = {
             showWarningDialog = true
             doLogout = true
@@ -213,7 +217,11 @@ fun DashboardScreen(
         },
         onEditProfileClick = {
             showEditProfile = true
-        }, onDismiss = { showSetting = false })
+        },
+        onChangePassword = {
+            showChangePass = true
+        },
+        onDismiss = { showSetting = false })
 
     EditProfileDialog(
         viewModel = viewModel,
@@ -225,6 +233,16 @@ fun DashboardScreen(
             navigator.navigate(LogoutHandlerDestination("Sesi login anda telah berakhir!"))
         },
         onDismiss = { showEditProfile = false }
+    )
+
+    ChangePasswordDialog(
+        mainViewModel = viewModel,
+        userToken = userData.token,
+        showDialog = showChangePass,
+        onUnauthorized = {
+            navigator.navigate(LogoutHandlerDestination("Sesi login anda telah berakhir!"))
+        },
+        onDismiss = { showChangePass = false }
     )
 
     LaunchedEffect(Unit) {

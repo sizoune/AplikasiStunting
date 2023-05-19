@@ -238,6 +238,47 @@ class MainViewModel @Inject constructor(
         }
     }
 
+    fun changePassword(token: String, newPass: String, newPassConfirm: String) {
+        viewModelScope.launch {
+            _uiState.emit(UiState.Loading)
+            apiRepository.changePassword(token, newPass, newPassConfirm).catch {
+                _uiState.value = UiState.Error(it.message.toString())
+            }.collect { response ->
+                when (response) {
+                    is NetworkResponse.Success -> {
+                        _uiState.value = UiState.Success(response.body)
+                    }
+
+                    is NetworkResponse.ServerError -> {
+                        if (response.code == 401) {
+                            _uiState.value = UiState.Unauthorized
+                        } else {
+                            _uiState.emit(
+                                UiState.Error(
+                                    response.body?.message
+                                        ?: "Terjadi kesalahan saat memproses data"
+                                )
+                            )
+                        }
+                    }
+
+                    is NetworkResponse.NetworkError -> {
+                        _uiState.emit(UiState.Error("Tolong periksa koneksi anda!"))
+                    }
+
+                    is NetworkResponse.UnknownError -> {
+                        _uiState.emit(
+                            UiState.Error(
+                                response.error.localizedMessage
+                                    ?: "Unknown Error"
+                            )
+                        )
+                    }
+                }
+            }
+        }
+    }
+
     fun getDaftarPetugasPKM(token: String, pkmID: Int) {
         viewModelScope.launch {
             _pkmStaffState.emit(UiState.Loading)

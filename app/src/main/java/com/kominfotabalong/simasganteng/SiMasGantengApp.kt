@@ -202,10 +202,8 @@ fun SiMasGantengApp(
             animatedComposable(LoginScreenDestination) {
                 LoginScreen(
                     snackbarHostState = snackbarHostState,
-                    viewModel = loginViewModel,
                     onLoginSuccess = {
                         loginViewModel.setLoginStatus(true)
-                        loginViewModel.setDoneCheckUserRemotely()
                     })
             }
             animatedComposable(DashboardScreenDestination) {
@@ -225,14 +223,6 @@ fun SiMasGantengApp(
                     userData = loggedUser,
                 )
             }
-//            animatedComposable(PetugasScreenDestination) {
-//                PetugasScreen(
-//                    dataPuskesmas = dataPuskesmas,
-//                    userData = loggedUser,
-//                    snackbarHostState = snackbarHostState,
-//                    navigator = destinationsNavigator
-//                )
-//            }
         }
     }
 

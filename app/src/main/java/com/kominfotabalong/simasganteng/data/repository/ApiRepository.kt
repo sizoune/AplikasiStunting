@@ -142,6 +142,38 @@ class ApiRepository @Inject constructor(
         }
     }.flowOn(Dispatchers.IO)
 
+    suspend fun changePassword(
+        token: String, newPass: String, newPassConfirm: String,
+    ) = flow {
+        when (val data = apiService.changePassword(
+            "Bearer $token",
+            createJsonRequestBody(
+                "password" to newPass,
+                "password_confirmation" to newPassConfirm,
+            )
+        )) {
+            is NetworkResponse.Success -> {
+                emit(
+                    NetworkResponse.Success(
+                        data.body.data, null, 200
+                    )
+                )
+            }
+
+            is NetworkResponse.ServerError -> {
+                emit(NetworkResponse.ServerError(data.body, data.code))
+            }
+
+            is NetworkResponse.NetworkError -> {
+                emit(NetworkResponse.NetworkError(data.error))
+            }
+
+            is NetworkResponse.UnknownError -> {
+                emit(NetworkResponse.UnknownError(data.error))
+            }
+        }
+    }.flowOn(Dispatchers.IO)
+
     suspend fun postFCMToken(
         token: String, fcmToken: String?
     ) = flow {

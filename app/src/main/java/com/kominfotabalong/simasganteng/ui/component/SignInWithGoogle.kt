@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.window.Dialog
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.firebase.auth.FirebaseUser
 import com.kominfotabalong.simasganteng.data.model.GoogleAuthResponse
 import com.kominfotabalong.simasganteng.ui.screen.login.LoginViewModel
@@ -11,7 +12,7 @@ import com.kominfotabalong.simasganteng.util.showToast
 
 @Composable
 fun SignInWithGoogle(
-    viewModel: LoginViewModel,
+    viewModel: LoginViewModel = hiltViewModel(),
     navigateToHomeScreen: (currentUser: FirebaseUser) -> Unit
 ) {
     val context = LocalContext.current

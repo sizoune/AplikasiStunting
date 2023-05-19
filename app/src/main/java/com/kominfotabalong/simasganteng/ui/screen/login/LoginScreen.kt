@@ -53,6 +53,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.google.android.gms.auth.api.identity.BeginSignInResult
 import com.google.android.gms.common.api.ApiException
@@ -77,7 +78,7 @@ import kotlinx.coroutines.tasks.await
 @Destination
 fun LoginScreen(
     modifier: Modifier = Modifier,
-    viewModel: LoginViewModel,
+    viewModel: LoginViewModel = hiltViewModel(),
     snackbarHostState: SnackbarHostState,
     onLoginSuccess: () -> Unit,
 ) {
@@ -284,7 +285,7 @@ fun LoginScreen(
         launcher.launch(intent)
     }
 
-    OneTapSignIn(viewModel = viewModel, launch = {
+    OneTapSignIn( launch = {
         launch(it)
     })
 
@@ -306,7 +307,6 @@ fun LoginScreen(
 
 
     SignInWithGoogle(
-        viewModel = viewModel,
         navigateToHomeScreen = { currentUser ->
             coroutine.launch {
                 val firebaseToken = currentUser.getIdToken(true).await()
