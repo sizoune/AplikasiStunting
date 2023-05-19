@@ -47,7 +47,6 @@ import com.kominfotabalong.simasganteng.ui.screen.laporan.LaporanViewModel
 import com.kominfotabalong.simasganteng.ui.screen.login.LoginScreen
 import com.kominfotabalong.simasganteng.ui.screen.login.LoginViewModel
 import com.kominfotabalong.simasganteng.ui.screen.pengukuran.PengukuranViewModel
-import com.kominfotabalong.simasganteng.ui.screen.petugas.PetugasScreen
 import com.kominfotabalong.simasganteng.ui.screen.splash.SplashScreen
 import com.kominfotabalong.simasganteng.ui.startAppDestination
 import com.ramcosta.composedestinations.DestinationsNavHost

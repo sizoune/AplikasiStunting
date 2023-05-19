@@ -38,7 +38,6 @@ import com.kominfotabalong.simasganteng.ui.screen.login.LoginViewModel
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootNavGraph
 import kotlinx.coroutines.delay
-import timber.log.Timber
 
 @Composable
 @RootNavGraph(start = true)

@@ -16,7 +16,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -37,12 +36,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.kominfotabalong.simasganteng.MainViewModel
-import com.kominfotabalong.simasganteng.data.model.LoginResponse
-import com.kominfotabalong.simasganteng.data.model.User
 import com.kominfotabalong.simasganteng.ui.common.UiState
 import com.kominfotabalong.simasganteng.ui.component.Loading
 import com.kominfotabalong.simasganteng.ui.component.OutlinedTextFieldComp
-import com.kominfotabalong.simasganteng.ui.screen.login.LoginViewModel
 import com.kominfotabalong.simasganteng.util.showToast
 
 @Composable
