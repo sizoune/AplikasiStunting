@@ -65,7 +65,8 @@ fun ListLaporanMasukScreen(
                         navigator.navigate(
                             DetailLaporanScreenDestination(
                                 dataReport,
-                                userData.token
+                                userData.token,
+                                isHandled = userData.user.role.lowercase() == "public"
                             )
                         )
                     }

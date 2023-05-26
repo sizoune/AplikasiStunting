@@ -354,7 +354,7 @@ fun DashboardScreen(
             }
             .padding(start = 16.dp, end = 16.dp)
             .offset {
-                IntOffset(0, -80)
+                IntOffset(0, -50)
             }
             .clickable {
                 navigator.navigate(AddLaporanScreenDestination)
@@ -377,6 +377,22 @@ fun DashboardScreen(
                 menuOnClick = {
                     navigator.navigate(PetugasScreenDestination())
                 })
+
+            if (userData.user.role.lowercase() == "public") {
+                Spacer(
+                    modifier = modifier
+                        .height(1.dp)
+                        .background(color = Color.LightGray)
+                        .fillMaxWidth()
+                )
+
+                DashboardMenu(iconImage = R.drawable.in_report,
+                    menuTitle = "Laporan Masuk",
+                    menuDesc = "Lihat laporan yang sudah masuk",
+                    menuOnClick = {
+                        navigator.navigate(ListLaporanMasukScreenDestination)
+                    })
+            }
         }
 
         if (userData.user.role.lowercase() != "public") {
@@ -386,7 +402,7 @@ fun DashboardScreen(
                     .constrainAs(adminTitle) {
                         top.linkTo(content.bottom)
                     }
-                    .padding(start = 16.dp, top = 16.dp, bottom = 16.dp))
+                    .padding(start = 16.dp, bottom = 16.dp))
 
             // Admin Area
             Card(modifier = modifier

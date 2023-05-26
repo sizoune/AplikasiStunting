@@ -1,5 +1,6 @@
 package com.kominfotabalong.simasganteng.ui.screen.laporan.tambah
 
+import android.os.Build
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -98,7 +99,8 @@ fun AddressChooser(
             val backBtnBG = colorResource(id = R.color.overlay_dark_30)
 
             LaunchedEffect(key1 = currentLatLng, block = {
-                viewModel.getAddressFromLocation(context, currentLatLng)
+                if (Build.VERSION.SDK_INT >= 33)
+                    viewModel.getAddressFromLocation(context, currentLatLng)
             })
 
             LaunchedEffect(key1 = currentLatLng, block = {

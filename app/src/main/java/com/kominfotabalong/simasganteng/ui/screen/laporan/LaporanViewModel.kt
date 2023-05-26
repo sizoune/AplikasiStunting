@@ -37,6 +37,7 @@ import kotlinx.coroutines.launch
 import java.util.Locale
 import javax.inject.Inject
 
+@Suppress("DEPRECATION")
 @HiltViewModel
 class LaporanViewModel @Inject constructor(
     private val apiRepository: ApiRepository
@@ -302,7 +303,7 @@ class LaporanViewModel @Inject constructor(
     }
 
 
-    @Suppress("DEPRECATION")
+
     fun getAddressFromLocation(context: Context, latLng: LatLng) {
         val geocoder = Geocoder(context, Locale.getDefault())
         var addresses: List<Address>? = null

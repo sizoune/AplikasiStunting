@@ -8,6 +8,7 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -30,7 +31,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.kominfotabalong.simasganteng.BuildConfig
 import com.kominfotabalong.simasganteng.R
 import com.kominfotabalong.simasganteng.ui.common.UiState
 import com.kominfotabalong.simasganteng.ui.component.ObserveLoggedUser
@@ -105,37 +108,47 @@ fun SplashScreen(
     }
 
     // Image
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
+    Box(
         modifier = Modifier
             .fillMaxSize()
             .background(color = MaterialTheme.colorScheme.primary)
     ) {
-        Card(
-            elevation = CardDefaults.cardElevation(10.dp),
-            shape = RoundedCornerShape(50.dp),
-            modifier = modifier.scale(scale.value),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.primary
-            )
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+            modifier = modifier.align(Alignment.Center)
         ) {
-            Image(
-                painter = painterResource(id = R.drawable.logo),
-                contentDescription = "Logo",
-                modifier = modifier.size(80.dp)
-            )
+            Card(
+                elevation = CardDefaults.cardElevation(10.dp),
+                shape = RoundedCornerShape(50.dp),
+                modifier = modifier.scale(scale.value),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.primary
+                )
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.logo),
+                    contentDescription = "Logo",
+                    modifier = modifier.size(80.dp)
+                )
+            }
+            AnimatedVisibility(
+                visible = showText,
+                enter = slideInHorizontally(),
+                exit = slideOutHorizontally()
+            ) {
+                Text(
+                    text = stringResource(id = R.string.app_name),
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                    modifier = modifier.padding(top = 24.dp)
+                )
+            }
         }
-        AnimatedVisibility(
-            visible = showText,
-            enter = slideInHorizontally(),
-            exit = slideOutHorizontally()
-        ) {
-            Text(
-                text = stringResource(id = R.string.app_name),
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                modifier = modifier.padding(top = 24.dp)
+
+        Text(
+            text = "Versi Aplikasi ${BuildConfig.VERSION_NAME}", fontSize = 11.sp ,modifier = modifier.align(
+                Alignment.BottomCenter
             )
-        }
+        )
     }
 }
