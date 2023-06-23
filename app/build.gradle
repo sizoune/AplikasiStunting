@@ -18,8 +18,8 @@ android {
         applicationId "com.kominfotabalong.simasganteng"
         minSdk 24
         targetSdk 33
-        versionCode 3
-        versionName "2.0.0"
+        versionCode 5
+        versionName "2.0.2"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -29,13 +29,13 @@ android {
 
     buildTypes {
         debug {
-            buildConfigField "String", "API_URL", "\"https://simasganteng.tabalongkab.go.id/api/v1/\""
-            buildConfigField "String", "IMAGE_URL", "\"https://simasganteng.tabalongkab.go.id/storage/uploads/\""
+            buildConfigField "String", "API_URL", "\"https://simas-ganteng.tabalongkab.go.id/api/v1/\""
+            buildConfigField "String", "IMAGE_URL", "\"https://simas-ganteng.tabalongkab.go.id/storage/uploads/\""
         }
         release {
             minifyEnabled false
-            buildConfigField "String", "API_URL", "\"https://simasganteng.tabalongkab.go.id/api/v1/\""
-            buildConfigField "String", "IMAGE_URL", "\"https://simasganteng.tabalongkab.go.id/storage/uploads/\""
+            buildConfigField "String", "API_URL", "\"https://simas-ganteng.tabalongkab.go.id/api/v1/\""
+            buildConfigField "String", "IMAGE_URL", "\"https://simas-ganteng.tabalongkab.go.id/storage/uploads/\""
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }

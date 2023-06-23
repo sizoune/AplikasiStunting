@@ -1,5 +1,6 @@
 package com.kominfotabalong.simasganteng.ui.component
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -18,9 +19,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.constraintlayout.compose.ConstraintLayout
@@ -29,6 +32,7 @@ import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.kominfotabalong.simasganteng.R
 import com.kominfotabalong.simasganteng.ui.theme.BlueGrey800
+import com.kominfotabalong.simasganteng.ui.theme.SIMASGANTENGTheme
 
 @Composable
 fun SuccessDialog(
@@ -112,4 +116,17 @@ fun SuccessDialog(
             }
 
         }
+}
+
+@Preview
+@Composable
+fun SuccessDialogPrev() {
+    SIMASGANTENGTheme {
+        SuccessDialog(
+            showDialog = true,
+            dialogDesc = "Terima kasih atas laporan anda!, sistem kami mendeteksi bahwa anak anda TIDAK tersuspek Stunting!",
+            onDismiss = {
+
+            })
+    }
 }

@@ -7,7 +7,9 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -29,6 +31,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -37,6 +40,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.focus.FocusDirection
@@ -44,6 +48,7 @@ import androidx.compose.ui.focus.onFocusEvent
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -53,6 +58,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.constraintlayout.compose.Dimension
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.google.android.gms.auth.api.identity.BeginSignInResult
@@ -83,6 +89,7 @@ fun LoginScreen(
     onLoginSuccess: () -> Unit,
 ) {
     val context = LocalContext.current
+    val urlHandle = LocalUriHandler.current
     val coroutine = rememberCoroutineScope()
     val focusManager = LocalFocusManager.current
     val bringIntoViewRequester = BringIntoViewRequester()
@@ -140,7 +147,7 @@ fun LoginScreen(
             .fillMaxSize()
             .navigationBarsPadding()
     ) {
-        val (logo, content) = createRefs()
+        val (logo, content, aggrement) = createRefs()
 
         Card(
             elevation = CardDefaults.cardElevation(10.dp),
@@ -277,6 +284,21 @@ fun LoginScreen(
                 modifier = modifier.size(48.dp)
             )
         }
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
+            modifier = modifier
+                .constrainAs(aggrement) {
+                    bottom.linkTo(parent.bottom)
+                    width = Dimension.fillToConstraints
+                }.fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            TextButton(onClick = { urlHandle.openUri("https://simas-ganteng.tabalongkab.go.id/privacy") }) {
+                Text(text = "Privacy & Policy", color = Color.Blue, style = MaterialTheme.typography.labelMedium)
+            }
+        }
     }
 
 
@@ -285,7 +307,7 @@ fun LoginScreen(
         launcher.launch(intent)
     }
 
-    OneTapSignIn( launch = {
+    OneTapSignIn(launch = {
         launch(it)
     })
 

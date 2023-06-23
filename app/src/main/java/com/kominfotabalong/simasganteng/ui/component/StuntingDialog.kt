@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -23,6 +24,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.constraintlayout.compose.ConstraintLayout
@@ -31,7 +33,9 @@ import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.kominfotabalong.simasganteng.R
+import com.kominfotabalong.simasganteng.ui.destinations.PetugasScreenDestination
 import com.kominfotabalong.simasganteng.ui.theme.BlueGrey800
+import com.kominfotabalong.simasganteng.ui.theme.SIMASGANTENGTheme
 
 @Composable
 fun StuntingDialog(
@@ -82,6 +86,7 @@ fun StuntingDialog(
                             }
                             .padding(top = 16.dp)
                     )
+
 
                     Text(
                         text = "Perhatian",
@@ -137,4 +142,22 @@ fun StuntingDialog(
             }
 
         }
+}
+
+@Preview
+@Composable
+fun StuntingDialogPrev () {
+    SIMASGANTENGTheme {
+        StuntingDialog(
+            showDialog = true,
+            dialogDesc = "Terima kasih atas laporan anda!, namun perlu diperhatikan sistem kami mendeteksi bahwa anak anda tersuspeksi Stunting !, " +
+                    "silahkan hubungi puskesmas terdekat untuk penanganan lebih lanjut!",
+            onDismiss = {
+
+            },
+            onPhoneClick = {
+
+            }
+        )
+    }
 }
