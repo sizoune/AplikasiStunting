@@ -12,14 +12,14 @@ plugins {
 
 android {
     namespace 'com.kominfotabalong.simasganteng'
-    compileSdk 33
+    compileSdk 34
 
     defaultConfig {
         applicationId "com.kominfotabalong.simasganteng"
         minSdk 24
-        targetSdk 33
-        versionCode 5
-        versionName "2.0.2"
+        targetSdk 34
+        versionCode 6
+        versionName "2.0.3"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -90,6 +90,7 @@ dependencies {
     implementation 'org.jetbrains.kotlin:kotlin-reflect:1.8.21'
     implementation 'androidx.paging:paging-runtime-ktx:3.1.1'
     implementation 'androidx.paging:paging-compose:1.0.0-alpha19'
+    implementation 'com.pierfrancescosoffritti.androidyoutubeplayer:core:12.1.1'
     implementation 'com.cocoahero.android:geojson:1.0.1@jar'
     kapt "com.google.dagger:hilt-android-compiler:$hilt_version"
     kapt "androidx.hilt:hilt-compiler:1.0.0"

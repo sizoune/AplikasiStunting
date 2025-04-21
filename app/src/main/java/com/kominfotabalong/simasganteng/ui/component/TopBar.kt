@@ -44,6 +44,7 @@ import com.kominfotabalong.simasganteng.ui.destinations.MapScreenDestination
 import com.kominfotabalong.simasganteng.ui.destinations.PengukuranScreenDestination
 import com.kominfotabalong.simasganteng.ui.destinations.PetugasScreenDestination
 import com.kominfotabalong.simasganteng.ui.destinations.StatistikScreenDestination
+import com.kominfotabalong.simasganteng.ui.destinations.TutorialScreenDestination
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
@@ -181,6 +182,10 @@ fun Destination.topBarTitle(): String {
 
         PetugasScreenDestination -> {
             "Daftar Petugas Puskesmas"
+        }
+
+        TutorialScreenDestination -> {
+            "Video Tutorial"
         }
 
         else -> javaClass.simpleName.removeSuffix("Destination")

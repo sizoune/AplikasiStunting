@@ -84,6 +84,7 @@ import com.kominfotabalong.simasganteng.ui.destinations.LogoutHandlerDestination
 import com.kominfotabalong.simasganteng.ui.destinations.MapScreenDestination
 import com.kominfotabalong.simasganteng.ui.destinations.PetugasScreenDestination
 import com.kominfotabalong.simasganteng.ui.destinations.StatistikScreenDestination
+import com.kominfotabalong.simasganteng.ui.destinations.TutorialScreenDestination
 import com.kominfotabalong.simasganteng.ui.screen.login.LoginViewModel
 import com.kominfotabalong.simasganteng.util.showToast
 import com.ramcosta.composedestinations.annotation.Destination
@@ -360,6 +361,17 @@ fun DashboardScreen(
                 navigator.navigate(AddLaporanScreenDestination)
             }, elevation = CardDefaults.cardElevation(10.dp), shape = RoundedCornerShape(20.dp)
         ) {
+            DashboardMenu(iconImage = R.drawable.report,
+                menuTitle = "Tutorial",
+                menuDesc = "Cara penimbangan bayi dan balita dan pengukuran panjang badan bayi dan tinggi badan balita menggunakan antropometri",
+                menuOnClick = { navigator.navigate(TutorialScreenDestination) })
+
+            Spacer(
+                modifier = modifier
+                    .height(1.dp)
+                    .background(color = Color.LightGray)
+                    .fillMaxWidth()
+            )
             DashboardMenu(iconImage = R.drawable.report,
                 menuTitle = "Pelaporan",
                 menuDesc = "Tambah laporan anak yang tersuspeksi Stunting",
